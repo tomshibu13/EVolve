@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About EVolve</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .about-section {
+            padding-top: 120px;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 50px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+            color: #007bff;
+            margin-bottom: 20px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .hero-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: #007bff;
+            border-radius: 2px;
+        }
+
+        .hero-subtitle {
+            color: #666;
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: #007bff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .feature-icon i {
+            color: white;
+            font-size: 24px;
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .feature-text {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .stats-section {
+            margin-top: 80px;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            text-align: center;
+        }
+
+        .stat-item {
+            padding: 20px;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .team-section {
+            margin-top: 80px;
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            color: #007bff;
+            margin-bottom: 40px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            margin-top: 40px;
+            transition: all 0.3s ease;
+        }
+
+        .cta-button:hover {
+            background: #007bff;
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Header and Navigation Styles */
+        .header {
+        background-color: rgba(255, 255, 255, 0.98);
+        padding: 1.2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        backdrop-filter: blur(8px);
+    }
+
+    .nav-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 2rem;
+    }
+
+    .logo {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--primary-color);
+        letter-spacing: -1px;
+        position: relative;
+        transition: all var(--transition-speed) ease;
+    }
+
+    .logo::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 0;
+        width: 0;
+        height: 3px;
+        background-color: var(--primary-color);
+        transition: width var(--transition-speed) ease;
+    }
+
+    .logo:hover {
+        transform: translateY(-1px);
+    }
+
+    .logo:hover::after {
+        width: 100%;
+    }
+
+    .nav-links {
+        display: flex;
+        gap: 2.5rem;
+        align-items: center;
+    }
+
+    .nav-links a {
+        text-decoration: none;
+        color: var(--text-color);
+        font-weight: 500;
+        font-size: 1.1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        transition: all var(--transition-speed) ease;
+        position: relative;
+    }
+
+    .nav-links a::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 2px;
+        background-color: var(--primary-color);
+        transition: width var(--transition-speed) ease;
+    }
+
+    .nav-links a:hover {
+        color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+
+    .nav-links a:hover::before {
+        width: 70%;
+    }
+
+    .nav-links a.active {
+        color: var(--primary-color);
+        background-color: rgba(63, 151, 141, 0.1);
+    }
+
+    .nav-links a:last-child {
+        background-color: var(--primary-color);
+        color: rgb(8, 8, 8);
+        padding: 0.7rem 1.5rem;
+        border-radius: 25px;
+        transition: all var(--transition-speed) ease;
+    }
+
+    .nav-links a:last-child:hover {
+        background-color: var(--hover-color);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(42, 157, 143, 0.2);
+    }
+
+    .nav-links a:last-child::before {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .nav-container {
+            padding: 0 1rem;
+        }
+
+        .nav-links {
+            gap: 1.5rem;
+        }
+
+        .nav-links a {
+            font-size: 1rem;
+            padding: 0.4rem 0.8rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+        }
+    }
+
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <nav class="nav-container">
+            <div class="logo" ><a href="index2.html"></a>EVolve</div>
+            <div class="nav-links">
+                <a href="#mc" class="active">Find Stations</a>
+                <a href="#">My Bookings</a>
+                <a href="evlogin.php">Login/Signup</a>
+            </div>
+        </nav>
+    </header>
+
+    <section class="about-section">
+        <div class="container">
+            <div class="hero-section">
+                <h1 class="hero-title">About EVolve</h1>
+                <p class="hero-subtitle">
+                    Pioneering the future of sustainable transportation through innovative 
+                    EV charging solutions and seamless user experiences.
+                </p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3 class="feature-title">Our Mission</h3>
+                    <p class="feature-text">
+                        To accelerate the world's transition to sustainable energy by making 
+                        EV charging accessible, reliable, and convenient for everyone.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3 class="feature-title">Our Impact</h3>
+                    <p class="feature-text">
+                        We've helped prevent over 1M kg of CO₂ emissions through our network 
+                        of charging stations and continue to expand our green footprint.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="feature-title">Our Community</h3>
+                    <p class="feature-text">
+                        Join thousands of eco-conscious drivers who are already part of 
+                        the EVolve network, driving change one charge at a time.
+                    </p>
+                </div>
+            </div>
+
+            <div class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">5000+</div>
+                        <div class="stat-label">Charging Stations</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">100K+</div>
+                        <div class="stat-label">Happy Users</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">50+</div>
+                        <div class="stat-label">Cities Covered</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">24/7</div>
+                        <div class="stat-label">Support Available</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="team-section">
+                <h2 class="section-title">Join the EV Revolution</h2>
+                <a href="main.html  " class="cta-button">Get Started Today</a>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
