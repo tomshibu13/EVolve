@@ -35,8 +35,11 @@ $tableSql = "CREATE TABLE IF NOT EXISTS tbl_users (
     profile_picture VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status BOOLEAN DEFAULT FALSE,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    reset_expires DATETIME NULL,
+    reset_token VARCHAR(255) NULL
 )";
+
 
 if ($conn->query($tableSql) === TRUE) {
     echo "Table tbl_users created successfully\n";
