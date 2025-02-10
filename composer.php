@@ -24,7 +24,7 @@ function sendVerificationEmail($recipientEmail, $verificationCode) {
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
 
-        $mail->setFrom('evolve1829@gmail.com', 'Taskmate');
+        $mail->setFrom('evolve1829@gmail.com', 'EVolve');
         $mail->addAddress($recipientEmail);
         $mail->Subject = 'Your Verification Code';
         $mail->Body    = "Your verification code is: $verificationCode\n\nThis code will expire in 10 minutes.";
@@ -222,7 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <input type="text" maxlength="1" required id="otp6" name="otp6">
             </div>
             <button type="submit" class="login-btn" name="verify">Verify OTP</button>
-            <p class="resend-text">Didn't receive the code? <a href="#">Resend OTP</a></p>
+            <p class="resend-text">Didn't receive the code? <a href="composer.php">Resend OTP</a></p>
         </form>
     </div>
 

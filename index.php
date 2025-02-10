@@ -208,6 +208,8 @@ session_start();
             </div>
         </nav>
     </header>
+    <br>
+    <br><br><br>
 
 
         <!-- Main Content -->
@@ -1048,6 +1050,7 @@ session_start();
                 <div class="forgot-password">
                     <a href="forgot_password.php">Forgot Password?</a>
                 </div>
+                
             </form>
 
             <!-- Signup Form -->

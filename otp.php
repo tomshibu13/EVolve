@@ -36,138 +36,125 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskMate - Forgot Password</title>
+    <title>EVolve - Forgot Password</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
+        /* General Page Styling */
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
 
-        body {
-            background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem;
-        }
+/* Centered Login Container */
+.login-container {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    width: 350px;
+}
 
-        .login-container {
-            background: white;
-            padding: 2.5rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-            animation: slideUp 0.5s ease-out;
-        }
+/* Logo Styling */
+.logo {
+    font-size: 26px;
+    font-weight: bold;
+    color: #007bff;
+    margin-bottom: 10px;
+}
 
-        .logo {
-            text-align: center;
-            margin-bottom: 2rem;
-            font-size: 2rem;
-            font-weight: 700;
-        }
+/* Headings */
+h2 {
+    font-size: 22px;
+    margin-bottom: 10px;
+    color: #333;
+}
 
-        .task { color: #2563eb; }
-        .mate { color: #3b82f6; }
+.description {
+    font-size: 14px;
+    color: #666;
+}
 
-        h2 {
-            text-align: center;
-            color: #1e293b;
-            margin-bottom: 1rem;
-        }
+/* Error Message */
+.error-message {
+    background: #ffdddd;
+    color: #d9534f;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px 0;
+    font-size: 14px;
+}
 
-        p.description {
-            text-align: center;
-            color: #64748b;
-            margin-bottom: 1.5rem;
-        }
+/* Form Group */
+.form-group {
+    text-align: left;
+    margin-bottom: 15px;
+}
 
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
+label {
+    font-size: 14px;
+    color: #444;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 5px;
+}
 
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #64748b;
-            font-size: 0.9rem;
-        }
+/* Input Field */
+input[type="email"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    outline: none;
+    transition: 0.3s ease;
+}
 
-        .form-group input {
-            width: 100%;
-            padding: 0.8rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
+input[type="email"]:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.2);
+}
 
-        .form-group input:focus {
-            outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
+/* Submit Button */
+.login-btn {
+    background: #007bff;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    width: 100%;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
 
-        .login-btn {
-            width: 100%;
-            padding: 1rem;
-            background: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
+.login-btn:hover {
+    background: #0056b3;
+}
 
-        .login-btn:hover {
-            background: #1d4ed8;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-        }
+/* Back to Login */
+.back-to-login {
+    margin-top: 10px;
+    font-size: 14px;
+}
 
-        .back-to-login {
-            text-align: center;
-            margin-top: 1.5rem;
-            color: #64748b;
-        }
+.back-to-login a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
 
-        .back-to-login a {
-            color: #2563eb;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
+.back-to-login a:hover {
+    text-decoration: underline;
+}
 
-        .back-to-login a:hover {
-            color: #1d4ed8;
-        }
-        .error-message {
-            background-color: #fee2e2;
-            color: #dc2626;
-            padding: 0.75rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
     </style>
 </head>
 <body>
