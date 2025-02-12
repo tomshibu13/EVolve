@@ -1,3 +1,4 @@
+<<<<<<< HEAD
     <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -553,3 +554,613 @@
     </script>
 </body>
 </html>
+=======
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Add Charging Station - EVolve</title>
+        <style>
+            :root {
+                --primary-color: #2A9D8F;
+                --primary-dark: #264653;
+                --error-color: #e63946;
+                --success-color: #2ecc71;
+                --text-color: #333;
+                --bg-color: #f8f9fa;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: system-ui, -apple-system, sans-serif;
+            }
+
+            body {
+                background-color: var(--bg-color);
+                min-height: 100vh;
+            }
+
+            .dashboard-container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 2rem;
+            }
+
+            .page-title {
+                color: var(--primary-dark);
+                margin-bottom: 2rem;
+                font-size: 2rem;
+            }
+
+            .station-form-container {
+                background: white;
+                border-radius: 15px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+                padding: 2rem;
+            }
+
+            .form-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 2rem;
+            }
+
+            .form-group {
+                margin-bottom: 1.5rem;
+            }
+
+            .full-width {
+                grid-column: 1 / -1;
+            }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 0.5rem;
+                color: var(--text-color);
+                font-weight: 500;
+            }
+
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                width: 100%;
+                padding: 0.8rem;
+                border: 2px solid #eee;
+                border-radius: 8px;
+                font-size: 1rem;
+                transition: all 0.3s ease;
+            }
+
+            .form-group textarea {
+                min-height: 100px;
+                resize: vertical;
+            }
+
+            .form-group input:focus,
+            .form-group select:focus,
+            .form-group textarea:focus {
+                border-color: var(--primary-color);
+                outline: none;
+                box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.1);
+            }
+
+            .error-message {
+                color: var(--error-color);
+                font-size: 0.9rem;
+                margin-top: 0.3rem;
+                display: none;
+            }
+
+            .amenities-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1rem;
+            }
+
+            .amenity-item {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .amenity-item input[type="checkbox"] {
+                width: auto;
+            }
+
+            .time-slots {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .submit-btn {
+                background-color: var(--primary-color);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 1rem 2rem;
+                font-size: 1.1rem;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                width: 100%;
+                margin-top: 1rem;
+            }
+
+            .submit-btn:hover {
+                background-color: var(--primary-dark);
+                transform: translateY(-2px);
+            }
+
+            .image-preview {
+                width: 100%;
+                height: 200px;
+                border: 2px dashed #ccc;
+                border-radius: 8px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin-top: 0.5rem;
+                background-size: cover;
+                background-position: center;
+            }
+
+            @media (max-width: 768px) {
+                .form-grid {
+                    grid-template-columns: 1fr;
+                    gap: 1rem;
+                }
+
+                .amenities-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+
+
+            /* [Previous styles remain the same until header styles] */
+
+    .header {
+        background-color: rgba(255, 255, 255, 0.98);
+        padding: 1.2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        backdrop-filter: blur(8px);
+    }
+
+    .nav-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 2rem;
+    }
+
+    .logo {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--primary-color);
+        letter-spacing: -1px;
+        position: relative;
+        transition: all var(--transition-speed) ease;
+    }
+
+    .logo::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 0;
+        width: 0;
+        height: 3px;
+        background-color: var(--primary-color);
+        transition: width var(--transition-speed) ease;
+    }
+
+    .logo:hover {
+        transform: translateY(-1px);
+    }
+
+    .logo:hover::after {
+        width: 100%;
+    }
+
+    .nav-links {
+        display: flex;
+        gap: 2.5rem;
+        align-items: center;
+    }
+
+    .nav-links a {
+        text-decoration: none;
+        color: var(--text-color);
+        font-weight: 500;
+        font-size: 1.1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        transition: all var(--transition-speed) ease;
+        position: relative;
+    }
+
+    .nav-links a::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 2px;
+        background-color: var(--primary-color);
+        transition: width var(--transition-speed) ease;
+    }
+
+    .nav-links a:hover {
+        color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+
+    .nav-links a:hover::before {
+        width: 70%;
+    }
+
+    .nav-links a.active {
+        color: var(--primary-color);
+        background-color: rgba(63, 151, 141, 0.1);
+    }
+
+    .nav-links a:last-child {
+        background-color: var(--primary-color);
+        color: rgb(8, 8, 8);
+        padding: 0.7rem 1.5rem;
+        border-radius: 25px;
+        transition: all var(--transition-speed) ease;
+    }
+
+    .nav-links a:last-child:hover {
+        background-color: var(--hover-color);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(42, 157, 143, 0.2);
+    }
+
+    .nav-links a:last-child::before {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .nav-container {
+            padding: 0 1rem;
+        }
+
+        .nav-links {
+            gap: 1.5rem;
+        }
+
+        .nav-links a {
+            font-size: 1rem;
+            padding: 0.4rem 0.8rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+        }
+    }
+
+        </style>
+    </head>
+    <body>
+        <header class="header">
+            <nav class="nav-container">
+                <div class="logo" ><a href="index2.html"></a>EVolve</div>
+                <div class="nav-links">
+                    <a href="#mc" class="active">Find Stations</a>
+                    <a href="#">My Bookings</a>
+                    <a href="evlogin.php">Login/Signup</a>
+                </div>
+            </nav>
+        </header>
+        <div class="dashboard-container">
+            <h1 class="page-title">Add New Charging Station</h1>
+            
+            <div class="station-form-container">
+                <form id="addStationForm" novalidate>
+                    <div class="form-grid">
+                        <!-- Owner Registration Section -->
+                        <div class="form-group full-width">
+                            <h2 style="color: var(--primary-dark); margin-bottom: 1rem;">Owner Information</h2>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ownerName">Owner Name*</label>
+                            <input type="text" id="ownerName" required>
+                            <div class="error-message"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ownerEmail">Email Address*</label>
+                            <input type="email" id="ownerEmail" required>
+                            <div class="error-message"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ownerPhone">Phone Number*</label>
+                            <input type="tel" id="ownerPhone" pattern="[0-9]{10}" placeholder="10-digit mobile number" required>
+                            <div class="error-message"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">Password*</label>
+                            <input type="password" id="password" required>
+                            <div class="error-message"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password*</label>
+                            <input type="password" id="confirmPassword" required>
+                            <div class="error-message"></div>
+                        </div>
+
+                        <!-- Station Information Section -->
+                        <div class="form-group full-width">
+                            <h2 style="color: var(--primary-dark); margin: 1rem 0;">Station Information</h2>
+                        </div>
+
+                        <!-- Basic Information -->
+                        <div class="form-group">
+                            <label for="stationName">Station Name*</label>
+                            <input type="text" id="stationName" required>
+                            <div class="error-message"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="location">Location*</label>
+                            <input type="text" id="location" required>
+                            <div class="error-message"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="coordinates">PIN <Code></Code></label>
+                            <input type="text" id="coordinates" placeholder="e.g., 659856, 698325" required>
+                            <div class="error-message"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="stationType">Station Type*</label>
+                            <select id="stationType" required>
+                                <option value="">Select Type</option>
+                                <option value="fast">Fast Charging</option>
+                                <option value="standard">Standard Charging</option>
+                                <option value="both">Both</option>
+                            </select>
+                            <div class="error-message"></div>
+                        </div>
+
+                        <!-- Charging Points -->
+                        <div class="form-group">
+                            <label for="fastPoints">Number of Fast Charging Points</label>
+                            <input type="number" id="fastPoints" min="0">
+                            <div class="error-message"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="standardPoints">Number of Standard Charging Points</label>
+                            <input type="number" id="standardPoints" min="0">
+                            <div class="error-message"></div>
+                        </div>
+
+                        <!-- Pricing -->
+                        <div class="form-group">
+                            <label for="fastPrice">Fast Charging Price (per kWh)*</label>
+                            <input type="number" id="fastPrice" min="0" step="0.01" required>
+                            <div class="error-message"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="standardPrice">Standard Charging Price (per kWh)*</label>
+                            <input type="number" id="standardPrice" min="0" step="0.01" required>
+                            <div class="error-message"></div>
+                        </div>
+
+                        <!-- Operating Hours -->
+                        <div class="form-group">
+                            <label for="openTime">Opening Time*</label>
+                            <input type="time" id="openTime" required>
+                            <div class="error-message"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="closeTime">Closing Time*</label>
+                            <input type="time" id="closeTime" required>
+                            <div class="error-message"></div>
+                        </div>
+
+                        <!-- Amenities -->
+                        <div class="form-group full-width">
+                            <label>Available Amenities</label>
+                            <div class="amenities-grid">
+                                <div class="amenity-item">
+                                    <input type="checkbox" id="wifi">
+                                    <label for="wifi">Wi-Fi</label>
+                                </div>
+                                <div class="amenity-item">
+                                    <input type="checkbox" id="restroom">
+                                    <label for="restroom">Restroom</label>
+                                </div>
+                                <div class="amenity-item">
+                                    <input type="checkbox" id="cafe">
+                                    <label for="cafe">Café</label>
+                                </div>
+                                <div class="amenity-item">
+                                    <input type="checkbox" id="parking">
+                                    <label for="parking">Parking</label>
+                                </div>
+                                <div class="amenity-item">
+                                    <input type="checkbox" id="waiting">
+                                    <label for="waiting">Waiting Area</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="form-group full-width">
+                            <label for="description">Description*</label>
+                            <textarea id="description" required></textarea>
+                            <div class="error-message"></div>
+                        </div>
+
+                        <!-- Image Upload -->
+                        <div class="form-group full-width">
+                            <label for="stationImage">Station Images</label>
+                            <input type="file" id="stationImage" accept="image/*" multiple>
+                            <div class="image-preview" id="imagePreview">
+                                Drop images here or click to upload
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Add Station</button>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const form = document.getElementById('addStationForm');
+                const imageInput = document.getElementById('stationImage');
+                const imagePreview = document.getElementById('imagePreview');
+
+                // Validation functions
+                const validators = {
+                    stationName: (value) => {
+                        return value.length >= 3 ? '' : 'Station name must be at least 3 characters long';
+                    },
+                    location: (value) => {
+                        return value.length >= 5 ? '' : 'Please enter a valid location';
+                    },
+                    coordinates: (value) => {
+                        const regex = /^-?\d+\.?\d*,\s*-?\d+\.?\d*$/;
+                        return regex.test(value) ? '' : 'Please enter valid coordinates (latitude, longitude)';
+                    },
+                    stationType: (value) => {
+                        return value ? '' : 'Please select a station type';
+                    },
+                    fastPrice: (value) => {
+                        return value > 0 ? '' : 'Please enter a valid price';
+                    },
+                    standardPrice: (value) => {
+                        return value > 0 ? '' : 'Please enter a valid price';
+                    },
+                    description: (value) => {
+                        return value.length >= 50 ? '' : 'Description must be at least 50 characters long';
+                    },
+                    ownerName: (value) => {
+                        return value.length >= 3 ? '' : 'Owner name must be at least 3 characters long';
+                    },
+                    ownerEmail: (value) => {
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        return emailRegex.test(value) ? '' : 'Please enter a valid email address';
+                    },
+                    ownerPhone: (value) => {
+                        const phoneRegex = /^[0-9]{10}$/;
+                        return phoneRegex.test(value) ? '' : 'Please enter a valid 10-digit phone number';
+                    },
+                    password: (value) => {
+                        return value.length >= 8 ? '' : 'Password must be at least 8 characters long';
+                    },
+                    confirmPassword: (value) => {
+                        const password = document.getElementById('password').value;
+                        return value === password ? '' : 'Passwords do not match';
+                    }
+                };
+
+                // Show error message
+                function showError(input, message) {
+                    const errorDiv = input.nextElementSibling;
+                    errorDiv.textContent = message;
+                    errorDiv.style.display = message ? 'block' : 'none';
+                    input.style.borderColor = message ? 'var(--error-color)' : '#eee';
+                }
+
+                // Real-time validation
+                document.querySelectorAll('input, select, textarea').forEach(input => {
+                    input.addEventListener('input', () => {
+                        if (validators[input.id]) {
+                            const error = validators[input.id](input.value);
+                            showError(input, error);
+                        }
+                    });
+                });
+
+                // Image preview handling
+                imageInput.addEventListener('change', function(e) {
+                    const files = Array.from(e.target.files);
+                    if (files.length > 0) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            imagePreview.style.backgroundImage = `url(${e.target.result})`;
+                            imagePreview.textContent = '';
+                        }
+                        reader.readAsDataURL(files[0]);
+                    }
+                });
+
+                // Form submission
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    let isValid = true;
+                    const formData = new FormData();
+
+                    // Validate all required fields
+                    document.querySelectorAll('[required]').forEach(input => {
+                        if (validators[input.id]) {
+                            const error = validators[input.id](input.value);
+                            showError(input, error);
+                            if (error) isValid = false;
+                        }
+                    });
+
+                    if (isValid) {
+                        // Collect form data
+                        const stationData = {
+                            owner: {
+                                name: document.getElementById('ownerName').value,
+                                email: document.getElementById('ownerEmail').value,
+                                phone: document.getElementById('ownerPhone').value,
+                                password: document.getElementById('password').value
+                            },
+                            name: document.getElementById('stationName').value,
+                            location: document.getElementById('location').value,
+                            coordinates: document.getElementById('coordinates').value,
+                            stationType: document.getElementById('stationType').value,
+                            fastPoints: document.getElementById('fastPoints').value,
+                            standardPoints: document.getElementById('standardPoints').value,
+                            fastPrice: document.getElementById('fastPrice').value,
+                            standardPrice: document.getElementById('standardPrice').value,
+                            openTime: document.getElementById('openTime').value,
+                            closeTime: document.getElementById('closeTime').value,
+                            amenities: {
+                                wifi: document.getElementById('wifi').checked,
+                                restroom: document.getElementById('restroom').checked,
+                                cafe: document.getElementById('cafe').checked,
+                                parking: document.getElementById('parking').checked,
+                                waiting: document.getElementById('waiting').checked
+                            },
+                            description: document.getElementById('description').value
+                        };
+
+                        // Here you would typically make an API call to your backend
+                        console.log('Station Data:', stationData);
+                        alert('Station added successfully!');
+                        form.reset();
+                        imagePreview.style.backgroundImage = '';
+                        imagePreview.textContent = 'Drop images here or click to upload';
+                    }
+                });
+            });
+        </script>
+    </body>
+    </html>
+>>>>>>> 0c499f78677a34c0d64e35d5565441573d6c2b38
