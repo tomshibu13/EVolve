@@ -106,6 +106,8 @@ if (isset($_SESSION['user_id'])) {
             margin-bottom: 15px;
             border-radius: 4px;
             border-left: 4px solid #c62828;
+            position: relative;
+            padding-right: 30px; /* Make room for close button */
         }
         .success-message {
             background-color: #e8f5e9;
@@ -423,6 +425,285 @@ if (isset($_SESSION['user_id'])) {
         .cancel-booking-btn:hover {
             background: #d32f2f;
         }
+
+        /* Add these styles to your existing CSS */
+        .error-close {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 18px;
+            color: #c62828;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .error-close:hover {
+            opacity: 1;
+        }
+
+        /* Support Container Styles */
+        .support-container {
+            padding: 60px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+        }
+
+        /* Header Styles */
+        .support-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .support-header h1 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .support-header p {
+            color: #666;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Support Grid Styles */
+        .support-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .support-card {
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .support-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .support-card i {
+            font-size: 2.5rem;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+
+        .support-card h3 {
+            color: #2c3e50;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+
+        .support-card p {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Contact Section Styles */
+        .contact-section {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            background: #f8f9fa;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .contact-section h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+
+        .contact-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .contact-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .email-button {
+            background: #3498db;
+            color: white;
+        }
+
+        .email-button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        /* Support Form Styles */
+        .support-form {
+            display: grid;
+            gap: 20px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .submit-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .submit-button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .support-header h1 {
+                font-size: 2rem;
+            }
+
+            .support-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .contact-section {
+                padding: 30px 20px;
+            }
+
+            .contact-buttons {
+                flex-direction: column;
+            }
+
+            .contact-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Animation for form submission */
+        @keyframes submitPulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(0.95);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .submit-button:active {
+            animation: submitPulse 0.2s ease-in-out;
+        }
+
+        /* Placeholder styles */
+        ::placeholder {
+            color: #999;
+            opacity: 1;
+        }
+
+        :-ms-input-placeholder {
+            color: #999;
+        }
+
+        ::-ms-input-placeholder {
+            color: #999;
+        }
+
+        /* Focus styles for accessibility */
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+        }
+
+        /* Error state styles */
+        .form-group.error input,
+        .form-group.error textarea {
+            border-color: #e74c3c;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        /* Success message styles */
+        .success-message {
+            text-align: center;
+            padding: 20px;
+            background: #2ecc71;
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -472,7 +753,7 @@ if (isset($_SESSION['user_id'])) {
         <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
         <i class="fas fa-chevron-down"></i>
         <div class="dropdown-content">
-            <a href=example.php>
+            <a href="example.php">
                 <i class="fas fa-user"></i>
                 My Profile
             </a>
@@ -581,13 +862,15 @@ if (isset($_SESSION['user_id'])) {
         <!-- Features Grid on Right -->
         <div class="ev-features-grid">
             <!-- All 9 features in a 3x3 grid -->
-            <div class="ev-feature-card" >
-                <div class="ev-feature-icon-box">
-                    <svg class="ev-feature-icon" viewBox="0 0 24 24">
-                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                    </svg>
-                </div>
-                <div class="ev-feature-label" >Registration</div>
+            <div class="ev-feature-card">
+                <a href="#" onclick="showSignupModal(); return false;" style="text-decoration: none; color: inherit; display: block;">
+                    <div class="ev-feature-icon-box">
+                        <svg class="ev-feature-icon" viewBox="0 0 24 24">
+                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                        </svg>
+                    </div>
+                    <div class="ev-feature-label">Registration</div>
+                </a>
             </div>
 
             <div class="ev-feature-card">
@@ -600,23 +883,39 @@ if (isset($_SESSION['user_id'])) {
             </div>
 
             <div class="ev-feature-card">
+            <a href="cs/geolocation.php" style="text-decoration: none; color: inherit;">
                 <div class="ev-feature-icon-box">
                     <svg class="ev-feature-icon" viewBox="0 0 24 24">
                         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/>
                     </svg>
                 </div>
                 <div class="ev-feature-label">
-                    <a href="cs/geolocation.php" style="text-decoration: none; color: inherit;">Geolocation</a>
+                   Geolocation</a>
                 </div>
             </div>
 
             <div class="ev-feature-card">
-                <div class="ev-feature-icon-box">
-                    <svg class="ev-feature-icon" viewBox="0 0 24 24">
-                        <path d="M19 3H5c-1.11 0-1.99.89-1.99 2L3 19c0 1.11.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
-                    </svg>
-                </div>
-                <div class="ev-feature-label">Slot Booking</div>
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <!-- Show slot booking link for logged in users -->
+                    <a href="user_stations.php" style="text-decoration: none; color: inherit; display: block;">
+                        <div class="ev-feature-icon-box">
+                            <svg class="ev-feature-icon" viewBox="0 0 24 24">
+                                <path d="M19 3H5c-1.11 0-1.99.89-1.99 2L3 19c0 1.11.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                            </svg>
+                        </div>
+                        <div class="ev-feature-label">Slot Booking</div>
+                    </a>
+                <?php else: ?>
+                    <!-- Show login prompt for non-logged in users -->
+                    <a href="#" onclick="showLoginModal(); return false;" style="text-decoration: none; color: inherit; display: block;">
+                        <div class="ev-feature-icon-box">
+                            <svg class="ev-feature-icon" viewBox="0 0 24 24">
+                                <path d="M19 3H5c-1.11 0-1.99.89-1.99 2L3 19c0 1.11.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                            </svg>
+                        </div>
+                        <div class="ev-feature-label">Book Slots</div>
+                    </a>
+                <?php endif; ?>
             </div>
 
             <div class="ev-feature-card">
@@ -638,21 +937,25 @@ if (isset($_SESSION['user_id'])) {
             </div>
 
             <div class="ev-feature-card">
-                <div class="ev-feature-icon-box">
-                    <svg class="ev-feature-icon" viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                    </svg>
-                </div>
-                <div class="ev-feature-label">24/7 Support</div>
+                <a href="#support" onclick="scrollToSupport(event)" style="text-decoration: none; color: inherit; display: block;">
+                    <div class="ev-feature-icon-box">
+                        <svg class="ev-feature-icon" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                        </svg>
+                    </div>
+                    <div class="ev-feature-label">24/7 Support</div>
+                </a>
             </div>
 
             <div class="ev-feature-card">
-                <div class="ev-feature-icon-box">
-                    <svg class="ev-feature-icon" viewBox="0 0 24 24">
-                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-                    </svg>
-                </div>
-                <div class="ev-feature-label">Usage History</div>
+                <a href="usage_history.php" style="text-decoration: none; color: inherit; display: block;">
+                    <div class="ev-feature-icon-box">
+                        <svg class="ev-feature-icon" viewBox="0 0 24 24">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                        </svg>
+                    </div>
+                    <div class="ev-feature-label">Usage History</div>
+                </a>
             </div>
 
             <div class="ev-feature-card">
@@ -740,6 +1043,46 @@ if (isset($_SESSION['user_id'])) {
         </div>
     </div>
 </div>
+
+
+<div id="support" class="support-container">
+        <div class="support-header">
+            <h1>24/7 Customer Support</h1>
+            <p>We're here to help you with any questions or concerns you may have</p>
+        </div>
+
+        <div class="support-grid">
+            <div class="support-card">
+                <i class="fas fa-question-circle"></i>
+                <h3>FAQ</h3>
+                <p>Find answers to commonly asked questions about our services, booking process, and payment options.</p>
+            </div>
+
+            <div class="support-card">
+                <i class="fas fa-book"></i>
+                <h3>User Guide</h3>
+                <p>Detailed instructions on how to use our platform, make bookings, and manage your account.</p>
+            </div>
+
+            <div class="support-card">
+                <i class="fas fa-tools"></i>
+                <h3>Technical Support</h3>
+                <p>Get help with technical issues related to charging stations, app functionality, or account access.</p>
+            </div>
+        </div>
+
+        <div class="contact-section">
+            <h2>Get in Touch</h2>
+            <div class="contact-buttons">
+                <a href="mailto:evolve1829@gmail.com" class="contact-button email-button">
+                    <i class="fas fa-envelope"></i>
+                    Email Support
+                </a>
+            </div>
+
+            
+        </div>
+    </div>
 
 
 
@@ -982,6 +1325,7 @@ if (isset($_SESSION['user_id'])) {
                 <div class="error-message">
                     <i class="fas fa-exclamation-circle"></i>
                     <p>${message}</p>
+                    <button class="error-close">&times;</button>
                 </div>
             `;
             document.getElementById('appContent').style.display = 'block';
@@ -2458,41 +2802,105 @@ if (isset($_SESSION['user_id'])) {
         showLoginTab(new Event('click'));
     }
 
+    // Add this function to handle closing the modal and clearing errors
     function closeLoginModal() {
-        // Only close if there are no error messages
+        // Hide the modal
+        document.getElementById('loginModal').style.display = 'none';
+        
+        // Clear all error messages
         const errorMessages = document.querySelectorAll('.error-message');
-        const validationMessages = document.querySelectorAll('.validation-message');
+        errorMessages.forEach(error => error.remove());
         
-        let hasErrors = false;
+        // Clear form inputs
+        document.getElementById('loginForm').reset();
+        document.getElementById('signupForm').reset();
         
-        // Check for error messages
-        errorMessages.forEach(msg => {
-            if (msg.textContent.trim() !== '') {
-                hasErrors = true;
-            }
-        });
+        // Clear validation messages
+        document.querySelectorAll('.validation-message').forEach(msg => msg.textContent = '');
         
-        // Check for validation messages
-        validationMessages.forEach(msg => {
-            if (msg.textContent.trim() !== '') {
-                hasErrors = true;
-            }
-        });
-        
-        // Only close if there are no errors
-        if (!hasErrors) {
-            const modal = document.getElementById('loginModal');
-            modal.style.display = 'none';
-        }
+        // Reset tabs to default state (login tab)
+        showLoginTab(new Event('click'));
     }
 
-    // Update the window click handler
-    window.onclick = function(event) {
-        const modal = document.getElementById('loginModal');
-        if (event.target === modal) {
-            closeLoginModal(); // Use the modified closeLoginModal function
+    // Update the login form submission handler to include error cleanup
+    loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Clear any existing error messages first
+        const existingErrors = this.querySelectorAll('.error-message');
+        existingErrors.forEach(error => error.remove());
+        
+        const usernameError = validateUsername(loginUsername.value);
+        const passwordError = validatePassword(loginPassword.value);
+
+        // Clear previous error messages
+        document.getElementById('login-username-validation').textContent = usernameError;
+        document.getElementById('login-password-validation').textContent = passwordError;
+
+        if (usernameError || passwordError) {
+            return;
         }
-    }
+
+        // Create FormData object
+        const formData = new FormData(this);
+
+        // Send AJAX request
+        fetch('login_process.php', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Clear any errors before redirecting
+                const errorMessages = document.querySelectorAll('.error-message');
+                errorMessages.forEach(error => error.remove());
+                
+                // Redirect on success
+                window.location.href = data.redirect;
+            } else {
+                // Show error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = data.error;
+                
+                // Add close button to error message
+                const closeBtn = document.createElement('span');
+                closeBtn.className = 'error-close';
+                closeBtn.innerHTML = '&times;';
+                closeBtn.onclick = function() {
+                    errorDiv.remove();
+                };
+                errorDiv.appendChild(closeBtn);
+                
+                // Insert error message at the top of the form
+                const firstChild = loginForm.firstChild;
+                loginForm.insertBefore(errorDiv, firstChild);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Show generic error message
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = 'An error occurred. Please try again.';
+            
+            // Add close button to error message
+            const closeBtn = document.createElement('span');
+            closeBtn.className = 'error-close';
+            closeBtn.innerHTML = '&times;';
+            closeBtn.onclick = function() {
+                errorDiv.remove();
+            };
+            errorDiv.appendChild(closeBtn);
+            
+            const firstChild = loginForm.firstChild;
+            loginForm.insertBefore(errorDiv, firstChild);
+        });
+    });
 
     // Form validation functions
     function validateUsername(username) {
@@ -2565,14 +2973,56 @@ if (isset($_SESSION['user_id'])) {
 
         // Login form submission
         loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
             const usernameError = validateUsername(loginUsername.value);
             const passwordError = validatePassword(loginPassword.value);
 
+            // Clear previous error messages
+            document.getElementById('login-username-validation').textContent = usernameError;
+            document.getElementById('login-password-validation').textContent = passwordError;
+
             if (usernameError || passwordError) {
-                e.preventDefault();
-                document.getElementById('login-username-validation').textContent = usernameError;
-                document.getElementById('login-password-validation').textContent = passwordError;
+                return;
             }
+
+            // Create FormData object
+            const formData = new FormData(this);
+
+            // Send AJAX request
+            fetch('login_process.php', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Redirect on success
+                    window.location.href = data.redirect;
+                } else {
+                    // Show error message
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message';
+                    errorDiv.textContent = data.error;
+                    
+                    // Insert error message at the top of the form
+                    const firstChild = loginForm.firstChild;
+                    loginForm.insertBefore(errorDiv, firstChild);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Show generic error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = 'An error occurred. Please try again.';
+                
+                const firstChild = loginForm.firstChild;
+                loginForm.insertBefore(errorDiv, firstChild);
+            });
         });
 
         // Signup form validation
@@ -2768,6 +3218,31 @@ if (isset($_SESSION['user_id'])) {
                 console.log('User signed out.');
             });
         }
+    </script>
+
+    <script>
+    function showSignupModal() {
+        // Show the modal
+        const modal = document.getElementById('loginModal');
+        modal.style.display = 'flex';
+        
+        // Switch to signup tab
+        document.getElementById('loginForm').classList.remove('active');
+        document.getElementById('signupForm').classList.add('active');
+        document.querySelector('.tab:first-child').classList.remove('active');
+        document.querySelector('.tab:last-child').classList.add('active');
+    }
+    </script>
+
+    <script>
+    function scrollToSupport(event) {
+        event.preventDefault();
+        const supportSection = document.getElementById('support');
+        supportSection.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
     </script>
 </body>
 </html>

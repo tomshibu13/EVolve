@@ -4,8 +4,15 @@ require_once 'config.php'; // Add this line to include the database connection
 
 // Check if the form was submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $username = $_POST['username'];
+    $username = trim($_POST['username']);
     $password = $_POST['password'];
+
+    // Basic validation
+    if (empty($username) || empty($password)) {
+        $_SESSION['login_error'] = "Please enter both username and password";
+        header("Location: index.php#loginForm");
+        exit();
+    }
 
     try {
         // Modified query to also select is_admin
@@ -23,26 +30,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION['user_id'] = $user['user_id'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['is_admin'] = $user['is_admin'];
-                $_SESSION['login_success'] = "Welcome back, " . $user['username'] . "!";
                 
-                // Redirect based on is_admin flag
-                if ($user['is_admin']) {
-                    header("Location: admindash.php");
-                } else {
-                    header("Location: index.php");
+                // Return success response for AJAX
+                if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                    echo json_encode(['success' => true, 'redirect' => $user['is_admin'] ? 'admindash.php' : 'index.php']);
+                    exit();
                 }
-                exit();
-            } else {
-                $_SESSION['login_error'] = "Invalid username or password";
-                header("Location: index.php#loginForm");
+                
+                // Regular form submission redirect
+                header("Location: " . ($user['is_admin'] ? 'admindash.php' : 'index.php'));
                 exit();
             }
-        } else {
-            $_SESSION['login_error'] = "Invalid username or password";
-            header("Location: index.php#loginForm");
+        }
+        
+        // Invalid credentials
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            echo json_encode(['success' => false, 'error' => 'Invalid username or password']);
             exit();
         }
+        
+        $_SESSION['login_error'] = "Invalid username or password";
+        header("Location: index.php#loginForm");
+        exit();
+
     } catch (Exception $e) {
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            echo json_encode(['success' => false, 'error' => 'An error occurred during login']);
+            exit();
+        }
+        
         $_SESSION['login_error'] = "An error occurred during login. Please try again.";
         error_log("Login error: " . $e->getMessage());
         header("Location: index.php#loginForm");

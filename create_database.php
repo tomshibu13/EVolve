@@ -79,6 +79,18 @@ try {
             FOREIGN KEY (station_id) REFERENCES charging_stations(station_id)
         )";
 
+        // Create support_messages table
+        $supportMessagesSql = "CREATE TABLE IF NOT EXISTS support_messages (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255) NOT NULL,
+            subject VARCHAR(255) NOT NULL,
+            message TEXT NOT NULL,
+            created_at DATETIME NOT NULL,
+            status VARCHAR(50) DEFAULT 'pending'
+        )";
+    
+
         if ($conn->query($stationsSql) === TRUE) {
             echo "Table charging_stations created successfully\n";
             
