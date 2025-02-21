@@ -1,11 +1,68 @@
+<?php
+// Database connection credentials
+$servername = "localhost";
+$username = "root"; 
+$password = "";    
+$dbname = "evolve1";
+
+try {
+    // Create connection
+    $conn = mysqli_connect($servername, $username, $password, $dbname);
+    
+    // Check connection
+    if (!$conn) {
+        throw new Exception("Connection failed: " . mysqli_connect_error());
+    }
+
+    // Handle block/unblock action
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && isset($_POST['id'])) {
+        $user_id = mysqli_real_escape_string($conn, $_POST['id']);
+        
+        if ($_POST['action'] === 'toggle_block') {
+            $query = "UPDATE tbl_users SET status = NOT status WHERE user_id = '$user_id'";
+            mysqli_query($conn, $query);
+            header("Location: user_list.php");
+            exit();
+        }
+    }
+
+    // Fetch all users without status
+    $users = mysqli_query($conn, "
+        SELECT 
+            user_id,
+            name,
+            email,
+            created_at
+        FROM tbl_users 
+        ORDER BY created_at DESC
+    ");
+    
+    if (!$users) {
+        throw new Exception("Error fetching users: " . mysqli_error($conn));
+    }
+
+} catch (Exception $e) {
+    die("Error: " . $e->getMessage());
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EVolve Admin Dashboard</title>
+    <title>User List - EVolve Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #2C3E50;
+            --background-color: #f5f6fa;
+            --card-bg: #ffffff;
+            --text-color: #2d3436;
+            --border-radius: 10px;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
         :root {
             --primary-color: #4CAF50;
             --secondary-color: #2C3E50;
@@ -243,7 +300,67 @@
             background-color: #f44336;
             color: white;
         }
+
+        .profile-dropdown {
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background-color: var(--card-bg);
+            min-width: 160px;
+            box-shadow: var(--shadow);
+            border-radius: var(--border-radius);
+            z-index: 1;
+            margin-top: 10px;
+        }
+
+        .dropdown-content.show {
+            display: block;
+        }
+
+        .dropdown-content a {
+            color: var(--text-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--background-color);
+        }
+
+        .dropdown-content i {
+            width: 20px;
+        }
+
+        .home-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: var(--border-radius);
+            transition: background-color 0.3s ease;
+        }
+
+        .home-btn:hover {
+            background-color: #3d8b40;
+        }
     </style>
+
+       
 </head>
 <body>
     <div class="dashboard-container">
@@ -261,19 +378,19 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <a href="charging_stations.php" class="nav-link">
                         <i class="fas fa-charging-station"></i>
                         <span>Charging Stations</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <a href="user_list.php" class="nav-link">
                         <i class="fas fa-users"></i>
                         <span>Users</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <a href="bookings.php" class="nav-link">
                         <i class="fas fa-bookmark"></i>
                         <span>Bookings</span>
                     </a>
@@ -294,116 +411,93 @@
         </aside>
 
         <!-- Main Content -->
-        <main class="main-content">
+        <div class="main-content">
             <div class="header">
-                <div class="search-bar">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search...">
-                </div>
-                <div class="user-profile">
-                    <span>Admin User</span>
-                    <img src="https://via.placeholder.com/40" alt="Admin Profile">
-                </div>
+                <a href="admindash.php" class="home-btn">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+                <a href="add_user.php" class="home-btn">
+                    <i class="fas fa-plus"></i> Add New User
+                </a>
             </div>
 
-            <!-- Dashboard Cards -->
-            <div class="dashboard-cards">
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-icon">
-                            <i class="fas fa-charging-station"></i>
-                        </div>
-                    </div>
-                    <div class="card-title">Total Stations</div>
-                    <div class="card-value">248</div>
-                    <div class="card-change">+12% from last month</div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                    </div>
-                    <div class="card-title">Active Users</div>
-                    <div class="card-value">1,534</div>
-                    <div class="card-change">+8% from last month</div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-icon">
-                            <i class="fas fa-bookmark"></i>
-                        </div>
-                    </div>
-                    <div class="card-title">Total Bookings</div>
-                    <div class="card-value">3,124</div>
-                    <div class="card-change">+15% from last month</div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-icon">
-                            <i class="fas fa-dollar-sign"></i>
-                        </div>
-                    </div>
-                    <div class="card-title">Revenue</div>
-                    <div class="card-value">$42,582</div>
-                    <div class="card-change">+20% from last month</div>
-                </div>
-            </div>
-
-            <!-- Recent Stations Table -->
             <div class="table-container">
-                <div class="table-header">
-                    <h2>Recent Stations</h2>
-                    <button class="action-btn edit-btn">Add New Station</button>
-                </div>
                 <table>
                     <thead>
                         <tr>
-                            <th>Station Name</th>
-                            <th>Location</th>
-                            <th>Owner</th>
-                            <th>Status</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Join Date</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>EV Station Alpha</td>
-                            <td>New York, NY</td>
-                            <td>John Doe</td>
-                            <td><span class="status active">Active</span></td>
-                            <td>
-                                <button class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
-                                <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Charge Point Beta</td>
-                            <td>Los Angeles, CA</td>
-                            <td>Jane Smith</td>
-                            <td><span class="status inactive">Inactive</span></td>
-                            <td>
-                                <button class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
-                                <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Power Hub Delta</td>
-                            <td>Chicago, IL</td>
-                            <td>Mike Johnson</td>
-                            <td><span class="status active">Active</span></td>
-                            <td>
-                                <button class="action-btn edit-btn"><i class="fas fa-edit"></i></button>
-                                <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
+                        <?php 
+                        if ($users && mysqli_num_rows($users) > 0):
+                            while($user = mysqli_fetch_assoc($users)): 
+                                $created_date = date('M d, Y', strtotime($user['created_at']));
+                        ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($user['name'] ?? 'N/A'); ?></td>
+                                <td><?php echo htmlspecialchars($user['email'] ?? 'N/A'); ?></td>
+                                <td><?php echo htmlspecialchars($created_date); ?></td>
+                                <td class="actions">
+                                    <form method="POST" style="display: inline;">
+                                        <input type="hidden" name="id" value="<?php echo htmlspecialchars($user['user_id']); ?>">
+                                        <button type="button" class="action-btn edit-btn" onclick="window.location.href='edit_user.php?id=<?php echo htmlspecialchars($user['user_id']); ?>'">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="submit" name="action" value="delete" class="action-btn delete-btn" onclick="return confirmDelete()">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php 
+                            endwhile;
+                        else: 
+                        ?>
+                            <tr>
+                                <td colspan="5" style="text-align: center;">No users found</td>
+                            </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
-        </main>
+        </div>
     </div>
+
+    <script>
+        function confirmDelete() {
+            return confirm('Are you sure you want to delete this user? This action cannot be undone.');
+        }
+
+        function confirmToggleBlock(userId, action) {
+            const message = action === 'block' ? 
+                'Are you sure you want to block this user?' : 
+                'Are you sure you want to unblock this user?';
+            
+            if (confirm(message)) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'user_list.php';
+                
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'toggle_block';
+                
+                const idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = userId;
+                
+                form.appendChild(actionInput);
+                form.appendChild(idInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
 </body>
-</html>
+</html> 

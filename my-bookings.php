@@ -1,0 +1,278 @@
+<?php
+session_start();
+require_once 'config.php';
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header('Location: index.php');
+    exit();
+}
+
+try {
+    // Create database connection
+    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    // Fetch user's bookings with station details
+    $stmt = $pdo->prepare("
+        SELECT 
+            b.*,
+            cs.name as station_name,
+            cs.address as station_address,
+            cs.image as station_image
+        FROM bookings b
+        JOIN charging_stations cs ON b.station_id = cs.station_id
+        WHERE b.user_id = ?
+        ORDER BY b.booking_date DESC, b.booking_time DESC
+    ");
+    
+    $stmt->execute([$_SESSION['user_id']]);
+    $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+} catch(PDOException $e) {
+    $error = "Database error: " . $e->getMessage();
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings - EVolve</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .bookings-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 2em;
+            color: #333;
+        }
+
+        .booking-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .booking-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.2s ease;
+        }
+
+        .booking-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .booking-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+
+        .booking-content {
+            padding: 20px;
+        }
+
+        .station-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .booking-info {
+            margin: 15px 0;
+            color: #666;
+        }
+
+        .booking-info p {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .booking-info i {
+            color: #2196F3;
+            width: 20px;
+        }
+
+        .booking-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+
+        .status-pending {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-confirmed {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-completed {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-cancelled {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .booking-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .action-button {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+        }
+
+        .cancel-btn {
+            background: #ff5252;
+            color: white;
+        }
+
+        .cancel-btn:hover {
+            background: #d32f2f;
+        }
+
+        .view-btn {
+            background: #2196F3;
+            color: white;
+        }
+
+        .view-btn:hover {
+            background: #1976D2;
+        }
+
+        .no-bookings {
+            text-align: center;
+            padding: 40px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            color: #666;
+        }
+
+        .no-bookings i {
+            font-size: 3em;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .booking-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bookings-container">
+        <div class="page-header">
+            <h1 class="page-title">My Bookings</h1>
+            <a href="index.php" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+        </div>
+
+        <?php if (isset($error)): ?>
+            <div class="error-message">
+                <?php echo htmlspecialchars($error); ?>
+            </div>
+        <?php else: ?>
+            <?php if (empty($bookings)): ?>
+                <div class="no-bookings">
+                    <i class="fas fa-calendar-times"></i>
+                    <h2>No Bookings Found</h2>
+                    <p>You haven't made any bookings yet.</p>
+                </div>
+            <?php else: ?>
+                <div class="booking-grid">
+                    <?php foreach ($bookings as $booking): ?>
+                        <div class="booking-card">
+                            <img src="<?php echo htmlspecialchars($booking['station_image'] ?? 'assets/default-station.jpg'); ?>" 
+                                 alt="<?php echo htmlspecialchars($booking['station_name']); ?>" 
+                                 class="booking-image">
+                            
+                            <div class="booking-content">
+                                <h2 class="station-name"><?php echo htmlspecialchars($booking['station_name']); ?></h2>
+                                
+                                <div class="booking-info">
+                                    <p>
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <?php echo htmlspecialchars($booking['station_address']); ?>
+                                    </p>
+                                    <p>
+                                        <i class="fas fa-calendar"></i>
+                                        <?php echo date('F j, Y', strtotime($booking['booking_date'])); ?>
+                                    </p>
+                                    <p>
+                                        <i class="fas fa-clock"></i>
+                                        <?php echo date('g:i A', strtotime($booking['booking_time'])); ?>
+                                    </p>
+                                    <p>
+                                        <i class="fas fa-hourglass-half"></i>
+                                        Duration: <?php echo htmlspecialchars($booking['duration']); ?> minutes
+                                    </p>
+                                </div>
+
+                                <div class="booking-status status-<?php echo strtolower($booking['status']); ?>">
+                                    <?php echo ucfirst(htmlspecialchars($booking['status'])); ?>
+                                </div>
+
+                                <div class="booking-actions">
+                                    <?php if ($booking['status'] === 'pending' || $booking['status'] === 'confirmed'): ?>
+                                        <form method="POST" action="cancel_booking.php" style="flex: 1;" 
+                                              onsubmit="return confirm('Are you sure you want to cancel this booking?')">
+                                            <input type="hidden" name="booking_id" value="<?php echo $booking['booking_id']; ?>">
+                                            <button type="submit" class="action-button cancel-btn" style="width: 100%;">
+                                                Cancel Booking
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+                                    <a href="booking_details.php?id=<?php echo $booking['booking_id']; ?>" 
+                                       class="action-button view-btn">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        <?php endif; ?>
+    </div>
+</body>
+</html> 

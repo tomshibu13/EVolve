@@ -21,13 +21,31 @@ $profile_picture = $_SESSION['profile_photo'] ?? ''; // Default to empty if not 
 
 // Handle profile updates (assuming form submission)
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $new_username = $_POST['username'];
-    $new_email = $_POST['email'];
+    // Validate and sanitize inputs
+    $new_username = trim(filter_input(INPUT_POST, 'username', FILTER_SANITIZE_STRING));
+    $new_email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
+
+    // Basic validation
+    if (empty($new_username) || empty($new_email) || !filter_var($new_email, FILTER_VALIDATE_EMAIL)) {
+        $_SESSION['error'] = "Please provide valid username and email.";
+        header("Location: edit_profile.php");
+        exit();
+    }
 
     // Handle profile picture upload
     if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
+        $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+        $filename = $_FILES['profile_picture']['name'];
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        
+        if (!in_array($ext, $allowed)) {
+            $_SESSION['error'] = "Invalid file type. Please upload an image file.";
+            header("Location: edit_profile.php");
+            exit();
+        }
+
         $targetDir = "uploads/profile_pictures/";
-        $fileName = basename($_FILES["profile_picture"]["name"]);
+        $fileName = uniqid() . "." . $ext; // Generate unique filename
         $targetFilePath = $targetDir . $fileName;
 
         // Ensure the directory exists
@@ -192,6 +210,15 @@ h1 {
 
     <div class="profile-container">
         <h1>Edit Your Profile</h1>
+
+        <?php if (isset($_SESSION['error'])): ?>
+            <div class="error-message">
+                <?php 
+                    echo htmlspecialchars($_SESSION['error']);
+                    unset($_SESSION['error']);
+                ?>
+            </div>
+        <?php endif; ?>
 
         <div class="profile-info">
             <!-- Profile Picture -->

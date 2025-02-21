@@ -1,6 +1,17 @@
 <?php
 session_start();
 
+// Debug session
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    // Redirect to login page if not logged in
+    header("Location: login.php");
+    exit();
+}
+
 // Database connection
 $servername = "localhost";
 $username = "root";
@@ -69,241 +80,365 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Profile</title>
-    <link rel="stylesheet" href="profile.css">
+    <!-- <link rel="stylesheet" href="profile.css"> -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Add Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        /* Header Styling */
-.header {
-    width: 100%;
-    background-color: #222;
-    padding: 15px 0;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-}
+        /* Reset and Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
 
-/* Navigation Container */
-.nav-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 90%;
-    margin: 0 auto;
-}
+        body {
+            background-color: #f5f8fa;
+            color: #333;
+            padding-top: 60px; /* Added to account for fixed header */
+        }
 
-/* Logo */
-.logo {
-    display: flex;
-    align-items: center;
-    font-size: 22px;
-    font-weight: bold;
-    color: #fff;
-}
+        /* Updated Header Styles */
+        .header {
+            background-color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 0 2rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            height: 60px;
+        }
 
-.logo i {
-    font-size: 24px;
-    margin-right: 8px;
-    color: #4caf50;
-}
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
-.logo-text {
-    font-size: 22px;
-    font-weight: bold;
-}
+        .logo {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
 
-.highlight {
-    color: #4caf50;
-}
+        .logo .highlight {
+            color: #4CAF50;
+        }
 
-/* Navigation Links */
-.nav-links {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
 
-.nav-link {
-    text-decoration: none;
-    color: #ddd;
-    font-size: 16px;
-    padding: 10px 15px;
-    transition: color 0.3s ease, background 0.3s ease;
-    border-radius: 5px;
-}
+        .nav-link {
+            text-decoration: none;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
 
-.nav-link:hover,
-.nav-link.active {
-    color: #4caf50;
-    background: rgba(255, 255, 255, 0.1);
-}
+        .nav-link:hover {
+            color: #4CAF50;
+        }
 
-/* User Profile Section */
-.user-profile {
-    position: relative;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    color: #ddd;
-}
+        .user-profile {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
 
-.profile-photo {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    overflow: hidden;
-    margin-right: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #444;
-}
+        .user-profile .profile-img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
 
-.profile-photo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
+        .user-profile .username {
+            font-size: 0.9rem;
+            color: #333;
+        }
 
-.profile-photo i {
-    font-size: 28px;
-    color: #aaa;
-}
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            min-width: 200px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 0.5rem 0;
+            margin-top: 0.5rem;
+        }
 
-.username {
-    font-size: 16px;
-    font-weight: bold;
-    color: #ddd;
-    margin-right: 8px;
-}
+        .user-profile:hover .dropdown-content {
+            display: block;
+        }
 
-.user-profile i.fa-chevron-down {
-    font-size: 14px;
-}
+        .dropdown-content a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: #666;
+            text-decoration: none;
+            gap: 0.5rem;
+            transition: background-color 0.3s ease;
+        }
 
-/* Dropdown Menu */
-.dropdown-content {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: 45px;
-    background-color: #333;
-    min-width: 160px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    border-radius: 5px;
-    overflow: hidden;
-}
+        .dropdown-content a:hover {
+            background-color: #f5f5f5;
+            color: #4CAF50;
+        }
 
-.user-profile:hover .dropdown-content {
-    display: block;
-}
+        .dropdown-divider {
+            height: 1px;
+            background-color: #e1e1e1;
+            margin: 0.5rem 0;
+        }
 
-.dropdown-content a {
-    display: flex;
-    align-items: center;
-    padding: 10px 15px;
-    color: #ddd;
-    text-decoration: none;
-    transition: background 0.3s ease;
-}
+        .logout-link {
+            color: #dc3545 !important;
+        }
 
-.dropdown-content a:hover {
-    background: #444;
-}
+        .logout-link:hover {
+            background-color: #fff5f5;
+        }
 
-.dropdown-content i {
-    margin-right: 10px;
-}
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .nav-links {
+                gap: 1rem;
+            }
 
-/* Dropdown Divider */
-.dropdown-divider {
-    height: 1px;
-    background: #555;
-    margin: 5px 0;
-}
+            .nav-link span {
+                display: none;
+            }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .nav-container {
-        flex-direction: column;
-        align-items: center;
-    }
+            .header {
+                padding: 0 1rem;
+            }
+        }
 
-    .nav-links {
-        flex-direction: column;
-        gap: 10px;
-    }
-}
+        /* User Profile Styles - Modified */
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
 
+        .user-profile .profile-photo img {
+            width: 32px; /* Smaller profile photo */
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-profile .username {
+            font-size: 0.9rem;
+        }
+
+        /* Dropdown modifications */
+        .dropdown-content {
+            top: 45px; /* Adjusted dropdown position */
+        }
+
+        /* Profile Container Styles */
+        .profile-container {
+            max-width: 800px;
+            margin: 100px auto 50px;
+            padding: 2rem;
+            background: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .profile-section {
+            padding: 2rem;
+        }
+
+        .profile-section h2 {
+            color: #2c3e50;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        /* Profile Photo Styles */
+        .profile-photo {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .profile-photo label {
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4CAF50;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .profile-photo:hover label {
+            opacity: 1;
+        }
+
+        .profile-photo img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #4CAF50;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .profile-photo img:hover {
+            transform: scale(1.05);
+        }
+
+        #profilePictureInput {
+            display: none;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        /* Button Styles */
+        .buttons-container {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .primary-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(76, 175, 80, 0.2);
+        }
+
+        .primary-button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+        }
+
+        /* Message Styles */
+        .message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+        }
+
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+        }
     </style>
 </head>
 <body>
 <header class="header">
-        <nav class="nav-container">
-            <div class="logo">
+    <nav class="nav-container">
+        <div class="logo">
+            <span class="logo-text">E<span class="highlight">V</span>olve</span>
+        </div>
+        <div class="nav-links">
+            <a href="index.php" class="nav-link">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="stations.php" class="nav-link">
                 <i class="fas fa-charging-station"></i>
-                <span class="logo-text">E<span class="highlight">V</span>olve</span>
-            </div>
-            <div class="nav-links">
-                <a href="#searchInput" class="nav-link active">
-                    <i class="fas fa-search"></i>
-                    Find Stations
-                </a>
-                <a href="#" class="nav-link" onclick="toggleBookingPanel(); return false;">
-                    <i class="fas fa-calendar-check"></i>
-                    My Bookings
-                </a>
-                <a href="#" class="nav-link">
-                    <i class="fas fa-cog"></i>
-                    Services
-                </a>
-                <a href="#about" class="nav-link">
-                    <i class="fas fa-info-circle"></i>
-                    About Us
-                </a>
-                <?php if (isset($_SESSION['user_id'])): ?>
-    <div class="user-profile">
-        <div class="profile-photo">
-            <?php if (isset($_SESSION['profile_photo']) && !empty($_SESSION['profile_photo'])): ?>
-                <!-- Display the user's profile photo -->
-                <img src="<?php echo htmlspecialchars($_SESSION['profile_photo']); ?>" alt="Profile Photo">
+                <span>Stations</span>
+            </a>
+            <a href="bookings.php" class="nav-link">
+                <i class="fas fa-calendar-check"></i>
+                <span>Bookings</span>
+            </a>
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <div class="user-profile">
+                    <img src="<?php echo htmlspecialchars($userData['profile_picture'] ?? 'uploads/default.jpg'); ?>" 
+                         alt="Profile" class="profile-img">
+                    <span class="username"><?php echo htmlspecialchars($userData['username']); ?></span>
+                    <div class="dropdown-content">
+                        <!-- <a href="editprofile.php">
+                            <i class="fas fa-user"></i>
+                            Edit Profile
+                        </a> -->
+                        <a href="bookings.php">
+                            <i class="fas fa-calendar-check"></i>
+                            My Bookings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="logout.php" class="logout-link">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Logout
+                        </a>
+                    </div>
+                </div>
             <?php else: ?>
-                <!-- Display a default icon if no profile picture is set -->
-                <i class="fas fa-user-circle"></i>
+                <a href="login.php" class="nav-link">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Login</span>
+                </a>
             <?php endif; ?>
         </div>
-        <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
-        <i class="fas fa-chevron-down"></i>
-        <div class="dropdown-content">
-            <a href="profile.php">
-                <i class="fas fa-user"></i>
-                My Profile
-            </a>
-            <a href="my-bookings.php">
-                <i class="fas fa-calendar-check"></i>
-                My Bookings
-            </a>
-            <a href="settings.php">
-                <i class="fas fa-cog"></i>
-                Settings
-            </a>
-            <div class="dropdown-divider"></div>
-            <a href="logout.php" class="logout-link">
-                <i class="fas fa-sign-out-alt"></i>
-                Logout
-            </a>
-        </div>
-    </div>
-<?php else: ?>
-    <a href="#" class="nav-link" onclick="showLoginModal(); return false;">
-        <i class="fas fa-user"></i>
-        Login/Signup
-    </a>
-<?php endif; ?>
-
-            </div>
-        </nav>
-    </header>
+    </nav>
+</header>
     <div class="profile-container">
         <?php if (isset($success_message)): ?>
             <div class="message success"><?php echo htmlspecialchars($success_message); ?></div>
@@ -318,7 +453,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
                 <div class="profile-photo">
                     <img src="<?php echo htmlspecialchars($userData['profile_picture'] ?? 'uploads/default.jpg'); ?>" 
                          alt="Profile Photo" id="profileImage">
-                    <input type="file" name="profile_picture" id="profilePictureInput">
+                    <label for="profilePictureInput">Change Photo</label>
+                    <input type="file" name="profile_picture" id="profilePictureInput" accept="image/*">
                 </div>
 
                 <div class="form-group">
@@ -348,17 +484,41 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
         </div>
     </div>
     <script>
+        // Profile picture preview
         document.getElementById("profilePictureInput").addEventListener("change", function(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById("profileImage").src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
-});
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById("profileImage").src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
+        // Profile dropdown functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const userProfile = document.querySelector('.user-profile');
+            const dropdownContent = document.querySelector('.dropdown-content');
+
+            // Toggle dropdown on click
+            userProfile.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!userProfile.contains(e.target)) {
+                    dropdownContent.style.display = 'none';
+                }
+            });
+
+            // Prevent dropdown from closing when clicking inside it
+            dropdownContent.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        });
     </script>
 </body>
 </html>
