@@ -1,0 +1,88 @@
+/* Header and Navigation */
+.header {
+    background-color: rgba(255, 255, 255, 0.98);
+    padding: 1.2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    backdrop-filter: blur(8px);
+}
+
+.nav-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+}
+
+/* Logo Styles */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #0066FF;
+    text-decoration: none;
+}
+
+/* Navigation Links */
+.nav-links {
+    display: flex;
+    gap: 2.5rem;
+    align-items: center;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 500;
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all var(--transition-speed) ease;
+    position: relative;
+}
+
+/* Hover Effects */
+.nav-links a:hover {
+    color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+/* Active Link Style */
+.nav-links a.active {
+    color: var(--primary-color);
+    background-color: rgba(42, 157, 143, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .nav-container {
+        padding: 0 1rem;
+    }
+    
+    .nav-links {
+        gap: 1.5rem;
+    }
+    
+    .nav-links a {
+        font-size: 1rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .logo {
+        font-size: 1.5rem;
+    }
+}
+
+.nav-link:hover {
+    text-decoration: underline;
+}
+
+.logo-text:hover {
+    text-decoration: underline;
+}

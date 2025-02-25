@@ -69,6 +69,8 @@ try {
         
         if (mysqli_stmt_execute($booking_stmt)) {
             $success_message = "Booking successful! We'll notify you once it's confirmed.";
+            header('Location: my-bookings.php');
+            exit();
         } else {
             throw new Exception("Failed to create booking");
         }
@@ -187,7 +189,11 @@ try {
     </style>
 </head>
 <body>
-    <div class="container">
+    <header style="position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--card-bg); box-shadow: var(--shadow);">
+        <?php include 'header.php'; ?>  
+    </header>
+
+    <div class="container" style="margin-top: 80px;">
         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;">
             <a href="javascript:history.back()" class="back-btn">
                 <i class="fas fa-arrow-left"></i>
@@ -204,18 +210,12 @@ try {
         <?php endif; ?>
 
         <?php if ($station): ?>
-            <div class="station-details">
-                <h2><?php echo htmlspecialchars($station['name']); ?></h2>
-                <p><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($station['address']); ?></p>
-                <p><i class="fas fa-user"></i> Operated by <?php echo htmlspecialchars($station['operator_name']); ?></p>
-                <p><i class="fas fa-dollar-sign"></i> ₹<?php echo number_format($station['price'], 2); ?> per kWh</p>
-            </div>
+
 
             <form class="booking-form" method="POST">
                 <div class="form-group">
                     <label for="booking_date">Date</label>
-                    <input type="date" id="booking_date" name="booking_date" class="form-control" required 
-                           min="<?php echo date('Y-m-d'); ?>">
+                    <input type="date" id="booking_date" name="booking_date" class="form-control" required>
                 </div>
 
                 <div class="form-group">
@@ -241,21 +241,10 @@ try {
     </div>
 
     <script>
-        // Add any necessary JavaScript for form validation or dynamic updates
         document.addEventListener('DOMContentLoaded', function() {
-            // Set minimum time based on current time if date is today
+            // Removed time restrictions
             const dateInput = document.getElementById('booking_date');
             const timeInput = document.getElementById('booking_time');
-
-            dateInput.addEventListener('change', function() {
-                if (this.value === new Date().toISOString().split('T')[0]) {
-                    const now = new Date();
-                    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                    timeInput.min = currentTime;
-                } else {
-                    timeInput.min = '';
-                }
-            });
         });
     </script>
 </body>

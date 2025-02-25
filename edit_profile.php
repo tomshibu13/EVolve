@@ -1,7 +1,11 @@
 <?php
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
+
+
+session_start(); // Start the session
+
+// Check if the user is logged in
+if (!isset($_SESSION['user_id'])) { // Assuming 'user_id' is set upon login
+    header("Location: index.php#LoginForm"); // Redirect to the login page
     exit();
 }
 

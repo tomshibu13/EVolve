@@ -2,6 +2,13 @@
 session_start();
 require_once 'config.php';
 
+
+// Check if the user is logged in
+if (!isset($_SESSION['user_id'])) { // Assuming 'user_id' is set upon login
+    header("Location: index.php#LoginForm"); // Redirect to the login page
+    exit();
+}
+
 // Check request method
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'message' => 'Only POST method is allowed']);

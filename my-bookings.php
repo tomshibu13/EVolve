@@ -43,12 +43,14 @@ try {
     <link rel="stylesheet" href="main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
+        /* Container Layout */
         .bookings-container {
             max-width: 1200px;
             margin: 40px auto;
             padding: 0 20px;
         }
 
+        /* Header Styles */
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -61,6 +63,7 @@ try {
             color: #333;
         }
 
+        /* Grid Layout */
         .booking-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -68,16 +71,18 @@ try {
             margin-top: 20px;
         }
 
+        /* Booking Card Styles */
         .booking-card {
             background: white;
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            transition: transform 0.2s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .booking-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
         }
 
         .booking-image {
@@ -90,6 +95,7 @@ try {
             padding: 20px;
         }
 
+        /* Station Information */
         .station-name {
             font-size: 1.2em;
             font-weight: 600;
@@ -114,6 +120,7 @@ try {
             width: 20px;
         }
 
+        /* Status Indicators */
         .booking-status {
             display: inline-block;
             padding: 6px 12px;
@@ -143,6 +150,7 @@ try {
             color: #c62828;
         }
 
+        /* Action Buttons */
         .booking-actions {
             display: flex;
             gap: 10px;
@@ -151,54 +159,79 @@ try {
 
         .action-button {
             flex: 1;
-            padding: 8px;
+            padding: 10px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            font-weight: 500;
-            transition: background-color 0.2s ease;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
         }
 
         .cancel-btn {
             background: #ff5252;
             color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
         .cancel-btn:hover {
             background: #d32f2f;
+            transform: scale(1.05);
         }
 
         .view-btn {
             background: #2196F3;
             color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
         .view-btn:hover {
             background: #1976D2;
+            transform: scale(1.05);
         }
 
+        /* Empty State */
         .no-bookings {
             text-align: center;
-            padding: 40px;
+            padding: 50px;
             background: #f5f5f5;
             border-radius: 12px;
             color: #666;
+            border: 1px solid #ddd;
         }
 
         .no-bookings i {
-            font-size: 3em;
+            font-size: 4em;
             color: #ccc;
             margin-bottom: 20px;
         }
 
+        /* Responsive Design */
         @media (max-width: 768px) {
             .booking-grid {
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Back to Home Button */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 15px;
+            background-color: #2196F3; /* Primary color */
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .back-btn:hover {
+            background-color: #1976D2; /* Darker shade on hover */
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
+    <?php include 'header.php'; ?>
     <div class="bookings-container">
         <div class="page-header">
             <h1 class="page-title">My Bookings</h1>
@@ -222,9 +255,7 @@ try {
                 <div class="booking-grid">
                     <?php foreach ($bookings as $booking): ?>
                         <div class="booking-card">
-                            <img src="<?php echo htmlspecialchars($booking['station_image'] ?? 'assets/default-station.jpg'); ?>" 
-                                 alt="<?php echo htmlspecialchars($booking['station_name']); ?>" 
-                                 class="booking-image">
+                           
                             
                             <div class="booking-content">
                                 <h2 class="station-name"><?php echo htmlspecialchars($booking['station_name']); ?></h2>
@@ -262,10 +293,7 @@ try {
                                             </button>
                                         </form>
                                     <?php endif; ?>
-                                    <a href="booking_details.php?id=<?php echo $booking['booking_id']; ?>" 
-                                       class="action-button view-btn">
-                                        View Details
-                                    </a>
+                                  
                                 </div>
                             </div>
                         </div>

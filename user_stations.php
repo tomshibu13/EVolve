@@ -58,6 +58,17 @@ try {
 } catch (Exception $e) {
     $error_message = "Error: " . $e->getMessage();
 }
+
+// Modify the query to return JSON when it's an AJAX request
+if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+    header('Content-Type: application/json');
+    $stations_array = [];
+    while ($station = mysqli_fetch_assoc($stations)) {
+        $stations_array[] = $station;
+    }
+    echo json_encode($stations_array);
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -69,8 +80,8 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --primary-color: #4CAF50;
-            --primary-hover: #45a049;
+            --primary-color: #0066FF;
+            --primary-hover: #0052cc;  /* Darker shade for hover */
             --secondary-color: #2C3E50;
             --background-color: #f5f6fa;
             --card-bg: #ffffff;
@@ -87,14 +98,27 @@ try {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
 
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background-color: var(--card-bg);
+        }
+
         body {
             background-color: var(--background-color);
             color: var(--text-color);
             padding: 2rem;
+            padding-top: calc(70px + 2rem); /* Adjust this value based on your header height */
             min-height: 100vh;
         }
 
-        .header {
+        .ev-header {
+            position: sticky;
+            top: 70px; /* Adjust this value based on your header height */
+            z-index: 900;
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
@@ -104,22 +128,22 @@ try {
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
         }
-
-        .page-title {
+        
+        .ev-page-title {
             font-size: 2rem;
             font-weight: 700;
             color: var(--text-color);
             letter-spacing: -0.025em;
         }
 
-        .stations-grid {
+        .ev-stations-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
             gap: 1.5rem;
             padding: 0.5rem;
         }
 
-        .station-card {
+        .ev-station-card {
             background-color: var(--card-bg);
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
@@ -130,7 +154,7 @@ try {
             overflow: hidden;
         }
 
-        .station-card::before {
+        .ev-station-card::before {
             content: '';
             position: absolute;
             top: 0;
@@ -142,23 +166,23 @@ try {
             transition: var(--transition);
         }
 
-        .station-card:hover {
+        .ev-station-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
-        .station-card:hover::before {
+        .ev-station-card:hover::before {
             opacity: 1;
         }
 
-        .station-name {
+        .ev-station-name {
             font-size: 1.25rem;
             font-weight: 600;
             margin-bottom: 1rem;
             color: var(--text-color);
         }
 
-        .station-info {
+        .ev-station-info {
             margin-bottom: 0.75rem;
             display: flex;
             align-items: center;
@@ -166,13 +190,13 @@ try {
             color: var(--secondary-color);
         }
 
-        .station-info i {
+        .ev-station-info i {
             color: var(--primary-color);
             width: 1.25rem;
             font-size: 1rem;
         }
 
-        .book-btn {
+        .ev-book-btn {
             background-color: var(--primary-color);
             color: white;
             padding: 0.75rem 1.5rem;
@@ -188,19 +212,20 @@ try {
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
+            text-decoration: none;
         }
 
-        .book-btn:hover {
+        .ev-book-btn:hover {
             background-color: var(--primary-hover);
         }
 
-        .filters {
+        .ev-filters {
             position: relative;
             width: 100%;
             max-width: 500px;
         }
 
-        .search-input {
+        .ev-search-input {
             width: 100%;
             padding: 1rem 1rem 1rem 3rem;
             border: 1px solid #e2e8f0;
@@ -210,13 +235,13 @@ try {
             background-color: white;
         }
 
-        .search-input:focus {
+        .ev-search-input:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
-        .search-icon {
+        .ev-search-icon {
             position: absolute;
             left: 1rem;
             top: 50%;
@@ -224,7 +249,7 @@ try {
             color: var(--secondary-color);
         }
 
-        .empty-state {
+        .ev-empty-state {
             grid-column: 1/-1;
             text-align: center;
             padding: 3rem;
@@ -233,13 +258,13 @@ try {
             box-shadow: var(--shadow);
         }
 
-        .empty-state i {
+        .ev-empty-state i {
             font-size: 3rem;
             color: var(--secondary-color);
             margin-bottom: 1rem;
         }
 
-        .empty-state p {
+        .ev-empty-state p {
             color: var(--secondary-color);
             font-size: 1.1rem;
         }
@@ -254,7 +279,7 @@ try {
             animation: pulse 1.5s infinite;
         }
 
-        .price-tag {
+        .ev-price-tag {
             display: inline-flex;
             align-items: center;
             background: #eef2ff;
@@ -264,7 +289,7 @@ try {
             font-weight: 500;
         }
 
-        .status-badge {
+        .ev-status-badge {
             position: absolute;
             top: 1rem;
             right: 1rem;
@@ -274,7 +299,7 @@ try {
             font-weight: 500;
         }
 
-        .status-available {
+        .ev-status-available {
             background: #dcfce7;
             color: #166534;
         }
@@ -284,12 +309,12 @@ try {
             color: #991b1b;
         } */
 
-        .status-limited {
+        .ev-status-limited {
             background: #fef3c7;
             color: #92400e;
         }
 
-        .back-btn {
+        .ev-back-btn {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -303,36 +328,39 @@ try {
             transition: var(--transition);
         }
 
-        .back-btn:hover {
+        .ev-back-btn:hover {
             background: var(--background-color);
             transform: translateX(-2px);
         }
     </style>
 </head>
 <body>
-    <div class="header">
+    <header>
+        <?php include 'header.php'; ?>
+    </header>
+    <div class="ev-header">
         <div style="display: flex; align-items: center; gap: 1rem;">
-            <a href="javascript:history.back()" class="back-btn">
+            <a href="index.php" class="ev-back-btn">
                 <i class="fas fa-arrow-left"></i>
             </a>
-            <h1 class="page-title">⚡ Available Charging Stations</h1>
+            <h1 class="ev-page-title">⚡ Available Charging Stations</h1>
         </div>
-        <form method="POST" class="filters">
-            <i class="fas fa-search search-icon"></i>
-            <input type="text" name="search" class="search-input" 
+        <form method="POST" class="ev-filters">
+            <i class="fas fa-search ev-search-icon"></i>
+            <input type="text" name="search" class="ev-search-input" 
                 value="<?php echo isset($_POST['search']) ? htmlspecialchars($_POST['search']) : ''; ?>"
                 placeholder="Search by location, operator, or power output...">
         </form>
     </div>
 
     <?php if ($error_message): ?>
-        <div class="empty-state">
+        <div class="ev-empty-state">
             <i class="fas fa-exclamation-circle"></i>
             <p><?php echo htmlspecialchars($error_message); ?></p>
         </div>
     <?php endif; ?>
 
-    <div class="stations-grid">
+    <div class="ev-stations-grid">
         <?php 
         if ($stations && mysqli_num_rows($stations) > 0):
             while($station = mysqli_fetch_assoc($stations)): 
@@ -353,18 +381,18 @@ try {
                     $statusText = 'Available';
                 }
         ?>
-            <div class="station-card">
-                <div class="status-badge <?php echo $statusClass; ?>"><?php echo $statusText; ?></div>
-                <div class="station-name"><?php echo htmlspecialchars($station['station_name'] ?? $station['name'] ?? 'Unnamed Station'); ?></div>
-                <div class="station-info">
+            <div class="ev-station-card">
+                <div class="ev-status-badge <?php echo str_replace('status-', 'ev-status-', $statusClass); ?>"><?php echo $statusText; ?></div>
+                <div class="ev-station-name"><?php echo htmlspecialchars($station['station_name'] ?? $station['name'] ?? 'Unnamed Station'); ?></div>
+                <div class="ev-station-info">
                     <i class="fas fa-map-marker-alt"></i>
                     <span><?php echo htmlspecialchars($station['address'] ?? 'No address available'); ?></span>
                 </div>
-                <div class="station-info">
+                <div class="ev-station-info">
                     <i class="fas fa-user"></i>
                     <span>Operated by <?php echo htmlspecialchars($station['operator_name'] ?? $station['owner_name'] ?? 'Unknown'); ?></span>
                 </div>
-                <div class="station-info">
+                <div class="ev-station-info">
                     <i class="fas fa-bolt"></i>
                     <span>
                         <?php 
@@ -388,24 +416,24 @@ try {
                         ?>
                     </span>
                 </div>
-                <div class="station-info">
+                <div class="ev-station-info">
                     <i class="fas fa-plug"></i>
                     <span><?php echo $availableSlots . '/' . $totalSlots . ' slots available'; ?></span>
                 </div>
-                <div class="station-info">
+                <div class="ev-station-info">
                     <i class="fas fa-dollar-sign"></i>
-                    <span class="price-tag">₹<?php echo isset($station['price']) ? number_format($station['price'], 2) : '0.00'; ?></span>
+                    <span class="ev-price-tag">₹<?php echo isset($station['price']) ? number_format($station['price'], 2) : '0.00'; ?></span>
                 </div>
-                <a href="book_station.php?id=<?php echo urlencode($station['station_id']); ?>" class="book-btn">
-                    <i class="fas fa-bolt"></i>
-                    Book Now
+                <a href="book_station.php?id=<?php echo urlencode($station['station_id']); ?>" class="ev-book-btn">
+                    <i class="fas fa-bolt" style="line-height: 1;"></i>
+                    <span style="line-height: 1;">Book Now</span>
                 </a>
             </div>
         <?php 
             endwhile;
         else: 
         ?>
-            <div class="empty-state">
+            <div class="ev-empty-state">
                 <i class="fas fa-charging-station"></i>
                 <p>No charging stations available at the moment.</p>
             </div>
@@ -413,11 +441,116 @@ try {
     </div>
 
     <script>
-        // Add event listener for form submission
-        document.querySelector('.filters').addEventListener('submit', function(e) {
-            e.preventDefault();
-            this.submit();
+    // Replace the existing script with this new version
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.querySelector('.ev-search-input');
+        const stationsGrid = document.querySelector('.ev-stations-grid');
+        let searchTimeout;
+
+        // Function to update stations
+        async function updateStations(searchTerm = '') {
+            try {
+                const formData = new FormData();
+                formData.append('search', searchTerm);
+
+                const response = await fetch('user_stations.php', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const stations = await response.json();
+                
+                if (stations.length === 0) {
+                    stationsGrid.innerHTML = `
+                        <div class="ev-empty-state">
+                            <i class="fas fa-charging-station"></i>
+                            <p>No charging stations found matching your search.</p>
+                        </div>`;
+                    return;
+                }
+
+                stationsGrid.innerHTML = stations.map(station => {
+                    const availableSlots = parseInt(station.available_slots);
+                    const totalSlots = parseInt(station.total_slots);
+                    let statusClass = '';
+                    let statusText = '';
+                    
+                    if (availableSlots <= 0) {
+                        statusClass = 'ev-status-full';
+                        statusText = 'Full';
+                    } else if (availableSlots < (totalSlots / 2)) {
+                        statusClass = 'ev-status-limited';
+                        statusText = 'Limited';
+                    } else {
+                        statusClass = 'ev-status-available';
+                        statusText = 'Available';
+                    }
+
+                    const chargerTypes = JSON.parse(station.charger_types || '[]');
+                    const types = Array.isArray(chargerTypes) ? chargerTypes.map(type => 
+                        typeof type === 'string' ? type : (type.type || type.name || 'Standard')
+                    ).join(', ') : 'Standard';
+
+                    return `
+                        <div class="ev-station-card">
+                            <div class="ev-status-badge ${statusClass}">${statusText}</div>
+                            <div class="ev-station-name">${station.station_name || station.name || 'Unnamed Station'}</div>
+                            <div class="ev-station-info">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>${station.address || 'No address available'}</span>
+                            </div>
+                            <div class="ev-station-info">
+                                <i class="fas fa-user"></i>
+                                <span>Operated by ${station.operator_name || station.owner_name || 'Unknown'}</span>
+                            </div>
+                            <div class="ev-station-info">
+                                <i class="fas fa-bolt"></i>
+                                <span>${types}</span>
+                            </div>
+                            <div class="ev-station-info">
+                                <i class="fas fa-plug"></i>
+                                <span>${availableSlots}/${totalSlots} slots available</span>
+                            </div>
+                            <div class="ev-station-info">
+                                <i class="fas fa-dollar-sign"></i>
+                                <span class="ev-price-tag">₹${parseFloat(station.price || 0).toFixed(2)}</span>
+                            </div>
+                            <a href="book_station.php?id=${encodeURIComponent(station.station_id)}" class="ev-book-btn">
+                                <i class="fas fa-bolt" style="line-height: 1;"></i>
+                                <span style="line-height: 1;">Book Now</span>
+                            </a>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error fetching stations:', error);
+                stationsGrid.innerHTML = `
+                    <div class="ev-empty-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Error loading stations. Please try again later.</p>
+                    </div>`;
+            }
+        }
+
+        // Real-time search with debouncing
+        searchInput.addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                updateStations(e.target.value);
+            }, 300);
         });
+
+        // Initial load
+        updateStations(searchInput.value);
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            updateStations(searchInput.value);
+        }, 30000);
+    });
     </script>
 </body>
 </html>

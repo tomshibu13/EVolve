@@ -96,167 +96,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
         body {
             background-color: #f5f8fa;
             color: #333;
-            padding-top: 60px; /* Added to account for fixed header */
-        }
-
-        /* Updated Header Styles */
-        .header {
-            background-color: #ffffff;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            padding: 0 2rem;
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 1000;
-            height: 60px;
-        }
-
-        .nav-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .logo {
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        .logo .highlight {
-            color: #4CAF50;
-        }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-        }
-
-        .nav-link {
-            text-decoration: none;
-            color: #666;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-            transition: color 0.3s ease;
-        }
-
-        .nav-link:hover {
-            color: #4CAF50;
-        }
-
-        .user-profile {
-            position: relative;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-        }
-
-        .user-profile .profile-img {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .user-profile .username {
-            font-size: 0.9rem;
-            color: #333;
-        }
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: white;
-            min-width: 200px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 0.5rem 0;
-            margin-top: 0.5rem;
-        }
-
-        .user-profile:hover .dropdown-content {
-            display: block;
-        }
-
-        .dropdown-content a {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            color: #666;
-            text-decoration: none;
-            gap: 0.5rem;
-            transition: background-color 0.3s ease;
-        }
-
-        .dropdown-content a:hover {
-            background-color: #f5f5f5;
-            color: #4CAF50;
-        }
-
-        .dropdown-divider {
-            height: 1px;
-            background-color: #e1e1e1;
-            margin: 0.5rem 0;
-        }
-
-        .logout-link {
-            color: #dc3545 !important;
-        }
-
-        .logout-link:hover {
-            background-color: #fff5f5;
-        }
-
-        /* Responsive styles */
-        @media (max-width: 768px) {
-            .nav-links {
-                gap: 1rem;
-            }
-
-            .nav-link span {
-                display: none;
-            }
-
-            .header {
-                padding: 0 1rem;
-            }
-        }
-
-        /* User Profile Styles - Modified */
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .user-profile .profile-photo img {
-            width: 32px; /* Smaller profile photo */
-            height: 32px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-
-        .user-profile .username {
-            font-size: 0.9rem;
-        }
-
-        /* Dropdown modifications */
-        .dropdown-content {
-            top: 45px; /* Adjusted dropdown position */
         }
 
         /* Profile Container Styles */
         .profile-container {
             max-width: 800px;
-            margin: 100px auto 50px;
+            margin: 50px auto;
             padding: 2rem;
             background: #ffffff;
             border-radius: 15px;
@@ -391,54 +236,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
     </style>
 </head>
 <body>
-<header class="header">
-    <nav class="nav-container">
-        <div class="logo">
-            <span class="logo-text">E<span class="highlight">V</span>olve</span>
-        </div>
-        <div class="nav-links">
-            <a href="index.php" class="nav-link">
-                <i class="fas fa-home"></i>
-                <span>Home</span>
-            </a>
-            <a href="stations.php" class="nav-link">
-                <i class="fas fa-charging-station"></i>
-                <span>Stations</span>
-            </a>
-            <a href="bookings.php" class="nav-link">
-                <i class="fas fa-calendar-check"></i>
-                <span>Bookings</span>
-            </a>
-            <?php if (isset($_SESSION['user_id'])): ?>
-                <div class="user-profile">
-                    <img src="<?php echo htmlspecialchars($userData['profile_picture'] ?? 'uploads/default.jpg'); ?>" 
-                         alt="Profile" class="profile-img">
-                    <span class="username"><?php echo htmlspecialchars($userData['username']); ?></span>
-                    <div class="dropdown-content">
-                        <!-- <a href="editprofile.php">
-                            <i class="fas fa-user"></i>
-                            Edit Profile
-                        </a> -->
-                        <a href="bookings.php">
-                            <i class="fas fa-calendar-check"></i>
-                            My Bookings
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="logout.php" class="logout-link">
-                            <i class="fas fa-sign-out-alt"></i>
-                            Logout
-                        </a>
-                    </div>
-                </div>
-            <?php else: ?>
-                <a href="login.php" class="nav-link">
-                    <i class="fas fa-sign-in-alt"></i>
-                    <span>Login</span>
-                </a>
-            <?php endif; ?>
-        </div>
-    </nav>
-</header>
+    <?php include 'header.php'; ?>
     <div class="profile-container">
         <?php if (isset($success_message)): ?>
             <div class="message success"><?php echo htmlspecialchars($success_message); ?></div>
@@ -494,30 +292,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
                 };
                 reader.readAsDataURL(file);
             }
-        });
-
-        // Profile dropdown functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const userProfile = document.querySelector('.user-profile');
-            const dropdownContent = document.querySelector('.dropdown-content');
-
-            // Toggle dropdown on click
-            userProfile.addEventListener('click', function(e) {
-                e.stopPropagation();
-                dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
-            });
-
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!userProfile.contains(e.target)) {
-                    dropdownContent.style.display = 'none';
-                }
-            });
-
-            // Prevent dropdown from closing when clicking inside it
-            dropdownContent.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
         });
     </script>
 </body>

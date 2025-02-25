@@ -1,4 +1,12 @@
 <?php
+session_start(); // Start the session
+
+// Check if the user is logged in
+if (!isset($_SESSION['user_id'])) { // Assuming 'user_id' is set upon login
+    header("Location: index.php#LoginForm"); // Redirect to the login page
+    exit();
+}
+
 // Database connection credentials
 $servername = "localhost";
 $username = "root";
@@ -10,9 +18,7 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Start session to fetch logged-in user data
-session_start();
-$user_id = $_SESSION['user_id'];
+
 
 // Fetch user data
 $sql = "SELECT * FROM tbl_users WHERE user_id = ?";
@@ -74,6 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['change_password'])) {
 $conn->close();
 ?>
 
+<?php include 'header.php'; ?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -82,105 +89,242 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="profile.css">
+   
     <style>
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            position: relative;
-            cursor: pointer;
-            padding: 4px 8px;
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f6fa;
+            --text-color: #2c3e50;
+            --error-color: #e74c3c;
+            --success-color: #2ecc71;
+            --border-radius: 8px;
         }
 
-        .user-profile .profile-photo {
-            width: 32px;
-            height: 32px;
+        body {
+            background-color: #f0f2f5;
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .profile-container {
+            max-width: 800px;
+            margin-top: 50px;
+            padding: 30px;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
+            background-color: #fff;
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        @media (max-width: 850px) {
+            .profile-container {
+                margin: 100px 20px;
+                width: calc(100% - 40px);
+            }
+        }
+
+        /* Message Styles */
+        .message {
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .message.success {
+            background-color: rgba(46, 204, 113, 0.1);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+        }
+
+        .message.error {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--error-color);
+            border: 1px solid var(--error-color);
+        }
+
+        /* Profile Header Styles */
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .profile-photo {
+            width: 150px;
+            height: 150px;
             border-radius: 50%;
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            border: 4px solid var(--primary-color);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.3s ease;
         }
 
-        .user-profile .profile-photo img {
+        .profile-photo:hover {
+            transform: scale(1.05);
+        }
+
+        .profile-photo img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .user-profile .profile-photo i {
-            font-size: 32px;
+        .profile-info h1 {
+            margin: 0;
+            color: var(--text-color);
+            font-size: 2em;
+        }
+
+        /* Section Styles */
+        .profile-section {
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: var(--text-color);
+            margin: 0;
+        }
+
+        /* Details Grid */
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            background-color: var(--secondary-color);
+            border-radius: var(--border-radius);
+            transition: transform 0.3s ease;
+        }
+
+        .detail-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .detail-item i {
+            font-size: 24px;
+            color: var(--primary-color);
+        }
+
+        .detail-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 0.9em;
             color: #666;
         }
 
-        .user-profile .username {
-            font-size: 14px;
-            margin: 0 4px;
+        .detail-value {
+            font-weight: 500;
+            color: var(--text-color);
         }
 
-        .profile-container {
-            max-width: 800px;
-            /* margin: 2rem auto; */
-            margin-top: 150px;
+        /* Button Styles */
+        .action-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .primary-button {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .primary-button:hover {
+            background-color: #357abd;
+            transform: translateY(-2px);
+        }
+
+        .secondary-button {
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+        }
+
+        .secondary-button:hover {
+            background-color: #e1e5f0;
+            transform: translateY(-2px);
+        }
+
+        /* Password Form Styles */
+        .password-form {
+            background-color: var(--secondary-color);
             padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            background-color: #fff;
+            border-radius: var(--border-radius);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1em;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+        }
+
+        .password-requirements {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 8px;
+        }
+
+        .buttons-container {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-<header class="header">
-    <nav class="nav-container">
-        <div class="logo">
-            <i class="fas fa-charging-station"></i>
-            <span class="logo-text">E<span class="highlight">V</span>olve</span>
-        </div>
-        <div class="nav-links">
-            <a href="index.php" class="nav-link">
-                <i class="fas fa-home"></i> Home
-            </a>
-            <a href="#searchInput" class="nav-link active">
-                <i class="fas fa-search"></i> Find Stations
-            </a>
-            <a href="#" class="nav-link" onclick="toggleBookingPanel(); return false;">
-                <i class="fas fa-calendar-check"></i> My Bookings
-            </a>
-            <a href="#" class="nav-link">
-                <i class="fas fa-cog"></i> Services
-            </a>
-            <a href="#about" class="nav-link">
-                <i class="fas fa-info-circle"></i> About Us
-            </a>
 
-            <?php if (isset($_SESSION['user_id'])): ?>
-            <div class="user-profile" onclick="toggleDropdown()">
-                <div class="profile-photo">
-                    <?php if (!empty($_SESSION['profile_photo'])): ?>
-                        <img src="<?php echo htmlspecialchars($_SESSION['profile_photo']); ?>" alt="Profile Photo">
-                    <?php else: ?>
-                        <i class="fas fa-user-circle"></i>
-                    <?php endif; ?>
-                </div>
-                <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
-                <i class="fas fa-chevron-down"></i>
-                <div class="dropdown-content" id="dropdownContent" style="display: none;">
-                    <!-- <a href="profile.php"><i class="fas fa-user"></i> My Profile</a> -->
-                    <a href="my-bookings.php"><i class="fas fa-calendar-check"></i> My Bookings</a>
-                    <a href="settings.php"><i class="fas fa-cog"></i> Settings</a>
-                    <div class="dropdown-divider"></div>
-                    <a href="logout.php" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                </div>
-            </div>
-            <?php else: ?>
-            <a href="#" class="nav-link" onclick="showLoginModal(); return false;">
-                <i class="fas fa-user"></i> Login/Signup
-            </a>
-            <?php endif; ?>
-        </div>
-    </nav>
-</header>
+
+
 
 <div class="profile-container">
     <!-- Messages Section -->
@@ -285,6 +429,14 @@ $conn->close();
                     <i class="fas fa-save"></i> Update Password
                 </button>
             </div>
+        </form>
+    </div>
+
+    <div class="buttons-container">
+        <form method="POST" action="home.php">
+            <button type="submit" class="action-button secondary-button">
+                <i class="fas fa-home"></i> Home
+            </button>
         </form>
     </div>
 </div>

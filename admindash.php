@@ -1,4 +1,12 @@
 <?php
+session_start(); // Start the session
+
+// Check if the user is logged in
+if (!isset($_SESSION['user_id'])) { // Assuming 'user_id' is set upon login
+    header("Location: index.php#LoginForm"); // Redirect to the login page
+    exit();
+}
+
 // Database connection credentials
 $servername = "localhost";
 $username = "root"; 
@@ -19,6 +27,7 @@ try {
     $conn = mysqli_connect($servername, $username, $password, $dbname);
     
     // Check connection
+    
     if (!$conn) {
         throw new Exception("Connection failed: " . mysqli_connect_error());
     }
@@ -124,6 +133,9 @@ try {
 } catch (Exception $e) {
     die("Error: " . $e->getMessage());
 }
+
+
+
 // Note: Don't close the connection here as we need it for the HTML section
 ?>
 <!DOCTYPE html>
@@ -565,7 +577,6 @@ try {
                             <th>Location</th>
                             <th>Operator</th>
                             <th>Status</th>
-                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -583,15 +594,6 @@ try {
                                     <span class="status <?php echo strtolower($station['status']); ?>">
                                         <?php echo ucfirst($station['status']); ?>
                                     </span>
-                                </td>
-                                <td>
-                                    <button class="action-btn edit-btn" onclick="window.location.href='edit_station.php?id=<?php echo htmlspecialchars($station['station_id']); ?>'">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="action-btn <?php echo strtolower($station['status']) === 'active' ? 'delete-btn' : 'edit-btn'; ?>" 
-                                            onclick="toggleStatus(<?php echo htmlspecialchars($station['station_id']); ?>, '<?php echo $station['status']; ?>')">
-                                        <i class="fas fa-power-off"></i>
-                                    </button>
                                 </td>
                             </tr>
                         <?php 

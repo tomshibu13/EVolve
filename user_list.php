@@ -1,13 +1,21 @@
 <?php
+session_start(); // Start the session
+
+// Check if the user is logged in
+if (!isset($_SESSION['user_id'])) { // Assuming 'user_id' is set upon login
+    header("Location: index.php#LoginForm"); // Redirect to the login page
+    exit();
+}
+
 // Database connection credentials
-$servername = "localhost";
-$username = "root"; 
+$serverusername = "localhost";
+$userusername = "root"; 
 $password = "";    
-$dbname = "evolve1";
+$dbusername = "evolve1";
 
 try {
     // Create connection
-    $conn = mysqli_connect($servername, $username, $password, $dbname);
+    $conn = mysqli_connect($serverusername, $userusername, $password, $dbusername);
     
     // Check connection
     if (!$conn) {
@@ -30,7 +38,7 @@ try {
     $users = mysqli_query($conn, "
         SELECT 
             user_id,
-            name,
+            username,
             email,
             created_at
         FROM tbl_users 
@@ -50,7 +58,7 @@ try {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta username="viewport" content="width=device-width, initial-scale=1.0">
     <title>User List - EVolve Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -438,16 +446,16 @@ try {
                                 $created_date = date('M d, Y', strtotime($user['created_at']));
                         ?>
                             <tr>
-                                <td><?php echo htmlspecialchars($user['name'] ?? 'N/A'); ?></td>
+                                <td><?php echo htmlspecialchars($user['username'] ?? 'N/A'); ?></td>
                                 <td><?php echo htmlspecialchars($user['email'] ?? 'N/A'); ?></td>
                                 <td><?php echo htmlspecialchars($created_date); ?></td>
                                 <td class="actions">
                                     <form method="POST" style="display: inline;">
-                                        <input type="hidden" name="id" value="<?php echo htmlspecialchars($user['user_id']); ?>">
+                                        <input type="hidden" username="id" value="<?php echo htmlspecialchars($user['user_id']); ?>">
                                         <button type="button" class="action-btn edit-btn" onclick="window.location.href='edit_user.php?id=<?php echo htmlspecialchars($user['user_id']); ?>'">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button type="submit" name="action" value="delete" class="action-btn delete-btn" onclick="return confirmDelete()">
+                                        <button type="submit" username="action" value="delete" class="action-btn delete-btn" onclick="return confirmDelete()">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
@@ -484,12 +492,12 @@ try {
                 
                 const actionInput = document.createElement('input');
                 actionInput.type = 'hidden';
-                actionInput.name = 'action';
+                actionInput.username = 'action';
                 actionInput.value = 'toggle_block';
                 
                 const idInput = document.createElement('input');
                 idInput.type = 'hidden';
-                idInput.name = 'id';
+                idInput.username = 'id';
                 idInput.value = userId;
                 
                 form.appendChild(actionInput);

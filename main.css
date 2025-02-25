@@ -47,31 +47,36 @@ body {
 }
 
 .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 1.8rem;
     font-weight: 800;
-    color: var(--primary-color);
-    letter-spacing: -1px;
-    position: relative;
-    transition: all var(--transition-speed) ease;
+    color: #0066FF;  /* Electric blue color */
+    text-decoration: none;
 }
 
+.logo i {
+    color: #0066FF;
+}
+
+.logo-text {
+    font-family: 'Arial', sans-serif;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.logo-text .highlight {
+    color: #0066FF;
+}
+
+/* Remove the hover underline effect */
 .logo::after {
-    content: '';
-    position: absolute;
-    bottom: -4px;
-    left: 0;
-    width: 0;
-    height: 3px;
-    background-color: var(--primary-color);
-    transition: width var(--transition-speed) ease;
+    display: none;
 }
 
 .logo:hover {
-    transform: translateY(-1px);
-}
-
-.logo:hover::after {
-    width: 100%;
+    transform: none;
 }
 
 .nav-links {

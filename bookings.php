@@ -1,8 +1,9 @@
 <?php
-// Add this near the top of the file, after database connection
-if (!isset($_SESSION['user_id'])) {
-    // Redirect to index.php with a parameter to show login modal
-    header("Location: index.php?showLogin=true");
+session_start(); // Start the session
+
+// Check if the user is logged in
+if (!isset($_SESSION['user_id'])) { // Assuming 'user_id' is set upon login
+    header("Location: index.php#LoginForm"); // Redirect to the login page
     exit();
 }
 

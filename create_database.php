@@ -98,23 +98,6 @@ try {
             if ($conn->query($bookingsSql) === TRUE) {
                 echo "Table bookings created successfully\n";
                 
-                // Add a test charging station
-                $testStationSql = "INSERT INTO charging_stations 
-                    (owner_name, name, location, address, operator_id, price, charger_types, total_slots, available_slots) 
-                    VALUES 
-                    ('Test Owner', 'Test Station', 
-                     POINT(10.0259, 76.3389), 
-                     '123 Test Street, Kochi', 
-                     1, 
-                     25.50,
-                     '{\"types\": [\"Type 2\", \"CCS\"]}',
-                     4,
-                     4)";
-                
-                if ($conn->query($testStationSql) === TRUE) {
-                    echo "Test charging station added successfully\n";
-                }
-
                 // Add status column to charging_stations table
                 $alterTableSql = "ALTER TABLE charging_stations 
                                   ADD COLUMN IF NOT EXISTS status ENUM('active', 'inactive') 

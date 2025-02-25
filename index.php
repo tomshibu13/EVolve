@@ -16,7 +16,7 @@ try {
         name,
         address,
         ST_X(location) as lng,
-        ST_Y(location) as lat,
+        ST_Y(location) as lat,nibodot873@lxheir.com
         status,
         available_slots as availableSlots,
         total_slots as totalSlots,
@@ -85,6 +85,84 @@ function getUserBookings($userId) {
 $userBookings = [];
 if (isset($_SESSION['user_id'])) {
     $userBookings = getUserBookings($_SESSION['user_id']);
+}
+
+// Add this after your existing PDO connection setup
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['action'])) {
+        try {
+            if ($_POST['action'] === 'nearby') {
+                $userLat = floatval($_POST['lat']);
+                $userLng = floatval($_POST['lng']);
+                $radius = floatval($_POST['radius']);
+
+                // Log the received parameters
+                error_log("Nearby search parameters - Lat: $userLat, Lng: $userLng, Radius: $radius");
+
+                // Use MySQL's ST_Distance_Sphere to calculate distance
+                $stmt = $pdo->prepare("
+                    SELECT 
+                        station_id as id,
+                        name,
+                        address,
+                        ST_X(location) as lng,
+                        ST_Y(location) as lat,
+                        status,
+                        available_slots as availableSlots,
+                        total_slots as totalSlots,
+                        price,
+                        owner_name as ownerName,
+                        charger_types,
+                        image,
+                        ST_Distance_Sphere(
+                            point(?, ?),
+                            location
+                        ) * 0.001 as distance
+                    FROM charging_stations
+                    WHERE status != 'inactive'
+                    HAVING distance <= ?
+                    ORDER BY distance
+                ");
+
+                $stmt->execute([$userLng, $userLat, $radius]);
+                $nearbyStations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                // Log the number of stations found
+                error_log("Found " . count($nearbyStations) . " nearby stations");
+
+                // Process charger_types JSON
+                foreach ($nearbyStations as &$station) {
+                    if (isset($station['charger_types'])) {
+                        $station['charger_types'] = json_decode($station['charger_types'], true);
+                    }
+                    // Ensure coordinates are numeric
+                    $station['lat'] = floatval($station['lat']);
+                    $station['lng'] = floatval($station['lng']);
+                    // Round distance to 1 decimal place
+                    $station['distance'] = round($station['distance'], 1);
+                }
+
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'stations' => $nearbyStations,
+                    'searchLocation' => [
+                        'lat' => $userLat,
+                        'lng' => $userLng
+                    ]
+                ]);
+                exit;
+            }
+        } catch(PDOException $e) {
+            error_log("Database Error in nearby search: " . $e->getMessage());
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'error' => 'Database error: ' . $e->getMessage()
+            ]);
+            exit;
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -209,20 +287,32 @@ if (isset($_SESSION['user_id'])) {
         }
 
         .profile-photo {
-            width: 32px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             overflow: hidden;
+            background: #f0f0f0;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #e0e0e0;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: border-color 0.3s ease;
         }
 
-        .profile-photo img {
+        .profile-image {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        /* Optional: Add a subtle border and hover effect */
+        .profile-photo {
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: border-color 0.3s ease;
+        }
+
+        .user-profile:hover .profile-photo {
+            border-color: rgba(255, 255, 255, 0.4);
         }
 
         .profile-photo i {
@@ -704,6 +794,140 @@ if (isset($_SESSION['user_id'])) {
                 transform: translateY(0);
             }
         }
+
+        .station-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .station-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .station-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .station-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.2rem;
+        }
+
+        .station-image {
+            width: 100%;
+            height: 200px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .station-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .station-info {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .station-info p {
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .station-info i {
+            color: #3498db;
+            width: 16px;
+        }
+
+        .station-actions {
+            margin-top: 15px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .view-details-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .view-details-btn:hover {
+            background: #2980b9;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .no-results i {
+            font-size: 3rem;
+            color: #ddd;
+            margin-bottom: 15px;
+        }
+
+        .results-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .results-container h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .validation-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            min-height: 20px;
+        }
+
+        .input-group input.error {
+            border-color: #dc3545;
+        }
+
+        .input-group input.error:focus {
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+        }
+
+        .error-message {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+            padding: 0.75rem 1.25rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .nav-link {
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
@@ -739,17 +963,16 @@ if (isset($_SESSION['user_id'])) {
     echo "-->";
     ?>
     <div class="user-profile">
-        <div class="profile-photo">
+        <!-- <div class="profile-photo">
             <?php if (isset($_SESSION['profile_picture']) && !empty($_SESSION['profile_picture'])): ?>
-                <!-- Display the user's profile photo -->
-                <img src="uploads/profile_pictures/<?php echo htmlspecialchars($_SESSION['profile_picture']); ?>" 
+                <img src="<?php echo htmlspecialchars($userData['profile_picture'] ?? '/api/placeholder/150/150'); ?>" 
                      alt="Profile Photo"
-                     onerror="this.onerror=null; this.src='assets/default-avatar.png';">
+                     onerror="this.onerror=null; this.src='profile_picture';"
+                     class="profile-image">
             <?php else: ?>
-                <!-- Display a default icon if no profile picture is set -->
-                <i class="fas fa-user-circle"></i>
+                <img src="images/default-avatar.png" alt="Default Profile Photo" class="profile-image">
             <?php endif; ?>
-        </div>
+        </div> -->
         <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
         <i class="fas fa-chevron-down"></i>
         <div class="dropdown-content">
@@ -773,7 +996,7 @@ if (isset($_SESSION['user_id'])) {
         </div>
     </div>
 <?php else: ?>
-    <a href="#" class="nav-link" onclick="showLoginModal(); return false;">
+    <a href="#" class="nav-link" id="loginSignupBtn">
         <i class="fas fa-user"></i>
         Login/Signup
     </a>
@@ -873,7 +1096,19 @@ if (isset($_SESSION['user_id'])) {
                 </a>
             </div>
 
+            
             <div class="ev-feature-card">
+                <a href="#" onclick="showLoginModal(); return false;" style="text-decoration: none; color: inherit; display: block;">
+                    <div class="ev-feature-icon-box">
+                        <svg class="ev-feature-icon" viewBox="0 0 24 24">
+                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                        </svg>
+                    </div>
+                    <div class="ev-feature-label">Log In</div>
+                </a>
+            </div>
+
+            <div class="ev-feature-card" onclick="document.getElementById('searchInput').focus();">
                 <div class="ev-feature-icon-box">
                     <svg class="ev-feature-icon" viewBox="0 0 24 24">
                         <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
@@ -947,16 +1182,6 @@ if (isset($_SESSION['user_id'])) {
                 </a>
             </div>
 
-            <div class="ev-feature-card">
-                <a href="usage_history.php" style="text-decoration: none; color: inherit; display: block;">
-                    <div class="ev-feature-icon-box">
-                        <svg class="ev-feature-icon" viewBox="0 0 24 24">
-                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-                        </svg>
-                    </div>
-                    <div class="ev-feature-label">Usage History</div>
-                </a>
-            </div>
 
             <div class="ev-feature-card">
                 <div class="ev-feature-icon-box">
@@ -1127,7 +1352,7 @@ if (isset($_SESSION['user_id'])) {
                                             <span>${station.availableSlots}/${station.totalSlots} Available</span>
                                         </div>
                                         <div class="stat">
-                                            <i class="fas fa-dollar-sign"></i>
+                                            <i class="fas fa-rupee-sign"></i>
                                             <span>${station.price}/kWh</span>
                                         </div>
                                     </div>
@@ -1157,37 +1382,125 @@ if (isset($_SESSION['user_id'])) {
                 return;
             }
 
-            // Show loading state
+            // Show loading indicator
             showLoadingIndicator();
 
-            // Create form data
-            const formData = new FormData();
-            formData.append('action', 'search');
-            formData.append('query', searchInput);
-            formData.append('radius', searchRadius);
+            // Use the Nominatim API to geocode the search input
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchInput)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        throw new Error('Location not found');
+                    }
 
-            // Make POST request to search endpoint
-            fetch('index.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    updateMapWithResults(data.stations);
-                    updateSearchResults(data.stations);
-                } else {
-                    throw new Error(data.error || 'Search failed');
-                }
-            })
-            .catch(error => {
-                console.error('Search error:', error);
-                showErrorMessage('Failed to search stations. Please try again.');
-            })
-            .finally(() => {
-                hideLoadingIndicator();
-            });
+                    const location = data[0];
+                    const lat = parseFloat(location.lat);
+                    const lng = parseFloat(location.lon);
+
+                    // Create form data for nearby search
+                    const formData = new FormData();
+                    formData.append('action', 'nearby');
+                    formData.append('lat', lat);
+                    formData.append('lng', lng);
+                    formData.append('radius', searchRadius);
+
+                    // Search for stations near the geocoded location
+                    return fetch('index.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Clear existing markers
+                        map.eachLayer((layer) => {
+                            if (layer instanceof L.Marker || layer instanceof L.Circle) {
+                                map.removeLayer(layer);
+                            }
+                        });
+
+                        // Add search location marker
+                        const searchIcon = L.divIcon({
+                            className: 'search-location-marker',
+                            html: '<i class="fas fa-search-location"></i>',
+                            iconSize: [30, 30],
+                            iconAnchor: [15, 15]
+                        });
+
+                        const searchLat = parseFloat(data.searchLocation?.lat || data.stations[0]?.lat);
+                        const searchLng = parseFloat(data.searchLocation?.lng || data.stations[0]?.lng);
+
+                        L.marker([searchLat, searchLng], {
+                            icon: searchIcon
+                        }).addTo(map);
+
+                        // Add radius circle
+                        L.circle([searchLat, searchLng], {
+                            radius: searchRadius * 1000, // Convert km to meters
+                            color: '#4CAF50',
+                            fillColor: '#4CAF50',
+                            fillOpacity: 0.1,
+                            weight: 1
+                        }).addTo(map);
+
+                        // Update map view and markers
+                        updateMapWithResults(data.stations);
+                        updateSearchResults(data.stations);
+
+                        // Show the results container
+                        document.getElementById('appContent').style.display = 'block';
+
+                    } else {
+                        throw new Error(data.error || 'No stations found in the area');
+                    }
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                    showErrorMessage(error.message);
+                })
+                .finally(() => {
+                    hideLoadingIndicator();
+                });
         }
+
+        // Add these helper styles for the search marker
+        const styles = `
+            .search-location-marker {
+                color: #2196F3;
+                font-size: 24px;
+                text-align: center;
+                line-height: 30px;
+            }
+
+            .loading-indicator {
+                position: absolute;
+                right: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #666;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .loading-indicator i {
+                font-size: 18px;
+            }
+        `;
+
+        // Add the styles to the document
+        const styleSheet = document.createElement("style");
+        styleSheet.textContent = styles;
+        document.head.appendChild(styleSheet);
+
+        // Add event listener for Enter key in search input
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSearch();
+            }
+        });
 
         function updateMapWithResults(stations) {
             // Clear existing markers
@@ -1197,108 +1510,102 @@ if (isset($_SESSION['user_id'])) {
                 }
             });
 
-            if (stations.length === 0) {
+            if (!stations || stations.length === 0) {
                 showNoResultsMessage();
                 return;
             }
 
-            // Add markers for search results
-            const bounds = L.latLngBounds();
-            
+            // Create a bounds object
+            let bounds = L.latLngBounds([]);
+
             stations.forEach(station => {
-                const marker = L.marker([station.lat, station.lng])
-                    .bindPopup(`
-                        <div class="marker-popup">
-                            <div class="popup-header">
-                                <h3>${station.name}</h3>
-                                <span class="status-badge ${station.status.toLowerCase()}">${station.status}</span>
+                if (station.lat && station.lng) {
+                    const marker = L.marker([station.lat, station.lng])
+                        .bindPopup(`
+                            <div class="marker-popup">
+                                <div class="popup-header">
+                                    <h3>${station.name}</h3>
+                                    <span class="status-badge ${station.status.toLowerCase()}">${station.status}</span>
+                                </div>
+                                <div class="popup-content">
+                                    <div class="popup-info">
+                                        <i class="fas fa-map-marker-alt"></i> ${station.address}
+                                    </div>
+                                    <div class="popup-stats">
+                                        <div class="stat">
+                                            <i class="fas fa-plug"></i>
+                                            <span>${station.availableSlots}/${station.totalSlots} Available</span>
+                                        </div>
+                                        <div class="stat">
+                                            <i class="fas fa-rupee-sign"></i>
+                                            <span>${station.price}/kWh</span>
+                                        </div>
+                                    </div>
+                                    <a href="station_details.php?id=${station.id}" class="popup-details-btn">
+                                        <span>View Details</span>
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </div>
                             </div>
-                            <div class="popup-content">
-                                ${station.image ? `
-                                    <div class="popup-image">
-                                        <img src="${station.image}" alt="${station.name}">
-                                    </div>
-                                ` : ''}
-                                <div class="popup-info">
-                                    <i class="fas fa-user"></i> ${station.ownerName}
-                                </div>
-                                <div class="popup-info">
-                                    <i class="fas fa-map-marker-alt"></i> ${station.address}
-                                </div>
-                                <div class="popup-stats">
-                                    <div class="stat">
-                                        <i class="fas fa-plug"></i>
-                                        <span>${station.availableSlots}/${station.totalSlots} Available</span>
-                                    </div>
-                                    <div class="stat">
-                                        <i class="fas fa-rupee-sign"></i>
-                                        <span>${station.price}/kWh</span>
-                                    </div>
-                                </div>
-                                <div class="popup-charger-types">
-                                    <i class="fas fa-charging-station"></i>
-                                    <span>${JSON.stringify(station.chargerTypes)}</span>
-                                </div>
-                                <a href="station_details.php?id=${station.id}" class="popup-details-btn">
-                                    <span>View Details</span>
-                                    <i class="fas fa-arrow-right"></i>
-                                </a>
-                            </div>
-                        </div>
-                    `)
-                    .addTo(map);
-                
-                bounds.extend([station.lat, station.lng]);
+                        `)
+                        .addTo(map);
+
+                    // Extend bounds with this marker's position
+                    bounds.extend([station.lat, station.lng]);
+                }
             });
 
-            // Fit map to show all markers
-            if (!bounds.isEmpty()) {
-                map.fitBounds(bounds, { padding: [50, 50] });
+            // Only fit bounds if we have markers
+            if (bounds.isValid()) {
+                map.fitBounds(bounds, {
+                    padding: [50, 50],
+                    maxZoom: 15
+                });
             }
         }
 
         function updateSearchResults(stations) {
             const resultsContainer = document.getElementById('searchResults');
-            resultsContainer.innerHTML = '';
+            const appContent = document.getElementById('appContent');
             
-            if (stations.length === 0) {
+            // Show the results container
+            appContent.style.display = 'block';
+            
+            if (!stations || stations.length === 0) {
                 resultsContainer.innerHTML = `
                     <div class="no-results">
                         <i class="fas fa-search"></i>
-                        <p>No charging stations found. Try adjusting your search criteria.</p>
+                        <p>No charging stations found in this area</p>
                     </div>
                 `;
                 return;
             }
 
-            // Show results count
-            resultsContainer.innerHTML = `
-                <div class="results-summary">
-                    <i class="fas fa-charging-station"></i>
-                    Found ${stations.length} charging station${stations.length !== 1 ? 's' : ''}
-                </div>
-            `;
-
-            // Add each station to the results list
-            stations.forEach(station => {
-                const resultItem = document.createElement('div');
-                resultItem.className = 'result-item';
-                resultItem.innerHTML = `
-                    <h3>${station.name}</h3>
-                    <div class="station-details">
-                        <span class="status ${station.status.toLowerCase()}">${station.status}</span>
-                        <p><i class="fas fa-map-marker-alt"></i> ${station.address}</p>
-                        <p><i class="fas fa-road"></i> ${station.distance} km away</p>
+            // Create HTML for stations
+            const stationsHTML = stations.map(station => `
+                <div class="station-card">
+                    <div class="station-header">
+                        <h3>${station.name}</h3>
+                        <span class="status-badge ${station.status.toLowerCase()}">${station.status}</span>
                     </div>
-                    <button onclick="focusStation(${station.lat}, ${station.lng})" class="view-details-btn">
-                        View on Map
-                    </button>
-                `;
-                resultsContainer.appendChild(resultItem);
-            });
+                   
+                    <div class="station-info">
+                        <p><i class="fas fa-map-marker-alt"></i> ${station.address}</p>
+                        ${station.distance ? `
+                            <p><i class="fas fa-road"></i> ${station.distance} km away</p>
+                        ` : ''}
+                        <p><i class="fas fa-plug"></i> ${station.availableSlots}/${station.totalSlots} slots available</p>
+                        <p><i class="fas fa-rupee-sign"></i> ${station.price}/kWh</p>
+                    </div>
+                    <div class="station-actions">
+                        <a href="station_details.php?id=${station.id}" class="view-details-btn">
+                            View Details <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            `).join('');
 
-            // Show the results container
-            document.getElementById('appContent').style.display = 'block';
+            resultsContainer.innerHTML = stationsHTML;
         }
 
         // Add these helper functions
@@ -1418,13 +1725,13 @@ if (isset($_SESSION['user_id'])) {
                                 iconAnchor: [15, 15]
                             });
 
-                            const userMarker = L.marker([userLat, userLng], {
+                            L.marker([userLat, userLng], {
                                 icon: userIcon
                             }).addTo(map);
 
                             // Add radius circle
-                            const radiusCircle = L.circle([userLat, userLng], {
-                                radius: radius * 1000,
+                            L.circle([userLat, userLng], {
+                                radius: radius * 1000, // Convert km to meters
                                 color: '#4CAF50',
                                 fillColor: '#4CAF50',
                                 fillOpacity: 0.1,
@@ -1432,16 +1739,18 @@ if (isset($_SESSION['user_id'])) {
                             }).addTo(map);
 
                             // Update map view and markers
-                            map.setView([userLat, userLng], getZoomForRadius(radius));
                             updateMapWithResults(data.stations);
                             updateSearchResults(data.stations);
+
+                            // Center map on user location with appropriate zoom
+                            map.setView([userLat, userLng], getZoomForRadius(radius));
                         } else {
-                            throw new Error(data.error || 'Search failed');
+                            throw new Error(data.error || 'No stations found in the area');
                         }
                     })
                     .catch(error => {
                         console.error('Search error:', error);
-                        showErrorMessage('Failed to find nearby stations. Please try again.');
+                        showErrorMessage(`Failed to find nearby stations: ${error.message}`);
                     })
                     .finally(() => {
                         hideLoadingIndicator();
@@ -1453,10 +1762,30 @@ if (isset($_SESSION['user_id'])) {
                 },
                 {
                     enableHighAccuracy: true,
-                    timeout: 5000,
+                    timeout: 10000,
                     maximumAge: 0
                 }
             );
+        }
+
+        function handleGeolocationError(error) {
+            let errorMessage;
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage = "Location access denied. Please enable location services in your browser settings to find nearby stations.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage = "Location information is unavailable. Please try again later.";
+                    break;
+                case error.TIMEOUT:
+                    errorMessage = "Location request timed out. Please check your internet connection and try again.";
+                    break;
+                default:
+                    errorMessage = "An unknown error occurred while getting your location. Please try again.";
+                    break;
+            }
+            showErrorMessage(errorMessage);
+            console.error('Geolocation error:', error); // Debug log
         }
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -1472,23 +1801,6 @@ if (isset($_SESSION['user_id'])) {
 
         function toRad(value) {
             return value * Math.PI / 180;
-        }
-
-        function handleGeolocationError(error) {
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    alert("Please allow location access to find nearby stations.");
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    alert("Location information is unavailable.");
-                    break;
-                case error.TIMEOUT:
-                    alert("Location request timed out.");
-                    break;
-                default:
-                    alert("An unknown error occurred.");
-                    break;
-            }
         }
 
         // Add this JavaScript for the booking panel functionality
@@ -2350,24 +2662,9 @@ if (isset($_SESSION['user_id'])) {
                 <a href="#" class="tab active" onclick="showLoginTab(event)">Log In</a>
                 <a href="#" class="tab" onclick="showSignupTab(event)">Register</a>
             </div>
-
+    
             <!-- Login Form -->
-             
-            
-            <form id="loginForm" action="login_process.php" method="post" class="tab-content active">
-                <?php
-                // Show login modal if there's an error
-                if (isset($_SESSION['error'])) {
-                    echo '<div class="error-message">' . htmlspecialchars($_SESSION['error']) . '</div>';
-                    echo '<script>document.addEventListener("DOMContentLoaded", function() { showLoginModal(); });</script>';
-                    unset($_SESSION['error']);
-                }
-                if (isset($_SESSION['success'])) {
-                    echo '<div class="success-message">' . htmlspecialchars($_SESSION['success']) . '</div>';
-                    unset($_SESSION['success']);
-                }
-                ?>
-
+                <form id="loginForm" action="login_process.php" method="post" class="tab-content active">
                 <div class="input-group">
                     <label for="login-username">Username</label>
                     <input type="text" id="login-username" name="username" required>
@@ -2380,73 +2677,41 @@ if (isset($_SESSION['user_id'])) {
                     <div class="validation-message" id="login-password-validation"></div>
                 </div>
 
-                <div class="remember-me">
-                    <input type="checkbox" id="remember" name="remember">
-                    <label for="remember">Remember Me</label>
-                </div>
+                <button type="submit" class="submit-button">Log In</button>
 
-                <button type="submit" class="login-btn">Log in</button>
-
-      
-                
-                <div class="forgot-password">
+                <p class="forgot-password">
                     <a href="forgot_password.php">Forgot Password?</a>
-                </div>
+                </p>
             </form>
 
             <!-- Signup Form -->
-<form id="signupForm" action="signup_process.php" method="post" class="tab-content" enctype="multipart/form-data">
+            <form id="signupForm" action="register_process.php" method="post" class="tab-content">
+                <div class="input-group">
+                    <label for="signup-username">Username</label>
+                    <input type="text" id="signup-username" name="username" required>
+                    <div class="validation-message" id="signup-username-validation"></div>
+                </div>
 
-    <div class="input-group">
-        <label for="signup-username">Username</label>
-        <input type="text" id="signup-username" name="username" required>
-        <small class="error-text" id="username-error"></small>
-    </div>
+                <div class="input-group">
+                    <label for="signup-email">Email</label>
+                    <input type="email" id="signup-email" name="email" required>
+                    <div class="validation-message" id="signup-email-validation"></div>
+                </div>
 
-    <div class="input-group">
-        <label for="signup-email">Email Address</label>
-        <input type="email" id="signup-email" name="email" required>
-        <small class="error-text" id="email-error"></small>
-    </div>
+                <div class="input-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" name="password" required>
+                    <div class="validation-message" id="signup-password-validation"></div>
+                </div>
 
-    <!-- <div class="input-group">
-        <label for="signup-phone">Phone Number</label>
-        <input type="tel" id="signup-phone" name="phone" pattern="[0-9]{10}" title="Enter a valid 10-digit phone number" required>
-        <small class="error-text" id="phone-error"></small>
-    </div> -->
+                <div class="input-group">
+                    <label for="signup-confirm-password">Confirm Password</label>
+                    <input type="password" id="signup-confirm-password" name="confirm_password" required>
+                    <div class="validation-message" id="signup-confirm-password-validation"></div>
+                </div>
 
-    <div class="input-group">
-        <label for="signup-password">Password</label>
-        <input type="password" id="signup-password" name="password" required>
-        <small class="error-text" id="password-error"></small>
-    </div>
-
-    <div class="input-group">
-        <label for="confirm-password">Confirm Password</label>
-        <input type="password" id="confirm-password" name="confirm_password" required>
-        <small class="error-text" id="confirm-password-error"></small>
-    </div>
-
-    <!-- <div class="input-group">
-        <label for="profile-picture">Profile Picture</label>
-        <input type="file" id="profile-picture" name="profile_picture" accept="image/*" required>
-        <small class="error-text" id="profile-picture-error"></small>
-    </div> -->
-    
-
-    <button type="submit" class="signup-btn">Create Account</button>
-
-    <div class="terms">
-        By signing up, you agree to our 
-        <a href="#">Terms of Service</a> and 
-        <a href="#">Privacy Policy</a>
-    </div>
-</form>
-
-            <!-- Google Sign-In Button -->
-            <div class="google-signin-container">
-                <div class="g-signin2" data-onsuccess="onSignIn"></div>
-            </div>
+                <button type="submit" class="submit-button">Sign Up</button>
+            </form>
         </div>
     </div>
 
@@ -2454,7 +2719,7 @@ if (isset($_SESSION['user_id'])) {
     
     /* Modal Base Styles */
 .login-modal {
-    display: none;
+    display: none; /* This is the default state */
     position: fixed;
     top: 0;
     left: 0;
@@ -2798,9 +3063,26 @@ if (isset($_SESSION['user_id'])) {
 
     function showLoginModal() {
         const modal = document.getElementById('loginModal');
-        modal.style.display = 'flex';
-        showLoginTab(new Event('click'));
+        if (modal) {
+            modal.style.display = 'flex'; // Change to 'flex' instead of 'block'
+            // Reset to login tab
+            showLoginTab(new Event('click'));
+        } else {
+            console.error('Login modal element not found');
+        }
     }
+
+    // Add event listener when the document is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add click handler to login/signup button
+        const loginButton = document.querySelector('a[onclick="showLoginModal(); return false;"]');
+        if (loginButton) {
+            loginButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                showLoginModal();
+            });
+        }
+    });
 
     // Add this function to handle closing the modal and clearing errors
     function closeLoginModal() {
@@ -2826,23 +3108,15 @@ if (isset($_SESSION['user_id'])) {
     loginForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // Clear any existing error messages first
+        // Clear any existing error messages
         const existingErrors = this.querySelectorAll('.error-message');
         existingErrors.forEach(error => error.remove());
         
-        const usernameError = validateUsername(loginUsername.value);
-        const passwordError = validatePassword(loginPassword.value);
-
-        // Clear previous error messages
-        document.getElementById('login-username-validation').textContent = usernameError;
-        document.getElementById('login-password-validation').textContent = passwordError;
-
-        if (usernameError || passwordError) {
-            return;
-        }
-
         // Create FormData object
         const formData = new FormData(this);
+
+        // Debug log
+        console.log('Submitting login form...');
 
         // Send AJAX request
         fetch('login_process.php', {
@@ -2852,22 +3126,26 @@ if (isset($_SESSION['user_id'])) {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status);
+            // Check if response is ok
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Response data:', data);
             if (data.success) {
-                // Clear any errors before redirecting
-                const errorMessages = document.querySelectorAll('.error-message');
-                errorMessages.forEach(error => error.remove());
-                
                 // Redirect on success
                 window.location.href = data.redirect;
             } else {
                 // Show error message
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'error-message';
-                errorDiv.textContent = data.error;
+                errorDiv.textContent = data.error || 'Login failed. Please try again.';
                 
-                // Add close button to error message
+                // Add close button
                 const closeBtn = document.createElement('span');
                 closeBtn.className = 'error-close';
                 closeBtn.innerHTML = '&times;';
@@ -2876,19 +3154,15 @@ if (isset($_SESSION['user_id'])) {
                 };
                 errorDiv.appendChild(closeBtn);
                 
-                // Insert error message at the top of the form
-                const firstChild = loginForm.firstChild;
-                loginForm.insertBefore(errorDiv, firstChild);
+                this.insertBefore(errorDiv, this.firstChild);
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            // Show generic error message
+            console.error('Fetch Error:', error);
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-message';
-            errorDiv.textContent = 'An error occurred. Please try again.';
+            errorDiv.textContent = 'Server error: ' + error.message;
             
-            // Add close button to error message
             const closeBtn = document.createElement('span');
             closeBtn.className = 'error-close';
             closeBtn.innerHTML = '&times;';
@@ -2897,8 +3171,7 @@ if (isset($_SESSION['user_id'])) {
             };
             errorDiv.appendChild(closeBtn);
             
-            const firstChild = loginForm.firstChild;
-            loginForm.insertBefore(errorDiv, firstChild);
+            this.insertBefore(errorDiv, this.firstChild);
         });
     });
 
@@ -2920,16 +3193,61 @@ if (isset($_SESSION['user_id'])) {
     }
 
     function validateEmail(email) {
-        // Check if email starts with a letter
-        if (!/^[a-zA-Z]/.test(email)) {
-            return "Email must start with a letter";
+        if (!email) return "Email is required";
+        if (!/^[a-zA-Z]/.test(email)) return "Email must start with a letter";
+
+        // Split email into local part and domain
+        const parts = email.toLowerCase().split('@');
+        if (parts.length !== 2) return "Please enter a valid email address";
+
+        const [localPart, domain] = parts;
+
+        // Check if domain is gmail.com
+        if (domain !== 'gmail.com') {
+            // Check if it's a common misspelling of gmail.com
+            const commonMisspellings = {
+                'gmail.co': 'Did you mean gmail.com?',
+                'gmai.com': 'Did you mean gmail.com?',
+                'gmil.com': 'Did you mean gmail.com?',
+                'gmal.com': 'Did you mean gmail.com?',
+                'gmail.comm': 'Did you mean gmail.com?',
+                'gmail.con': 'Did you mean gmail.com?',
+                'gmail.om': 'Did you mean gmail.com?',
+                'gmail.cm': 'Did you mean gmail.com?',
+                'gmail.cpm': 'Did you mean gmail.com?',
+                'gmail.vom': 'Did you mean gmail.com?',
+                'gmail.cim': 'Did you mean gmail.com?',
+                'gamil.com': 'Did you mean gmail.com?',
+                'gnail.com': 'Did you mean gmail.com?',
+                'gmaill.com': 'Did you mean gmail.com?',
+            };
+
+            if (commonMisspellings[domain]) {
+                return commonMisspellings[domain];
+            }
+            return "Please use a Gmail address (example@gmail.com)";
         }
-        // More comprehensive email validation
-        const emailRegex = /^[a-zA-Z][\w.-]*[a-zA-Z0-9]@[a-zA-Z0-9][\w.-]*[a-zA-Z0-9]\.[a-zA-Z][a-zA-Z.]*[a-zA-Z]$/;
-        if (!emailRegex.test(email)) {
-            return "Please enter a valid email address";
+
+        // Validate local part (username) of email
+        if (localPart.length < 6) return "Gmail username must be at least 6 characters long";
+        if (localPart.length > 30) return "Gmail username cannot exceed 30 characters";
+        
+        // Check for valid characters in username
+        if (!/^[a-zA-Z0-9]+([._-]?[a-zA-Z0-9]+)*$/.test(localPart)) {
+            return "Gmail username can only contain letters, numbers, dots, underscores, or hyphens";
         }
-        return "";
+
+        // Check for consecutive special characters
+        if (/[._-]{2,}/.test(localPart)) {
+            return "Gmail username cannot contain consecutive dots, underscores, or hyphens";
+        }
+
+        // Check for special characters at start or end
+        if (/^[._-]|[._-]$/.test(localPart)) {
+            return "Gmail username cannot start or end with a dot, underscore, or hyphen";
+        }
+
+        return ""; // Return empty string if email is valid
     }
 
     function validatePassword(password) {
@@ -3030,12 +3348,12 @@ if (isset($_SESSION['user_id'])) {
         const signupUsername = document.getElementById('signup-username');
         const signupEmail = document.getElementById('signup-email');
         const signupPassword = document.getElementById('signup-password');
-        const confirmPassword = document.getElementById('confirm-password');
+        const confirmPassword = document.getElementById('signup-confirm-password');
 
         // Signup username validation
         signupUsername.addEventListener('input', function() {
             const error = validateUsername(this.value);
-            const errorElement = document.getElementById('username-error');
+            const errorElement = document.getElementById('signup-username-validation');
             errorElement.textContent = error;
             this.classList.toggle('error', error !== '');
         });
@@ -3043,7 +3361,7 @@ if (isset($_SESSION['user_id'])) {
         // Signup email validation
         signupEmail.addEventListener('input', function() {
             const error = validateEmail(this.value);
-            const errorElement = document.getElementById('email-error');
+            const errorElement = document.getElementById('signup-email-validation');
             errorElement.textContent = error;
             this.classList.toggle('error', error !== '');
         });
@@ -3051,7 +3369,7 @@ if (isset($_SESSION['user_id'])) {
         // Signup password validation
         signupPassword.addEventListener('input', function() {
             const error = validatePassword(this.value);
-            const errorElement = document.getElementById('password-error');
+            const errorElement = document.getElementById('signup-password-validation');
             errorElement.textContent = error;
             this.classList.toggle('error', error !== '');
             
@@ -3059,7 +3377,7 @@ if (isset($_SESSION['user_id'])) {
             if (confirmPassword.value) {
                 const confirmError = confirmPassword.value !== this.value ? 
                     "Passwords do not match" : "";
-                document.getElementById('confirm-password-error').textContent = confirmError;
+                document.getElementById('signup-confirm-password-validation').textContent = confirmError;
                 confirmPassword.classList.toggle('error', confirmError !== '');
             }
         });
@@ -3068,7 +3386,7 @@ if (isset($_SESSION['user_id'])) {
         confirmPassword.addEventListener('input', function() {
             const error = this.value !== signupPassword.value ? 
                 "Passwords do not match" : "";
-            const errorElement = document.getElementById('confirm-password-error');
+            const errorElement = document.getElementById('signup-confirm-password-validation');
             errorElement.textContent = error;
             this.classList.toggle('error', error !== '');
         });
@@ -3082,10 +3400,10 @@ if (isset($_SESSION['user_id'])) {
 
             if (usernameError || emailError || passwordError || confirmError) {
                 e.preventDefault();
-                document.getElementById('username-error').textContent = usernameError;
-                document.getElementById('email-error').textContent = emailError;
-                document.getElementById('password-error').textContent = passwordError;
-                document.getElementById('confirm-password-error').textContent = 
+                document.getElementById('signup-username-validation').textContent = usernameError;
+                document.getElementById('signup-email-validation').textContent = emailError;
+                document.getElementById('signup-password-validation').textContent = passwordError;
+                document.getElementById('signup-confirm-password-validation').textContent = 
                     confirmError ? "Passwords do not match" : "";
                 document.getElementById('signup-error-message').textContent = 
                     "Please fix the errors before submitting";
@@ -3160,65 +3478,12 @@ if (isset($_SESSION['user_id'])) {
             }
         });
 
-        function handleGoogleSignIn() {
-            // Initialize Google Sign-In
-            // You'll need to add your Google OAuth credentials
-            // and implement the sign-in flow
-            console.log('Google sign-in clicked');
-        }
-
-        function handleFacebookSignIn() {
-            // Initialize Facebook Sign-In
-            // You'll need to add your Facebook OAuth credentials
-            // and implement the sign-in flow
-            console.log('Facebook sign-in clicked');
-        }
-
-        function handleAppleSignIn() {
-            // Initialize Apple Sign-In
-            // You'll need to add your Apple OAuth credentials
-            // and implement the sign-in flow
-            console.log('Apple sign-in clicked');
-        }
-    });
+       
     </script>
 
-    <!-- Initialize Facebook SDK -->
-    <script>
-    window.fbAsyncInit = function() {
-        FB.init({
-            appId: 'your-app-id',
-            cookie: true,
-            xfbml: true,
-            version: 'v12.0'
-        });
-    };
-    </script>
 
-    <!-- Initialize Apple Sign-In -->
-    <script type="text/javascript" src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"></script>
 
-    <script>
-        function onSignIn(googleUser) {
-            var profile = googleUser.getBasicProfile();
-            console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
-            console.log('Name: ' + profile.getName());
-            console.log('Image URL: ' + profile.getImageUrl());
-            console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
-
-            // Send the ID token to your server
-            var id_token = googleUser.getAuthResponse().id_token;
-            // You can send this token to your server for further processing
-            // Example: sendTokenToServer(id_token);
-        }
-
-        function signOut() {
-            var auth2 = gapi.auth2.getAuthInstance();
-            auth2.signOut().then(function () {
-                console.log('User signed out.');
-            });
-        }
-    </script>
+   
 
     <script>
     function showSignupModal() {
@@ -3243,6 +3508,623 @@ if (isset($_SESSION['user_id'])) {
             block: 'start'
         });
     }
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Define the showLoginModal function
+        function showLoginModal() {
+            const modal = document.getElementById('loginModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            } else {
+                console.error('Login modal element not found');
+            }
+        }
+
+        // Add tab switching functions
+        function showLoginTab() {
+            document.getElementById('loginForm').classList.add('active');
+            document.getElementById('signupForm').classList.remove('active');
+            document.getElementById('loginTab').classList.add('active');
+            document.getElementById('signupTab').classList.remove('active');
+        }
+
+        function showSignupTab() {
+            document.getElementById('loginForm').classList.remove('active');
+            document.getElementById('signupForm').classList.add('active');
+            document.getElementById('loginTab').classList.remove('active');
+            document.getElementById('signupTab').classList.add('active');
+        }
+
+        // Add click handler to login/signup button
+        const loginButton = document.getElementById('loginSignupBtn');
+        if (loginButton) {
+            loginButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                showLoginModal();
+            });
+        }
+
+        // Add click handlers for tab switching
+        const loginTab = document.getElementById('loginTab');
+        const signupTab = document.getElementById('signupTab');
+
+        if (loginTab) {
+            loginTab.addEventListener('click', function(e) {
+                e.preventDefault();
+                showLoginTab();
+            });
+        }
+
+        if (signupTab) {
+            signupTab.addEventListener('click', function(e) {
+                e.preventDefault();
+                showSignupTab();
+            });
+        }
+    });
+    </script>
+
+    <!-- Add this script section after your existing scripts -->
+    <script>
+    // Global functions for modal control
+    function showLoginModal() {
+        const modal = document.getElementById('loginModal');
+        modal.style.display = 'flex';
+        showLoginTab(new Event('click')); // Reset to login tab by default
+    }
+
+    function closeLoginModal() {
+        const modal = document.getElementById('loginModal');
+        modal.style.display = 'none';
+        
+        // Clear all forms and error messages
+        document.getElementById('loginForm').reset();
+        document.getElementById('signupForm').reset();
+        document.querySelectorAll('.validation-message').forEach(msg => msg.textContent = '');
+    }
+
+    function showLoginTab(event) {
+        event.preventDefault();
+        // Update tab styles
+        document.querySelector('.tabs .tab:first-child').classList.add('active');
+        document.querySelector('.tabs .tab:last-child').classList.remove('active');
+        
+        // Update form visibility
+        document.getElementById('loginForm').classList.add('active');
+        document.getElementById('signupForm').classList.remove('active');
+    }
+
+    function showSignupTab(event) {
+        event.preventDefault();
+        // Update tab styles
+        document.querySelector('.tabs .tab:first-child').classList.remove('active');
+        document.querySelector('.tabs .tab:last-child').classList.add('active');
+        
+        // Update form visibility
+        document.getElementById('loginForm').classList.remove('active');
+        document.getElementById('signupForm').classList.add('active');
+    }
+
+    // Initialize event listeners when the document is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add click handler for the login/signup button
+        const loginSignupBtn = document.getElementById('loginSignupBtn');
+        if (loginSignupBtn) {
+            loginSignupBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                showLoginModal();
+            });
+        }
+
+        // Add click handler for the close button
+        const closeBtn = document.querySelector('.close-modal');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeLoginModal);
+        }
+
+        // Close modal when clicking outside
+        const modal = document.getElementById('loginModal');
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeLoginModal();
+                }
+            });
+        }
+
+        // Add form submission handlers
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                // Add your login form submission logic here
+                console.log('Login form submitted');
+                // You can add AJAX call to login_process.php here
+            });
+        }
+
+        const signupForm = document.getElementById('signupForm');
+        if (signupForm) {
+            signupForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                // Add your signup form submission logic here
+                console.log('Signup form submitted');
+                // You can add AJAX call to register_process.php here
+            });
+        }
+
+        // Add tab switching handlers
+        const tabs = document.querySelectorAll('.tabs .tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (this.textContent.includes('Log In')) {
+                    showLoginTab(e);
+                } else if (this.textContent.includes('Register')) {
+                    showSignupTab(e);
+                }
+            });
+        });
+    });
+
+    // Add these CSS styles to ensure proper display
+    document.head.insertAdjacentHTML('beforeend', `
+        <style>
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        </style>
+    `);
+    </script>
+
+    <script>
+    // ... existing code ...
+
+    // Add this function to handle live validation
+    function setupLiveValidation() {
+        console.log('Setting up live validation'); // Debug log
+
+        // Login form validation
+        const loginUsername = document.getElementById('login-username');
+        const loginPassword = document.getElementById('login-password');
+
+        if (loginUsername) {
+            loginUsername.addEventListener('input', function() {
+                console.log('Login username input detected'); // Debug log
+                const error = validateUsername(this.value);
+                const validationElement = document.getElementById('login-username-validation');
+                if (validationElement) {
+                    validationElement.textContent = error;
+                    this.classList.toggle('error', error !== '');
+                }
+            });
+        }
+
+        if (loginPassword) {
+            loginPassword.addEventListener('input', function() {
+                console.log('Login password input detected'); // Debug log
+                const error = validatePassword(this.value);
+                const validationElement = document.getElementById('login-password-validation');
+                if (validationElement) {
+                    validationElement.textContent = error;
+                    this.classList.toggle('error', error !== '');
+                }
+            });
+        }
+
+        // Signup form validation
+        const signupUsername = document.getElementById('signup-username');
+        const signupEmail = document.getElementById('signup-email');
+        const signupPassword = document.getElementById('signup-password');
+        const signupConfirmPassword = document.getElementById('signup-confirm-password');
+
+        if (signupUsername) {
+            signupUsername.addEventListener('input', function() {
+                const error = validateUsername(this.value);
+                const validationElement = document.getElementById('signup-username-validation');
+                if (validationElement) {
+                    validationElement.textContent = error;
+                    this.classList.toggle('error', error !== '');
+                }
+            });
+        }
+
+        if (signupEmail) {
+            signupEmail.addEventListener('input', function() {
+                const error = validateEmail(this.value);
+                const validationElement = document.getElementById('signup-email-validation');
+                if (validationElement) {
+                    validationElement.textContent = error;
+                    this.classList.toggle('error', error !== '');
+                }
+            });
+        }
+
+        if (signupPassword) {
+            signupPassword.addEventListener('input', function() {
+                const error = validatePassword(this.value);
+                const validationElement = document.getElementById('signup-password-validation');
+                if (validationElement) {
+                    validationElement.textContent = error;
+                    this.classList.toggle('error', error !== '');
+                }
+
+                // Check confirm password match if it has a value
+                if (signupConfirmPassword && signupConfirmPassword.value) {
+                    const confirmError = signupConfirmPassword.value !== this.value ? 
+                        "Passwords do not match" : "";
+                    const confirmValidationElement = document.getElementById('signup-confirm-password-validation');
+                    if (confirmValidationElement) {
+                        confirmValidationElement.textContent = confirmError;
+                        signupConfirmPassword.classList.toggle('error', confirmError !== '');
+                    }
+                }
+            });
+        }
+
+        if (signupConfirmPassword) {
+            signupConfirmPassword.addEventListener('input', function() {
+                const signupPassword = document.getElementById('signup-password');
+                const error = this.value !== signupPassword.value ? 
+                    "Passwords do not match" : "";
+                const validationElement = document.getElementById('signup-confirm-password-validation');
+                if (validationElement) {
+                    validationElement.textContent = error;
+                    this.classList.toggle('error', error !== '');
+                }
+            });
+        }
+    }
+
+    // Call setupLiveValidation when the modal is shown
+    function showLoginModal() {
+        const modal = document.getElementById('loginModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            showLoginTab(new Event('click'));
+            // Set up live validation after modal is shown
+            setupLiveValidation();
+        } else {
+            console.error('Login modal element not found');
+        }
+    }
+
+    // Also set up validation when switching tabs
+    function showLoginTab(event) {
+        event.preventDefault();
+        document.getElementById('loginForm').classList.add('active');
+        document.getElementById('signupForm').classList.remove('active');
+        document.querySelector('.tab:first-child').classList.add('active');
+        document.querySelector('.tab:last-child').classList.remove('active');
+        setupLiveValidation();
+    }
+
+    function showSignupTab(event) {
+        event.preventDefault();
+        document.getElementById('loginForm').classList.remove('active');
+        document.getElementById('signupForm').classList.add('active');
+        document.querySelector('.tab:first-child').classList.remove('active');
+        document.querySelector('.tab:last-child').classList.add('active');
+        setupLiveValidation();
+    }
+
+    // Keep the validation functions as they are
+    function validateUsername(username) {
+        if (!username) return "Username is required";
+        if (!/^[a-zA-Z]/.test(username)) return "Username must start with a letter";
+        if (username.length < 3) return "Username must be at least 3 characters long";
+        if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(username)) return "Username can only contain letters, numbers, and underscores";
+        return "";
+    }
+
+    function validateEmail(email) {
+        if (!email) return "Email is required";
+        if (!/^[a-zA-Z]/.test(email)) return "Email must start with a letter";
+        const emailRegex = /^[a-zA-Z][\w.-]*[a-zA-Z0-9]@[a-zA-Z0-9][\w.-]*[a-zA-Z0-9]\.[a-zA-Z][a-zA-Z.]*[a-zA-Z]$/;
+        if (!emailRegex.test(email)) return "Please enter a valid email address";
+        return "";
+    }
+
+    function validatePassword(password) {
+        if (!password) return "Password is required";
+        if (password.length < 8) return "Password must be at least 8 characters long";
+        if (!/[A-Z]/.test(password)) return "Password must contain at least one uppercase letter";
+        if (!/[a-z]/.test(password)) return "Password must contain at least one lowercase letter";
+        if (!/[0-9]/.test(password)) return "Password must contain at least one number";
+        return "";
+    }
+    </script>
+
+    <script>
+    // Update the login form submission handler
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Clear any existing error messages
+        const existingErrors = document.querySelectorAll('.error-message');
+        existingErrors.forEach(error => error.remove());
+        
+        // Validate form inputs
+        const username = document.getElementById('login-username').value;
+        const password = document.getElementById('login-password').value;
+        
+        const usernameError = validateUsername(username);
+        const passwordError = validatePassword(password);
+
+        // Show validation errors if any
+        document.getElementById('login-username-validation').textContent = usernameError;
+        document.getElementById('login-password-validation').textContent = passwordError;
+
+        if (usernameError || passwordError) {
+            return;
+        }
+
+        // Create FormData object
+        const formData = new FormData(this);
+
+        // Send AJAX request
+        fetch('login_process.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Redirect on success
+                window.location.href = data.redirect || 'index.php';
+            } else {
+                // Show error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = data.error || 'Login failed. Please try again.';
+                this.insertBefore(errorDiv, this.firstChild);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = 'An error occurred. Please try again.';
+            this.insertBefore(errorDiv, this.firstChild);
+        });
+    });
+
+    // Update the signup form submission handler
+    document.getElementById('signupForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Clear any existing error messages
+        const existingErrors = document.querySelectorAll('.error-message');
+        existingErrors.forEach(error => error.remove());
+        
+        // Validate form inputs
+        const username = document.getElementById('signup-username').value;
+        const email = document.getElementById('signup-email').value;
+        const password = document.getElementById('signup-password').value;
+        const confirmPassword = document.getElementById('signup-confirm-password').value;
+        
+        const usernameError = validateUsername(username);
+        const emailError = validateEmail(email);
+        const passwordError = validatePassword(password);
+        const confirmError = password !== confirmPassword ? "Passwords do not match" : "";
+
+        // Show validation errors if any
+        document.getElementById('signup-username-validation').textContent = usernameError;
+        document.getElementById('signup-email-validation').textContent = emailError;
+        document.getElementById('signup-password-validation').textContent = passwordError;
+        document.getElementById('signup-confirm-password-validation').textContent = confirmError;
+
+        if (usernameError || emailError || passwordError || confirmError) {
+            return;
+        }
+
+        // Create FormData object
+        const formData = new FormData(this);
+
+        // Send AJAX request
+        fetch('register_process.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message and redirect
+                const successDiv = document.createElement('div');
+                successDiv.className = 'success-message';
+                successDiv.textContent = data.message || 'Registration successful!';
+                this.insertBefore(successDiv, this.firstChild);
+                
+                // Redirect after a short delay
+                setTimeout(() => {
+                    window.location.href = data.redirect || 'index.php';
+                }, 1500);
+            } else {
+                // Show error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = data.error || 'Registration failed. Please try again.';
+                this.insertBefore(errorDiv, this.firstChild);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = 'An error occurred. Please try again.';
+            this.insertBefore(errorDiv, this.firstChild);
+        });
+    });
+    </script>
+
+    <!-- Replace the existing login form submission script with this updated version: -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Function to initialize form handlers
+        function initializeFormHandlers() {
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+
+            if (loginForm) {
+                loginForm.removeEventListener('submit', handleLoginSubmit); // Remove any existing handlers
+                loginForm.addEventListener('submit', handleLoginSubmit);
+            }
+
+            if (signupForm) {
+                signupForm.removeEventListener('submit', handleSignupSubmit); // Remove any existing handlers
+                signupForm.addEventListener('submit', handleSignupSubmit);
+            }
+        }
+
+        // Login form submission handler
+        function handleLoginSubmit(e) {
+            e.preventDefault();
+            
+            // Clear any existing error messages
+            const existingErrors = this.querySelectorAll('.error-message');
+            existingErrors.forEach(error => error.remove());
+
+            // Create FormData object
+            const formData = new FormData(this);
+
+            // Send AJAX request
+            fetch('login_process.php', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Redirect on success
+                    window.location.href = data.redirect || 'index.php';
+                } else {
+                    // Show error message
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message';
+                    errorDiv.textContent = data.error || 'Login failed. Please try again.';
+                    
+                    // Add close button
+                    const closeBtn = document.createElement('span');
+                    closeBtn.className = 'error-close';
+                    closeBtn.innerHTML = '&times;';
+                    closeBtn.onclick = function() {
+                        errorDiv.remove();
+                    };
+                    errorDiv.appendChild(closeBtn);
+                    
+                    // Insert error at the top of the form
+                    this.insertBefore(errorDiv, this.firstChild);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = 'An error occurred. Please try again.';
+                
+                const closeBtn = document.createElement('span');
+                closeBtn.className = 'error-close';
+                closeBtn.innerHTML = '&times;';
+                closeBtn.onclick = function() {
+                    errorDiv.remove();
+                };
+                errorDiv.appendChild(closeBtn);
+                
+                this.insertBefore(errorDiv, this.firstChild);
+            });
+        }
+
+        // Signup form submission handler
+        function handleSignupSubmit(e) {
+            e.preventDefault();
+            
+            // Clear any existing error messages
+            const existingErrors = this.querySelectorAll('.error-message');
+            existingErrors.forEach(error => error.remove());
+
+            // Create FormData object
+            const formData = new FormData(this);
+
+            // Send AJAX request
+            fetch('register_process.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const successDiv = document.createElement('div');
+                    successDiv.className = 'success-message';
+                    successDiv.textContent = data.message || 'Registration successful!';
+                    this.insertBefore(successDiv, this.firstChild);
+                    
+                    setTimeout(() => {
+                        window.location.href = data.redirect || 'index.php';
+                    }, 1500);
+                } else {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message';
+                    errorDiv.textContent = data.error || 'Registration failed. Please try again.';
+                    
+                    const closeBtn = document.createElement('span');
+                    closeBtn.className = 'error-close';
+                    closeBtn.innerHTML = '&times;';
+                    closeBtn.onclick = function() {
+                        errorDiv.remove();
+                    };
+                    errorDiv.appendChild(closeBtn);
+                    
+                    this.insertBefore(errorDiv, this.firstChild);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = 'An error occurred. Please try again.';
+                
+                const closeBtn = document.createElement('span');
+                closeBtn.className = 'error-close';
+                closeBtn.innerHTML = '&times;';
+                closeBtn.onclick = function() {
+                    errorDiv.remove();
+                };
+                errorDiv.appendChild(closeBtn);
+                
+                this.insertBefore(errorDiv, this.firstChild);
+            });
+        }
+
+        // Initialize form handlers when the modal is shown
+        function showLoginModal() {
+            const modal = document.getElementById('loginModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                showLoginTab(new Event('click'));
+                initializeFormHandlers(); // Initialize form handlers when modal is shown
+            }
+        }
+
+        // Add click handler for the login/signup button
+        const loginSignupBtn = document.getElementById('loginSignupBtn');
+        if (loginSignupBtn) {
+            loginSignupBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                showLoginModal();
+            });
+        }
+
+        // Initialize form handlers on page load
+        initializeFormHandlers();
+    });
     </script>
 </body>
 </html>

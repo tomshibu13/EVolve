@@ -1,4 +1,13 @@
 <?php
+session_start(); // Start the session
+
+// Check if the user is logged in
+if (!isset($_SESSION['user_id'])) { // Assuming 'user_id' is set upon login
+    header("Location: index.php#LoginForm"); // Redirect to the login page
+    exit();
+}
+
+
 // Database connection credentials
 $servername = "localhost";
 $username = "root";
@@ -49,7 +58,7 @@ try {
     <title>Charging Stations Management - EVolve Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Root Variables */
+        /* Updated Root Variables */
         :root {
             --primary-color: #4CAF50;    /* Green */
             --secondary-color: #2C3E50;  /* Dark Blue */
@@ -57,7 +66,7 @@ try {
             --card-bg: #ffffff;          /* White */
             --text-color: #2d3436;       /* Dark Gray */
             --border-radius: 10px;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Increased shadow for depth */
         }
 
         /* Reset Styles */
@@ -141,29 +150,94 @@ try {
             padding: 20px;
         }
 
-        /* Header Section */
+        /* Updated Header Styles */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
+            padding: 10px 0; /* Added padding for better spacing */
+            border-bottom: 2px solid var(--primary-color); /* Added bottom border */
         }
 
-        /* Search Bar */
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-color); /* Text color */
+        }
+
+        .add-station-btn {
+            display: inline-flex;
+            align-items: center;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 15px; /* Added padding */
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-station-btn:hover {
+            background-color: #3d8b40; /* Darker green on hover */
+        }
+
+        /* Updated Error Message Styles */
+        .error-message {
+            background-color: #f8d7da; /* Light red background */
+            color: #721c24; /* Dark red text */
+            padding: 10px; /* Added padding */
+            border: 1px solid #f5c6cb; /* Border color */
+            border-radius: var(--border-radius);
+            margin-bottom: 20px; /* Space below the error message */
+        }
+
+        /* Updated Filters Styles */
+        .filters {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Space between inputs */
+            margin-bottom: 20px; /* Space below filters */
+        }
+
+        .search-input {
+            border: 1px solid #ccc; /* Border for search input */
+            border-radius: var(--border-radius);
+            padding: 8px; /* Padding for search input */
+            font-size: 16px;
+            width: 200px; /* Fixed width for search input */
+        }
+
+        .filter-select {
+            padding: 8px; /* Padding for select */
+            border-radius: var(--border-radius);
+            border: 1px solid #ccc; /* Border for select */
+            font-size: 16px; /* Font size for select */
+        }
+
+        /* Updated Search Bar */
         .search-bar {
             display: flex;
             align-items: center;
             background-color: var(--card-bg);
-            padding: 10px;
+            padding: 12px; /* Increased padding */
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
+            margin-bottom: 20px; /* Space below the search bar */
         }
 
         .search-bar input {
-            border: none;
-            outline: none;
-            padding: 5px 10px;
+            border: 1px solid #ccc; /* Added border */
+            border-radius: var(--border-radius);
+            padding: 8px; /* Increased padding */
             font-size: 16px;
+            width: 100%; /* Full width */
+            margin-right: 10px; /* Space between input and select */
+        }
+
+        .search-bar select {
+            padding: 8px; /* Padding for select */
+            border-radius: var(--border-radius);
+            border: 1px solid #ccc; /* Added border */
         }
 
         /* User Profile */
@@ -195,7 +269,7 @@ try {
             box-shadow: var(--shadow);
         }
 
-        /* Table Styles */
+        /* Updated Table Styles */
         .table-container {
             background-color: var(--card-bg);
             border-radius: var(--border-radius);
@@ -207,38 +281,47 @@ try {
         table {
             width: 100%;
             border-collapse: collapse;
+            border-radius: var(--border-radius);
+            overflow: hidden; /* Rounded corners for the table */
         }
 
         th, td {
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid #eee;
+            transition: background-color 0.3s; /* Smooth background transition */
         }
 
-        /* Status Indicators */
+        tr:hover {
+            background-color: rgba(76, 175, 80, 0.1); /* Highlight row on hover */
+        }
+
+        /* Updated Status Indicators */
         .status {
             padding: 5px 10px;
             border-radius: 20px;
             font-size: 12px;
+            font-weight: bold; /* Bold text for status */
         }
 
         .status.active {
-            background-color: rgba(76, 175, 80, 0.1);
+            background-color: rgba(76, 175, 80, 0.3); /* Lighter green */
             color: var(--primary-color);
         }
 
         .status.inactive {
-            background-color: rgba(244, 67, 54, 0.1);
+            background-color: rgba(244, 67, 54, 0.3); /* Lighter red */
             color: #f44336;
         }
 
-        /* Action Buttons */
+        /* Updated Action Buttons */
         .action-btn {
-            padding: 5px 10px;
+            padding: 8px 12px; /* Increased padding for better touch targets */
             border: none;
-            border-radius: 5px;
+            border-radius: var(--border-radius);
             cursor: pointer;
             transition: all 0.3s ease;
+            font-weight: bold; /* Bold text for better visibility */
         }
 
         .edit-btn {
@@ -246,9 +329,17 @@ try {
             color: white;
         }
 
+        .edit-btn:hover {
+            background-color: #1e88e5; /* Darker blue on hover */
+        }
+
         .delete-btn {
             background-color: #f44336;
             color: white;
+        }
+
+        .delete-btn:hover {
+            background-color: #e53935; /* Darker red on hover */
         }
 
         /* Dropdown Menu */
@@ -359,6 +450,11 @@ try {
         <!-- Main Content -->
         <main class="main-content">
             <div class="header">
+                <!-- Added Back Button -->
+                <a href="admindash.php" class="home-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Back
+                </a>
                 <h1 class="page-title">Charging Stations Management</h1>
                 <a href="add_station_page.php" class="add-station-btn">
                     <i class="fas fa-plus"></i>
@@ -416,7 +512,7 @@ try {
                                     echo !empty($charger_types) ? htmlspecialchars($charger_types) : 'N/A';
                                 ?></td>
                                 <td><?php echo $station['available_slots'] . '/' . $station['total_slots']; ?></td>
-                                <td>$<?php echo number_format($station['price'], 2); ?></td>
+                                <td>₹<?php echo number_format($station['price'], 2); ?></td>
                                 <td>
                                     <button class="action-btn edit-btn" onclick="window.location.href='edit_station.php?id=<?php echo htmlspecialchars($station['station_id']); ?>'">
                                         <i class="fas fa-edit"></i>
@@ -505,19 +601,24 @@ try {
                     method: 'POST',
                     body: formData
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.success) {
+                        // Refresh the page to show updated status
                         location.reload();
                     } else {
-                        alert('Failed to update status. Please try again.');
-                        button.innerHTML = originalContent;
-                        button.disabled = false;
+                        throw new Error(data.error || 'Failed to update status');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('An error occurred. Please try again.');
+                    alert('Error: ' + error.message);
+                    // Restore button state
                     button.innerHTML = originalContent;
                     button.disabled = false;
                 });
