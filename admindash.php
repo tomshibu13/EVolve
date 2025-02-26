@@ -20,6 +20,7 @@ $bookings = 0;
 $total_revenue = 0;
 $recent_stations = null;
 $admin_user = null;
+$station_owner_requests_count = 0; // New variable for station owner requests count
 
 // Create a connection with error handling using try-catch
 try {
@@ -122,6 +123,12 @@ try {
             ");
             if ($admin_query && mysqli_num_rows($admin_query) > 0) {
                 $admin_user = mysqli_fetch_assoc($admin_query);
+            }
+
+            // Fetch station owner requests count
+            $result = mysqli_query($conn, "SELECT COUNT(*) as total FROM station_owner_requests");
+            if ($result) {
+                $station_owner_requests_count = mysqli_fetch_assoc($result)['total'];
             }
         } else {
             throw new Exception("Required tables do not exist. Please run create_database.php first.");
@@ -471,6 +478,12 @@ try {
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="station_owner_details.php" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        <span>Station Owner Details</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="bookings.php" class="nav-link">
                         <i class="fas fa-bookmark"></i>
                         <span>Bookings</span>
@@ -555,12 +568,11 @@ try {
                 <div class="card">
                     <div class="card-header">
                         <div class="card-icon">
-                            <i class="fas fa-dollar-sign"></i>
+                            <i class="fas fa-user-plus"></i> <!-- New icon for station owner requests -->
                         </div>
                     </div>
-                    <div class="card-title">Revenue</div>
-                    <div class="card-value">$<?php echo number_format($total_revenue, 2); ?></div>
-                    <!-- <div class="card-change">+20% from last month</div> -->
+                    <div class="card-title">Station Owner Requests</div> <!-- New title -->
+                    <div class="card-value"><?php echo $station_owner_requests_count; ?></div> <!-- Displaying the count -->
                 </div>
             </div>
 

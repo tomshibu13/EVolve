@@ -53,6 +53,7 @@ try {
             location POINT NOT NULL,
             address VARCHAR(255) NOT NULL,
             operator_id INT,
+            owner_request_id INT,
             price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
             charger_types JSON NOT NULL,
             total_slots INT NOT NULL,
@@ -62,39 +63,53 @@ try {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (operator_id) REFERENCES tbl_users(user_id),
+            FOREIGN KEY (owner_request_id) REFERENCES station_owner_requests(request_id),
             SPATIAL INDEX(location)
         )";
-
-        // Create bookings table
-        $bookingsSql = "CREATE TABLE IF NOT EXISTS bookings (
-            booking_id INT PRIMARY KEY AUTO_INCREMENT,
-            user_id INT NOT NULL,
-            station_id INT NOT NULL,
-            booking_date DATE NOT NULL,
-            booking_time TIME NOT NULL,
-            duration INT NOT NULL,
-            status VARCHAR(20) NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES tbl_users(user_id),
-            FOREIGN KEY (station_id) REFERENCES charging_stations(station_id)
-        )";
-
-        // Create support_messages table
-        $supportMessagesSql = "CREATE TABLE IF NOT EXISTS support_messages (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(255) NOT NULL,
-            email VARCHAR(255) NOT NULL,
-            subject VARCHAR(255) NOT NULL,
-            message TEXT NOT NULL,
-            created_at DATETIME NOT NULL,
-            status VARCHAR(50) DEFAULT 'pending'
-        )";
-    
 
         if ($conn->query($stationsSql) === TRUE) {
             echo "Table charging_stations created successfully\n";
             
+            // Create station_owner_requests table
+            $ownerRequestsSql = "CREATE TABLE IF NOT EXISTS station_owner_requests (
+                request_id INT PRIMARY KEY AUTO_INCREMENT,
+                user_id INT NOT NULL,
+                owner_name VARCHAR(100) NOT NULL,
+                business_name VARCHAR(100),
+                email VARCHAR(100) NOT NULL,
+                phone VARCHAR(20) NOT NULL,
+                address TEXT NOT NULL,
+                city VARCHAR(50) NOT NULL,
+                state VARCHAR(50) NOT NULL,
+                postal_code VARCHAR(10) NOT NULL,
+                business_registration VARCHAR(50),
+                password_hash VARCHAR(255) NOT NULL,
+                status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES tbl_users(user_id)
+            )";
+
+            if ($conn->query($ownerRequestsSql) === TRUE) {
+                echo "Table station_owner_requests created successfully\n";
+            } else {
+                throw new Exception("Error creating station_owner_requests table: " . $conn->error);
+            }
+            
             // Create bookings table
+            $bookingsSql = "CREATE TABLE IF NOT EXISTS bookings (
+                booking_id INT PRIMARY KEY AUTO_INCREMENT,
+                user_id INT NOT NULL,
+                station_id INT NOT NULL,
+                booking_date DATE NOT NULL,
+                booking_time TIME NOT NULL,
+                duration INT NOT NULL,
+                status VARCHAR(20) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES tbl_users(user_id),
+                FOREIGN KEY (station_id) REFERENCES charging_stations(station_id)
+            )";
+
             if ($conn->query($bookingsSql) === TRUE) {
                 echo "Table bookings created successfully\n";
                 

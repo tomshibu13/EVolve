@@ -164,6 +164,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+// Add this function near the top of the file after session_start()
+function isApprovedStationOwner($userId) {
+    global $pdo;
+    try {
+        $stmt = $pdo->prepare("
+            SELECT status 
+            FROM station_owner_requests 
+            WHERE user_id = ? AND status = 'approved'
+        ");
+        $stmt->execute([$userId]);
+        
+        // Add debug logging
+        error_log("Checking station owner status for user_id: " . $userId);
+        error_log("Query result count: " . $stmt->rowCount());
+        
+        return $stmt->rowCount() > 0;
+    } catch(PDOException $e) {
+        error_log("Error checking station owner status: " . $e->getMessage());
+        return false;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -928,6 +950,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .nav-link {
             text-decoration: none;
         }
+
+        .owner-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .owner-button:hover:not(:disabled) {
+            background-color: #45a049;
+            transform: translateY(-1px);
+        }
+
+        .owner-button.pending {
+            background-color: #ffa726;
+            cursor: not-allowed;
+        }
+
+        .owner-button i {
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -1016,10 +1067,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <h2>Welcome to EVolve Charging Network</h2>
                     <p>Find and book charging stations across the country. Our network provides reliable, fast, and convenient charging solutions for all electric vehicles.</p>
                     <div>
-                        <!-- <a href="register_station.php">
-                            <button class="owner-button" onclick="showSection('owner')">Become a Station Owner</button>
-                        </a> -->
-                        
+                        <?php if (isset($_SESSION['user_id'])): ?>
+                            <?php
+                            // Add debug output
+                            error_log("User ID from session: " . $_SESSION['user_id']);
+                            $isOwner = isApprovedStationOwner($_SESSION['user_id']);
+                            error_log("Is approved owner: " . ($isOwner ? "yes" : "no"));
+                            ?>
+                            
+                            <?php if ($isOwner): ?>
+                                <a href="station-owner-dashboard.php">
+                                    <button class="owner-button">
+                                        <i class="fas fa-charging-station"></i>
+                                        Station Owner Dashboard
+                                    </button>
+                                </a>
+                            <?php else: ?>
+                                <?php
+                                // Check if user has a pending request
+                                $stmt = $pdo->prepare("
+                                    SELECT status 
+                                    FROM station_owner_requests 
+                                    WHERE user_id = ? AND status = 'pending'
+                                ");
+                                $stmt->execute([$_SESSION['user_id']]);
+                                $hasPendingRequest = $stmt->rowCount() > 0;
+                                ?>
+                                
+                                <?php if ($hasPendingRequest): ?>
+                                    <button class="owner-button pending" disabled>
+                                        <i class="fas fa-clock"></i>
+                                        Request Pending Approval
+                                    </button>
+                                <?php else: ?>
+                                    <a href="stationlogin.php">
+                                        <button class="owner-button">
+                                            <i class="fas fa-plus-circle"></i>
+                                            Become a Station Owner
+                                        </button>
+                                    </a>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <a href="stationlogin.php">
+                                <button class="owner-button">
+                                    <i class="fas fa-plus-circle"></i>
+                                    Become a Station Owner
+                                </button>
+                            </a>
+                        <?php endif; ?>
                     </div>
          
                 </div>

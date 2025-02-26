@@ -92,10 +92,10 @@ $conn->close();
    
     <style>
         :root {
-            --primary-color: #4a90e2;
-            --secondary-color: #f5f6fa;
-            --text-color: #2c3e50;
-            --error-color: #e74c3c;
+            --primary-color: #ff5a73;
+            --secondary-color: #f5f5f5;
+            --text-color: #333;
+            --error-color: #ff3a57;
             --success-color: #2ecc71;
             --border-radius: 8px;
         }

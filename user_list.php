@@ -34,13 +34,14 @@ try {
         }
     }
 
-    // Fetch all users without status
+    // Fetch all users with status
     $users = mysqli_query($conn, "
         SELECT 
             user_id,
             username,
             email,
-            created_at
+            created_at,
+            status
         FROM tbl_users 
         ORDER BY created_at DESC
     ");
@@ -398,6 +399,12 @@ try {
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="station_owner_details.php" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        <span>Station Owner Details</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="bookings.php" class="nav-link">
                         <i class="fas fa-bookmark"></i>
                         <span>Bookings</span>
@@ -424,9 +431,6 @@ try {
                 <a href="admindash.php" class="home-btn">
                     <i class="fas fa-arrow-left"></i> Back to Dashboard
                 </a>
-                <a href="add_user.php" class="home-btn">
-                    <i class="fas fa-plus"></i> Add New User
-                </a>
             </div>
 
             <div class="table-container">
@@ -451,12 +455,14 @@ try {
                                 <td><?php echo htmlspecialchars($created_date); ?></td>
                                 <td class="actions">
                                     <form method="POST" style="display: inline;">
-                                        <input type="hidden" username="id" value="<?php echo htmlspecialchars($user['user_id']); ?>">
+                                        <input type="hidden" name="id" value="<?php echo htmlspecialchars($user['user_id']); ?>">
+                                        <input type="hidden" name="action" value="toggle_block">
                                         <button type="button" class="action-btn edit-btn" onclick="window.location.href='edit_user.php?id=<?php echo htmlspecialchars($user['user_id']); ?>'">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button type="submit" username="action" value="delete" class="action-btn delete-btn" onclick="return confirmDelete()">
-                                            <i class="fas fa-trash"></i>
+                                        <button type="submit" class="action-btn <?php echo $user['status'] ? 'delete-btn' : 'edit-btn'; ?>" 
+                                            onclick="return confirmToggleBlock(<?php echo htmlspecialchars($user['user_id']); ?>, '<?php echo $user['status'] ? 'block' : 'unblock'; ?>')">
+                                            <i class="fas fa-power-off"></i>
                                         </button>
                                     </form>
                                 </td>
@@ -476,35 +482,12 @@ try {
     </div>
 
     <script>
-        function confirmDelete() {
-            return confirm('Are you sure you want to delete this user? This action cannot be undone.');
-        }
-
         function confirmToggleBlock(userId, action) {
             const message = action === 'block' ? 
                 'Are you sure you want to block this user?' : 
                 'Are you sure you want to unblock this user?';
             
-            if (confirm(message)) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = 'user_list.php';
-                
-                const actionInput = document.createElement('input');
-                actionInput.type = 'hidden';
-                actionInput.username = 'action';
-                actionInput.value = 'toggle_block';
-                
-                const idInput = document.createElement('input');
-                idInput.type = 'hidden';
-                idInput.username = 'id';
-                idInput.value = userId;
-                
-                form.appendChild(actionInput);
-                form.appendChild(idInput);
-                document.body.appendChild(form);
-                form.submit();
-            }
+            return confirm(message);
         }
     </script>
 </body>
