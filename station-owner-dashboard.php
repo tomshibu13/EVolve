@@ -429,7 +429,7 @@ include 'header.php';
                                        class="btn btn-primary">
                                         <i class='bx bx-edit'></i> Edit
                                     </a>
-                                    <a href="view-bookings.php?station_id=<?php echo $station['station_id']; ?>" 
+                                    <a href="station_owner/so_bookings_view.php?station_id=<?php echo $station['station_id']; ?>" 
                                        class="btn btn-info">
                                         <i class='bx bx-calendar'></i> Bookings
                                     </a>

@@ -273,21 +273,7 @@ include '../header.php';
                                        value="<?php echo htmlspecialchars($user_data['business_registration']); ?>" readonly>
                             </div>
                             
-                            <div class="col-12">
-                                <hr>
-                                <h5>Change Password</h5>
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Current Password</label>
-                                <input type="password" class="form-control" name="current_password">
-                            </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">New Password</label>
-                                <input type="password" class="form-control" name="new_password">
-                            </div>
-                        </div>
+      
                         
                         <div class="text-end">
                             <button type="submit" class="btn btn-primary">
