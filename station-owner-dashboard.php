@@ -376,8 +376,8 @@ include 'header.php';
                                         <p class="card-text">
                                             <i class='bx bx-map'></i> <strong>Address:</strong><br>
                                             <?php echo htmlspecialchars($station['address']); ?><br>
-                                            <i class='bx bx-dollar'></i> <strong>Price:</strong> 
-                                            $<?php echo number_format($station['price'], 2); ?>/kWh<br>
+                                            <i ></i> <strong>₹Price:</strong> 
+                                            ₹<?php echo number_format($station['price'], 2); ?>/kWh<br>
                                             <i class='bx bx-plug'></i> <strong>Slots:</strong> 
                                             <?php echo $station['available_slots']; ?>/<?php echo $station['total_slots']; ?>
                                         </p>

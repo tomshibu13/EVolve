@@ -1,5 +1,11 @@
 <?php
+
 session_start();
+
+if (!isset($_SESSION['user_id'])) { // Assuming 'user_id' is set upon login
+    header("Location: stationlogin.php"); // Redirect to the login page
+    exit();
+}
 
 // Database connection credentials - Move these to the top
 $servername = "localhost";
@@ -45,32 +51,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         if ($conn->connect_error) {
             throw new Exception("Database connection failed: " . $conn->connect_error);
-        }
-
-        // Handle image upload
-        $image_paths = [];
-        if (!empty($_FILES['station_images']['name'][0])) {
-            $upload_dir = 'uploads/stations/';
-            
-            if (!file_exists($upload_dir)) {
-                mkdir($upload_dir, 0777, true);
-            }
-            
-            foreach ($_FILES['station_images']['tmp_name'] as $key => $tmp_name) {
-                $file_name = $_FILES['station_images']['name'][$key];
-                $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
-                $unique_file_name = uniqid() . '.' . $file_ext;
-                $target_file = $upload_dir . $unique_file_name;
-                
-                $allowed_types = ['jpg', 'jpeg', 'png', 'gif'];
-                if (!in_array($file_ext, $allowed_types)) {
-                    throw new Exception("Invalid file type. Only JPG, JPEG, PNG & GIF files are allowed.");
-                }
-                
-                if (move_uploaded_file($tmp_name, $target_file)) {
-                    $image_paths[] = $target_file;
-                }
-            }
         }
 
         // Validate input
@@ -358,7 +338,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php endif; ?>
 
         <div class="form-container">
-            <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" enctype="multipart/form-data">
+            <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
                 <div class="form-group">
                     <label for="name">Station Name</label>
                     <input type="text" id="name" name="name" required>
@@ -409,12 +389,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div class="form-group">
                     <label for="price">Price per kWh (₹)</label>
                     <input type="number" id="price" name="price" min="0" step="0.01" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="station_images">Station Images</label>
-                    <input type="file" id="station_images" name="station_images[]" accept="image/*" multiple>
-                    <div id="image_preview" class="image-preview"></div>
                 </div>
 
                 <button type="submit" class="submit-btn">Add Station</button>

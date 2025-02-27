@@ -439,15 +439,7 @@
             }
         }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
-
-        .shake {
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-        }
+       
     </style>
 </head>
 <body>
@@ -591,31 +583,77 @@
         // Function to show error message
         function showError(inputId, message) {
             const errorElement = document.getElementById(`${inputId}-error`);
-            errorElement.textContent = message;
-            errorElement.style.display = 'block';
-            document.getElementById(inputId).classList.add('shake');
+            const inputElement = document.getElementById(inputId);
             
-            // Remove shake animation after it completes
-            setTimeout(() => {
-                document.getElementById(inputId).classList.remove('shake');
-            }, 500);
-            
+            if (errorElement && inputElement) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+                inputElement.classList.add('error');
+                inputElement.classList.add('shake');
+                
+                // Remove shake animation after it completes
+                setTimeout(() => {
+                    inputElement.classList.remove('shake');
+                }, 500);
+            }
             return false;
         }
 
         // Function to clear error message
         function clearError(inputId) {
             const errorElement = document.getElementById(`${inputId}-error`);
-            if (errorElement) {
+            const inputElement = document.getElementById(inputId);
+            
+            if (errorElement && inputElement) {
                 errorElement.textContent = '';
                 errorElement.style.display = 'none';
+                inputElement.classList.remove('error');
             }
         }
 
         // Function to validate email format
         function isValidEmail(email) {
-            const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-            return re.test(String(email).toLowerCase());
+            // Basic email format validation
+            const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!email || !emailRegex.test(email)) {
+                return false;
+            }
+
+            // Split email into local part and domain
+            const parts = email.toLowerCase().split('@');
+            if (parts.length !== 2) return false;
+
+            const [localPart, domain] = parts;
+
+            // Check if domain is gmail.com
+            if (domain !== 'gmail.com') {
+                // Check if it's a common misspelling of gmail.com
+                const commonMisspellings = {
+                    'gmail.co': 'Did you mean gmail.com?',
+                    'gmai.com': 'Did you mean gmail.com?',
+                    'gmil.com': 'Did you mean gmail.com?',
+                    'gmal.com': 'Did you mean gmail.com?',
+                    'gmail.comm': 'Did you mean gmail.com?',
+                    'gmail.con': 'Did you mean gmail.com?',
+                    'gmail.om': 'Did you mean gmail.com?',
+                    'gmail.cm': 'Did you mean gmail.com?',
+                    'gmail.cpm': 'Did you mean gmail.com?',
+                    'gmail.vom': 'Did you mean gmail.com?',
+                    'gmail.cim': 'Did you mean gmail.com?',
+                    'gamil.com': 'Did you mean gmail.com?',
+                    'gnail.com': 'Did you mean gmail.com?',
+                    'gmaill.com': 'Did you mean gmail.com?',
+                };
+
+                if (commonMisspellings[domain]) {
+                    showError('signupEmail', commonMisspellings[domain]);
+                    return false;
+                }
+                showError('signupEmail', "Please use a Gmail address (example@gmail.com)");
+                return false;
+            }
+
+            return true;
         }
 
         // Function to check password strength
@@ -862,89 +900,70 @@
         document.querySelectorAll('input, textarea').forEach(input => {
             input.addEventListener('input', function() {
                 let errorMessage = '';
+                const value = this.value.trim();
                 
                 switch(this.id) {
-                    case 'loginEmail':
-                        errorMessage = validateUsername(this.value.trim());
+                    case 'signupEmail':
+                        if (value && !isValidEmail(value)) {
+                            errorMessage = 'Please enter a valid Gmail address';
+                        }
                         break;
                     
                     case 'signupUsername':
-                        errorMessage = validateUsername(this.value.trim());
+                        if (value.length < 4) {
+                            errorMessage = 'Username must be at least 4 characters';
+                        } else if (!/^[a-zA-Z0-9_]+$/.test(value)) {
+                            errorMessage = 'Username can only contain letters, numbers, and underscores';
+                        }
                         break;
                     
                     case 'signupPassword':
-                        errorMessage = validatePassword(this.value);
+                        errorMessage = validatePassword(value);
                         break;
                     
                     case 'confirmPassword':
-                        if (this.value && this.value !== passwordInput.value) {
+                        const password = document.getElementById('signupPassword').value;
+                        if (value && value !== password) {
                             errorMessage = 'Passwords do not match';
                         }
                         break;
                     
                     case 'signupFullName':
-                        if (this.value.trim() && this.value.trim().length < 2) {
+                        if (value && value.length < 2) {
                             errorMessage = 'Please enter your full name';
                         }
                         break;
                     
-                    case 'businessName':
-                        if (this.value.trim().length < 2) {
-                            errorMessage = 'Business name must be at least 2 characters';
-                        }
-                        break;
-                    
                     case 'phone':
-                        errorMessage = validatePhone(this.value.trim());
-                        break;
-                    
-                    case 'address':
-                        if (this.value.trim().length < 10) {
-                            errorMessage = 'Please enter a complete address';
-                        }
-                        break;
-                    
-                    case 'city':
-                        if (this.value.trim().length < 2) {
-                            errorMessage = 'City name must be at least 2 characters';
-                        }
-                        break;
-                    
-                    case 'state':
-                        if (this.value.trim().length < 2) {
-                            errorMessage = 'Please enter a valid state';
+                        if (value) {
+                            errorMessage = validatePhone(value);
                         }
                         break;
                     
                     case 'postalCode':
-                        errorMessage = validatePostalCode(this.value.trim());
-                        break;
-                    
-                    case 'businessRegistration':
-                        errorMessage = validateBusinessRegistration(this.value.trim());
+                        if (value) {
+                            errorMessage = validatePostalCode(value);
+                        }
                         break;
                 }
                 
-                const errorElement = document.getElementById(`${this.id}-error`);
-                if (errorElement) {
-                    if (errorMessage && this.value) {
-                        errorElement.textContent = errorMessage;
-                        errorElement.style.display = 'block';
-                        this.style.borderColor = '#ff3a57';
-                    } else {
-                        errorElement.style.display = 'none';
-                        this.style.borderColor = '#ddd';
-                    }
+                if (errorMessage) {
+                    showError(this.id, errorMessage);
+                } else {
+                    clearError(this.id);
                 }
             });
 
             // Enhanced blur validation
             input.addEventListener('blur', function() {
-                if (this.required || document.getElementById('isStationOwner').checked) {
-                    const fieldName = this.previousElementSibling.textContent;
-                    if (!this.value.trim()) {
+                const value = this.value.trim();
+                const isStationOwner = document.getElementById('isStationOwner').checked;
+                
+                // Check if field is required
+                if (this.required || (isStationOwner && this.closest('#stationOwnerFields'))) {
+                    if (!value) {
+                        const fieldName = this.previousElementSibling.textContent;
                         showError(this.id, `${fieldName} is required`);
-                        this.style.borderColor = '#ff3a57';
                     } else {
                         // Trigger input validation on blur
                         this.dispatchEvent(new Event('input'));
@@ -1023,22 +1042,27 @@
             let isValid = true;
             const isStationOwner = document.getElementById('isStationOwner').checked;
             
+            // Clear all previous error messages
             document.querySelectorAll('.error-message').forEach(error => {
                 error.style.display = 'none';
                 error.textContent = '';
             });
             
+            // Validate required fields
             const requiredFields = ['signupFullName', 'signupEmail', 'signupUsername', 'signupPassword', 'confirmPassword'];
             requiredFields.forEach(field => {
                 const element = document.getElementById(field);
                 if (!element.value.trim()) {
-                    isValid = showError(field, `${element.placeholder} is required`);
+                    isValid = false;
+                    showError(field, `${element.placeholder} is required`);
                 }
             });
             
-            const email = document.getElementById('signupEmail').value;
+            // Email validation
+            const email = document.getElementById('signupEmail').value.trim();
             if (email && !isValidEmail(email)) {
-                isValid = showError('signupEmail', 'Please enter a valid email address');
+                isValid = false;
+                // Error message is already shown by isValidEmail function
             }
             
             const password = document.getElementById('signupPassword').value;

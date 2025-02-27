@@ -483,12 +483,12 @@ try {
                         <span>Station Owner Details</span>
                     </a>
                 </li>
-                <li class="nav-item">
+                <!-- <li class="nav-item">
                     <a href="bookings.php" class="nav-link">
                         <i class="fas fa-bookmark"></i>
                         <span>Bookings</span>
                     </a>
-                </li>
+                </li> -->
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="fas fa-chart-bar"></i>
@@ -551,10 +551,9 @@ try {
                     </div>
                     <div class="card-title">Active Users</div>
                     <div class="card-value"><?php echo $active_users; ?></div>
-                    <!-- <div class="card-change">+8% from last month</div> -->
                 </div>
 
-                <div class="card">
+                <!-- <div class="card">
                     <div class="card-header">
                         <div class="card-icon">
                             <i class="fas fa-bookmark"></i>
@@ -562,8 +561,7 @@ try {
                     </div>
                     <div class="card-title">Total Bookings</div>
                     <div class="card-value"><?php echo $bookings; ?></div>
-                    <!-- <div class="card-change">+15% from last month</div> -->
-                </div>
+                </div> -->
 
                 <div class="card">
                     <div class="card-header">

@@ -432,12 +432,12 @@ try {
                         <span>Station Owner Details</span>
                     </a>
                 </li>
-                <li class="nav-item">
+                <!-- <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="fas fa-bookmark"></i>
                         <span>Bookings</span>
                     </a>
-                </li>
+                </li> -->
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="fas fa-chart-bar"></i>

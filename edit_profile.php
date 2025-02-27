@@ -207,6 +207,22 @@ h1 {
     }
 }
 
+/* Add these new styles */
+.input-group .error-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 5px;
+    display: none;
+}
+
+.input-group input.invalid {
+    border-color: #dc3545;
+}
+
+.input-group input.valid {
+    border-color: #28a745;
+}
+
     </style>
 
 </head>
@@ -235,26 +251,105 @@ h1 {
             </div>
         </div>
 
-        <form method="POST" enctype="multipart/form-data" class="edit-form">
+        <form method="POST" enctype="multipart/form-data" class="edit-form" id="profileForm">
             <div class="input-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" value="<?php echo htmlspecialchars($username); ?>" required>
+                <div class="error-message" id="username-error"></div>
             </div>
 
             <div class="input-group">
                 <label for="email">Email</label>
                 <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($email); ?>" required>
+                <div class="error-message" id="email-error"></div>
             </div>
 
             <div class="input-group">
                 <label for="profile_picture">Profile Picture</label>
-                <input type="file" id="profile_picture" name="profile_picture">
+                <input type="file" id="profile_picture" name="profile_picture" accept="image/*">
+                <div class="error-message" id="profile-picture-error"></div>
             </div>
 
             <button type="submit" class="update-btn">Update Profile</button>
         </form>
 
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('profileForm');
+            const usernameInput = document.getElementById('username');
+            const emailInput = document.getElementById('email');
+            const profilePictureInput = document.getElementById('profile_picture');
+
+            // Validation functions
+            function validateUsername(username) {
+                return username.length >= 3 && username.length <= 30 && /^[a-zA-Z0-9_]+$/.test(username);
+            }
+
+            function validateEmail(email) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            }
+
+            function validateProfilePicture(file) {
+                if (!file) return true; // Optional field
+                const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                return validTypes.includes(file.type);
+            }
+
+            // Live validation handlers
+            usernameInput.addEventListener('input', function() {
+                const errorElement = document.getElementById('username-error');
+                if (!validateUsername(this.value)) {
+                    errorElement.textContent = 'Username must be 3-30 characters long and contain only letters, numbers, and underscores';
+                    errorElement.style.display = 'block';
+                    this.classList.add('invalid');
+                    this.classList.remove('valid');
+                } else {
+                    errorElement.style.display = 'none';
+                    this.classList.add('valid');
+                    this.classList.remove('invalid');
+                }
+            });
+
+            emailInput.addEventListener('input', function() {
+                const errorElement = document.getElementById('email-error');
+                if (!validateEmail(this.value)) {
+                    errorElement.textContent = 'Please enter a valid email address';
+                    errorElement.style.display = 'block';
+                    this.classList.add('invalid');
+                    this.classList.remove('valid');
+                } else {
+                    errorElement.style.display = 'none';
+                    this.classList.add('valid');
+                    this.classList.remove('invalid');
+                }
+            });
+
+            profilePictureInput.addEventListener('change', function() {
+                const errorElement = document.getElementById('profile-picture-error');
+                if (this.files.length > 0 && !validateProfilePicture(this.files[0])) {
+                    errorElement.textContent = 'Please select a valid image file (JPEG, PNG, or GIF)';
+                    errorElement.style.display = 'block';
+                } else {
+                    errorElement.style.display = 'none';
+                }
+            });
+
+            // Form submission validation
+            form.addEventListener('submit', function(e) {
+                const username = usernameInput.value;
+                const email = emailInput.value;
+                const profilePicture = profilePictureInput.files[0];
+
+                if (!validateUsername(username) || !validateEmail(email) || 
+                    (profilePicture && !validateProfilePicture(profilePicture))) {
+                    e.preventDefault();
+                    alert('Please correct the errors in the form before submitting.');
+                }
+            });
+        });
+    </script>
 
 </body>
 </html>
