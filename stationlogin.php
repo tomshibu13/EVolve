@@ -439,7 +439,12 @@
             }
         }
 
-       
+        #stationOwnerFields {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
     </style>
 </head>
 <body>
@@ -881,7 +886,7 @@
 
         // Function to validate postal code
         function validatePostalCode(code) {
-            const postalRegex = /^\d{5}(-\d{4})?$/;  // US format, adjust for your country
+            const postalRegex = /^\d{6}(-\d{4})?$/;  // US format, adjust for your country
             if (!postalRegex.test(code)) {
                 return 'Please enter a valid postal code';
             }
@@ -896,7 +901,39 @@
             return '';
         }
 
-        // Add live validation event listeners
+        // Add these validation functions after the existing validation functions
+        function validateBusinessName(name) {
+            if (name.length < 2) {
+                return 'Business name must be at least 2 characters long';
+            }
+            if (!/^[a-zA-Z0-9\s&'-]+$/.test(name)) {
+                return 'Business name can only contain letters, numbers, spaces, &, \', and -';
+            }
+            return '';
+        }
+
+        function validateAddress(address) {
+            if (address.length < 5) {
+                return 'Please enter a complete address';
+            }
+            return '';
+        }
+
+        function validateCity(city) {
+            if (!/^[a-zA-Z\s-]+$/.test(city)) {
+                return 'City name can only contain letters, spaces, and hyphens';
+            }
+            return '';
+        }
+
+        function validateState(state) {
+            if (!/^[a-zA-Z\s]+$/.test(state)) {
+                return 'State name can only contain letters and spaces';
+            }
+            return '';
+        }
+
+        // Update the input event listeners section
         document.querySelectorAll('input, textarea').forEach(input => {
             input.addEventListener('input', function() {
                 let errorMessage = '';
@@ -945,6 +982,26 @@
                             errorMessage = validatePostalCode(value);
                         }
                         break;
+                    
+                    case 'businessName':
+                        errorMessage = validateBusinessName(value);
+                        break;
+                    
+                    case 'address':
+                        errorMessage = validateAddress(value);
+                        break;
+                    
+                    case 'city':
+                        errorMessage = validateCity(value);
+                        break;
+                    
+                    case 'state':
+                        errorMessage = validateState(value);
+                        break;
+                    
+                    case 'businessRegistration':
+                        errorMessage = validateBusinessRegistration(value);
+                        break;
                 }
                 
                 if (errorMessage) {
@@ -954,22 +1011,96 @@
                 }
             });
 
-            // Enhanced blur validation
+            // Enhanced blur validation with specific messages
             input.addEventListener('blur', function() {
                 const value = this.value.trim();
                 const isStationOwner = document.getElementById('isStationOwner').checked;
                 
-                // Check if field is required
-                if (this.required || (isStationOwner && this.closest('#stationOwnerFields'))) {
-                    if (!value) {
-                        const fieldName = this.previousElementSibling.textContent;
-                        showError(this.id, `${fieldName} is required`);
-                    } else {
-                        // Trigger input validation on blur
-                        this.dispatchEvent(new Event('input'));
+                if ((this.required || (isStationOwner && this.closest('#stationOwnerFields'))) && !value) {
+                    let fieldName = this.previousElementSibling.textContent;
+                    let customMessage;
+                    
+                    switch(this.id) {
+                        case 'businessName':
+                            customMessage = 'Please enter your business name';
+                            break;
+                        case 'phone':
+                            customMessage = 'Please enter a valid phone number';
+                            break;
+                        case 'address':
+                            customMessage = 'Please enter your business address';
+                            break;
+                        case 'city':
+                            customMessage = 'Please enter your city';
+                            break;
+                        case 'state':
+                            customMessage = 'Please enter your state';
+                            break;
+                        case 'postalCode':
+                            customMessage = 'Please enter your postal code';
+                            break;
+                        case 'businessRegistration':
+                            customMessage = 'Please enter your business registration number';
+                            break;
+                        default:
+                            customMessage = `${fieldName} is required`;
                     }
+                    
+                    showError(this.id, customMessage);
+                } else {
+                    // Trigger input validation on blur
+                    this.dispatchEvent(new Event('input'));
                 }
             });
+        });
+
+        // Add real-time phone number formatting
+        document.getElementById('phone').addEventListener('input', function(e) {
+            let value = this.value.replace(/\D/g, '');
+            if (value.length > 0) {
+                if (value.length <= 3) {
+                    value = value;
+                } else if (value.length <= 6) {
+                    value = value.slice(0, 3) + '-' + value.slice(3);
+                } else {
+                    value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6, 10);
+                }
+                this.value = value;
+            }
+        });
+
+        // Update the isStationOwner change handler
+        document.getElementById('isStationOwner').addEventListener('change', function() {
+            const stationOwnerFields = document.getElementById('stationOwnerFields');
+            const fields = stationOwnerFields.querySelectorAll('input, textarea');
+            
+            if (this.checked) {
+                stationOwnerFields.style.display = 'block';
+                fields.forEach(field => {
+                    field.required = true;
+                    // Clear any existing values
+                    field.value = '';
+                    // Remove any existing error states
+                    clearError(field.id);
+                });
+                
+                // Add slide-down animation
+                stationOwnerFields.style.maxHeight = stationOwnerFields.scrollHeight + 'px';
+                stationOwnerFields.style.opacity = '1';
+            } else {
+                // Add slide-up animation
+                stationOwnerFields.style.maxHeight = '0';
+                stationOwnerFields.style.opacity = '0';
+                
+                setTimeout(() => {
+                    stationOwnerFields.style.display = 'none';
+                    fields.forEach(field => {
+                        field.required = false;
+                        field.value = '';
+                        clearError(field.id);
+                    });
+                }, 300);
+            }
         });
 
         // Login form submit handler
@@ -1169,32 +1300,6 @@
                         toggleBtn.focus();
                     }
                 }
-            }
-        });
-
-        // Toggle station owner fields
-        document.getElementById('isStationOwner').addEventListener('change', function() {
-            const stationOwnerFields = document.getElementById('stationOwnerFields');
-            const fields = stationOwnerFields.querySelectorAll('input, textarea');
-            
-            if (this.checked) {
-                stationOwnerFields.style.display = 'block';
-                fields.forEach(field => {
-                    field.required = true;
-                    // Trigger validation for existing values
-                    field.dispatchEvent(new Event('input'));
-                });
-            } else {
-                stationOwnerFields.style.display = 'none';
-                fields.forEach(field => {
-                    field.required = false;
-                    // Clear any existing errors
-                    const errorElement = document.getElementById(`${field.id}-error`);
-                    if (errorElement) {
-                        errorElement.style.display = 'none';
-                    }
-                    field.style.borderColor = '#ddd';
-                });
             }
         });
     </script>

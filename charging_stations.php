@@ -507,7 +507,7 @@ try {
                                 <td><?php echo htmlspecialchars($station['name'] ?? 'N/A'); ?></td>
                                 <td><?php echo htmlspecialchars($station['owner_name'] ?? 'N/A'); ?></td>
                                 <td><?php echo htmlspecialchars($station['address'] ?? 'N/A'); ?></td>
-                                <td><?php echo htmlspecialchars($station['operator_name'] ?? 'N/A'); ?></td>
+                                <td><?php echo htmlspecialchars($station['owner_name'] ?? 'N/A'); ?></td>
                                 <td>
                                     <span class="status-badge status-<?php echo strtolower($station['status']); ?>">
                                         <?php echo ucfirst(htmlspecialchars($station['status'])); ?>
