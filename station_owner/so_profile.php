@@ -121,7 +121,7 @@ try {
                         <i class='bx bx-user-circle'></i> Profile Settings
                     </h3>
 
-                    <form method="POST" action="">
+                    <form id="profileForm" method="POST" action="">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Owner Name</label>
@@ -165,8 +165,11 @@ try {
                         </div>
 
                         <div class="text-end mt-3">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary" id="saveButton" disabled>
                                 <i class='bx bx-save'></i> Save Changes
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="window.history.back();">
+                                <i class='bx bx-arrow-back'></i> Back
                             </button>
                         </div>
                     </form>
@@ -176,5 +179,26 @@ try {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('profileForm');
+            const saveButton = document.getElementById('saveButton');
+            const initialData = new FormData(form);
+
+            form.addEventListener('input', function() {
+                const currentData = new FormData(form);
+                let isChanged = false;
+
+                for (let [key, value] of currentData.entries()) {
+                    if (value !== initialData.get(key)) {
+                        isChanged = true;
+                        break;
+                    }
+                }
+
+                saveButton.disabled = !isChanged;
+            });
+        });
+    </script>
 </body>
 </html>

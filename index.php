@@ -1033,6 +1033,42 @@ function isApprovedStationOwner($userId) {
             right: 0;
             z-index: -1;
         }
+
+        .login-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .close-modal {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #f8f9fa;
+        }
+
+        .close-modal:hover {
+            color: #333;
+            background: #e9ecef;
+        }
     </style>
 </head>
 <body>
@@ -1067,18 +1103,31 @@ function isApprovedStationOwner($userId) {
     echo "Session profile_picture: " . (isset($_SESSION['profile_picture']) ? $_SESSION['profile_picture'] : 'not set') . "\n";
     echo "-->";
     ?>
+    <?php
+    // Add this code block to fetch user data if name is not set
+    if (!isset($_SESSION['name']) || empty($_SESSION['name'])) {
+        try {
+            $stmt = $pdo->prepare("SELECT name FROM tbl_users WHERE user_id = ?");
+            $stmt->execute([$_SESSION['user_id']]);
+            $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($userData) {
+                $_SESSION['name'] = $userData['name'];
+            }
+        } catch(PDOException $e) {
+            error_log("Error fetching user data: " . $e->getMessage());
+        }
+    }
+    ?>
     <div class="user-profile">
-        <!-- <div class="profile-photo">
-            <?php if (isset($_SESSION['profile_picture']) && !empty($_SESSION['profile_picture'])): ?>
-                <img src="<?php echo htmlspecialchars($userData['profile_picture'] ?? '/api/placeholder/150/150'); ?>" 
-                     alt="Profile Photo"
-                     onerror="this.onerror=null; this.src='profile_picture';"
-                     class="profile-image">
-            <?php else: ?>
-                <img src="images/default-avatar.png" alt="Default Profile Photo" class="profile-image">
-            <?php endif; ?>
-        </div> -->
-        <span class="username"><?php echo htmlspecialchars($_SESSION['name'] ?? 'User'); ?></span>
+        <span class="username">
+            <?php 
+            if (isset($_SESSION['name']) && !empty($_SESSION['name'])) {
+                echo htmlspecialchars($_SESSION['name']);
+            } else {
+                echo 'User';
+            }
+            ?>
+        </span>
         <i class="fas fa-chevron-down"></i>
         <div class="dropdown-content">
             <a href="example.php">
@@ -1281,7 +1330,7 @@ function isApprovedStationOwner($userId) {
 
             <div class="ev-feature-card">
                 <?php if (isset($_SESSION['user_id'])): ?>
-                    <!-- Show slot booking link for logged in users -->
+                    <!-- Show slot booking link for logged in tbl_users -->
                     <a href="user_stations.php" style="text-decoration: none; color: inherit; display: block;">
                         <div class="ev-feature-icon-box">
                             <svg class="ev-feature-icon" viewBox="0 0 24 24">
@@ -1291,7 +1340,7 @@ function isApprovedStationOwner($userId) {
                         <div class="ev-feature-label">Slot Booking</div>
                     </a>
                 <?php else: ?>
-                    <!-- Show login prompt for non-logged in users -->
+                    <!-- Show login prompt for non-logged in tbl_users -->
                     <a href="#" onclick="showLoginModal(); return false;" style="text-decoration: none; color: inherit; display: block;">
                         <div class="ev-feature-icon-box">
                             <svg class="ev-feature-icon" viewBox="0 0 24 24">
@@ -2807,7 +2856,7 @@ function isApprovedStationOwner($userId) {
     <!-- Login Modal -->
     <div id="loginModal" class="login-modal">
         <div class="login-container">
-            <span class="close-modal" onclick="closeLoginModal()">&times;</span>
+            <span class="close-modal" onclick="closeLoginModal()"><i class="fas fa-times"></i></span>
             <div class="tabs">
                 <a href="#" class="tab active" onclick="showLoginTab(event)">Log In</a>
                 <a href="#" class="tab" onclick="showSignupTab(event)">Register</a>
@@ -2860,7 +2909,7 @@ function isApprovedStationOwner($userId) {
             </form>
 
             <!-- Signup Form -->
-            <form id="signupForm" action="register_process.php" method="post" class="tab-content">
+            <form id="signupForm" action="verify_otp.php" method="post" class="tab-content">
                 <div class="input-group">
                     <label for="signup-username">Username</label>
                     <input type="text" id="signup-username" name="username" required>
@@ -2884,6 +2933,8 @@ function isApprovedStationOwner($userId) {
                     <input type="password" id="signup-confirm-password" name="confirm_password" required>
                     <div class="validation-message" id="signup-confirm-password-validation"></div>
                 </div>
+
+                <div id="signup-error" class="error-message" style="display: none; color: red;"></div>
 
                 <button type="submit" class="submit-button">Sign Up</button>
 
@@ -3299,9 +3350,9 @@ function isApprovedStationOwner($userId) {
     function showLoginModal() {
         const modal = document.getElementById('loginModal');
         if (modal) {
-            modal.style.display = 'flex'; // Change to 'flex' instead of 'block'
-            // Reset to login tab
+            modal.style.display = 'flex';
             showLoginTab(new Event('click'));
+            setupLiveValidation();
         } else {
             console.error('Login modal element not found');
         }
@@ -3321,501 +3372,6 @@ function isApprovedStationOwner($userId) {
 
     // Add this function to handle closing the modal and clearing errors
     function closeLoginModal() {
-        // Hide the modal
-        document.getElementById('loginModal').style.display = 'none';
-        
-        // Clear all error messages
-        const errorMessages = document.querySelectorAll('.error-message');
-        errorMessages.forEach(error => error.remove());
-        
-        // Clear form inputs
-        document.getElementById('loginForm').reset();
-        document.getElementById('signupForm').reset();
-        
-        // Clear validation messages
-        document.querySelectorAll('.validation-message').forEach(msg => msg.textContent = '');
-        
-        // Reset tabs to default state (login tab)
-        showLoginTab(new Event('click'));
-    }
-
-    // Update the login form submission handler to include error cleanup
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Clear any existing error messages
-        const existingErrors = this.querySelectorAll('.error-message');
-        existingErrors.forEach(error => error.remove());
-        
-        // Create FormData object and convert to JSON
-        const formData = {
-            email: document.getElementById('login-email').value,
-            password: document.getElementById('login-password').value,
-            remember: document.getElementById('remember').checked
-        };
-
-        // Show loading state
-        const submitButton = this.querySelector('.submit-button');
-        const originalButtonText = submitButton.textContent;
-        submitButton.textContent = 'Logging in...';
-        submitButton.disabled = true;
-
-        // Send AJAX request
-        fetch('login_process.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Show success message
-                const successDiv = document.createElement('div');
-                successDiv.className = 'success-message';
-                successDiv.textContent = data.message;
-                this.insertBefore(successDiv, this.firstChild);
-                
-                // Redirect after brief delay
-                setTimeout(() => {
-                    window.location.href = data.redirect;
-                }, 1000);
-            } else {
-                // Show error message
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'error-message';
-                errorDiv.textContent = data.message;
-                this.insertBefore(errorDiv, this.firstChild);
-                
-                // Reset button
-                submitButton.textContent = originalButtonText;
-                submitButton.disabled = false;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            errorDiv.textContent = 'An error occurred. Please try again.';
-            
-            const closeBtn = document.createElement('span');
-            closeBtn.className = 'error-close';
-            closeBtn.innerHTML = '&times;';
-            closeBtn.onclick = function() {
-                errorDiv.remove();
-            };
-            errorDiv.appendChild(closeBtn);
-            
-            this.insertBefore(errorDiv, this.firstChild);
-            
-            // Reset button
-            submitButton.textContent = originalButtonText;
-            submitButton.disabled = false;
-        });
-    });
-
-    // Form validation functions
-    function validateUsername(username) {
-        // Check if username starts with a letter
-        if (!/^[a-zA-Z]/.test(username)) {
-            return "Username must start with a letter";
-        }
-        // Check minimum length
-        if (username.length < 3) {
-            return "Username must be at least 3 characters long";
-        }
-        // Check for valid characters (letters, numbers, and underscores only)
-        if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(username)) {
-            return "Username can only contain letters, numbers, and underscores";
-        }
-        return "";
-    }
-
-    function validateEmail(email) {
-        if (!email) return "Email is required";
-        if (!/^[a-zA-Z]/.test(email)) return "Email must start with a letter";
-
-        // Split email into local part and domain
-        const parts = email.toLowerCase().split('@');
-        if (parts.length !== 2) return "Please enter a valid email address";
-
-        const [localPart, domain] = parts;
-
-        // Check if domain is gmail.com
-        if (domain !== 'gmail.com') {
-            // Check if it's a common misspelling of gmail.com
-            const commonMisspellings = {
-                'gmail.co': 'Did you mean gmail.com?',
-                'gmai.com': 'Did you mean gmail.com?',
-                'gmil.com': 'Did you mean gmail.com?',
-                'gmal.com': 'Did you mean gmail.com?',
-                'gmail.comm': 'Did you mean gmail.com?',
-                'gmail.con': 'Did you mean gmail.com?',
-                'gmail.om': 'Did you mean gmail.com?',
-                'gmail.cm': 'Did you mean gmail.com?',
-                'gmail.cpm': 'Did you mean gmail.com?',
-                'gmail.vom': 'Did you mean gmail.com?',
-                'gmail.cim': 'Did you mean gmail.com?',
-                'gamil.com': 'Did you mean gmail.com?',
-                'gnail.com': 'Did you mean gmail.com?',
-                'gmaill.com': 'Did you mean gmail.com?',
-            };
-
-            if (commonMisspellings[domain]) {
-                return commonMisspellings[domain];
-            }
-            return "Please use a Gmail address (example@gmail.com)";
-        }
-
-        // Validate local part (username) of email
-        if (localPart.length < 6) return "Gmail username must be at least 6 characters long";
-        if (localPart.length > 30) return "Gmail username cannot exceed 30 characters";
-        
-        // Check for valid characters in username
-        if (!/^[a-zA-Z0-9]+([._-]?[a-zA-Z0-9]+)*$/.test(localPart)) {
-            return "Gmail username can only contain letters, numbers, dots, underscores, or hyphens";
-        }
-
-        // Check for consecutive special characters
-        if (/[._-]{2,}/.test(localPart)) {
-            return "Gmail username cannot contain consecutive dots, underscores, or hyphens";
-        }
-
-        // Check for special characters at start or end
-        if (/^[._-]|[._-]$/.test(localPart)) {
-            return "Gmail username cannot start or end with a dot, underscore, or hyphen";
-        }
-
-        return ""; // Return empty string if email is valid
-    }
-
-    function validatePassword(password) {
-        if (password.length < 8) {
-            return "Password must be at least 8 characters long";
-        }
-        if (!/[A-Z]/.test(password)) {
-            return "Password must contain at least one uppercase letter";
-        }
-        if (!/[a-z]/.test(password)) {
-            return "Password must contain at least one lowercase letter";
-        }
-        if (!/[0-9]/.test(password)) {
-            return "Password must contain at least one number";
-        }
-        return "";
-    }
-
-    // Add live validation when the DOM is loaded
-    document.addEventListener('DOMContentLoaded', function() {
-        // Login form validation
-        const loginForm = document.getElementById('loginForm');
-        const loginUsername = document.getElementById('login-username');
-        const loginPassword = document.getElementById('login-password');
-        
-        // Login username validation
-        loginUsername.addEventListener('input', function() {
-            const error = validateUsername(this.value);
-            const validationMessage = document.getElementById('login-username-validation');
-            validationMessage.textContent = error;
-            this.classList.toggle('error', error !== '');
-        });
-
-        // Login password validation
-        loginPassword.addEventListener('input', function() {
-            const error = validatePassword(this.value);
-            const validationMessage = document.getElementById('login-password-validation');
-            validationMessage.textContent = error;
-            this.classList.toggle('error', error !== '');
-        });
-
-        // Login form submission
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const usernameError = validateUsername(loginUsername.value);
-            const passwordError = validatePassword(loginPassword.value);
-
-            // Clear previous error messages
-            document.getElementById('login-username-validation').textContent = usernameError;
-            document.getElementById('login-password-validation').textContent = passwordError;
-
-            if (usernameError || passwordError) {
-                return;
-            }
-
-            // Create FormData object
-            const formData = new FormData(this);
-
-            // Send AJAX request
-            fetch('login_process.php', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Redirect on success
-                    window.location.href = data.redirect;
-                } else {
-                    // Show error message
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'error-message';
-                    errorDiv.textContent = data.error;
-                    
-                    // Insert error message at the top of the form
-                    const firstChild = loginForm.firstChild;
-                    loginForm.insertBefore(errorDiv, firstChild);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                // Show generic error message
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'error-message';
-                errorDiv.textContent = 'An error occurred. Please try again.';
-                
-                const firstChild = loginForm.firstChild;
-                loginForm.insertBefore(errorDiv, firstChild);
-            });
-        });
-
-        // Signup form validation
-        const signupForm = document.getElementById('signupForm');
-        const signupUsername = document.getElementById('signup-username');
-        const signupEmail = document.getElementById('signup-email');
-        const signupPassword = document.getElementById('signup-password');
-        const confirmPassword = document.getElementById('signup-confirm-password');
-
-        // Signup username validation
-        signupUsername.addEventListener('input', function() {
-            const error = validateUsername(this.value);
-            const errorElement = document.getElementById('signup-username-validation');
-            errorElement.textContent = error;
-            this.classList.toggle('error', error !== '');
-        });
-
-        // Signup email validation
-        signupEmail.addEventListener('input', function() {
-            const error = validateEmail(this.value);
-            const errorElement = document.getElementById('signup-email-validation');
-            errorElement.textContent = error;
-            this.classList.toggle('error', error !== '');
-        });
-
-        // Signup password validation
-        signupPassword.addEventListener('input', function() {
-            const error = validatePassword(this.value);
-            const errorElement = document.getElementById('signup-password-validation');
-            errorElement.textContent = error;
-            this.classList.toggle('error', error !== '');
-            
-            // Check confirm password match if it has a value
-            if (confirmPassword.value) {
-                const confirmError = confirmPassword.value !== this.value ? 
-                    "Passwords do not match" : "";
-                document.getElementById('signup-confirm-password-validation').textContent = confirmError;
-                confirmPassword.classList.toggle('error', confirmError !== '');
-            }
-        });
-
-        // Confirm password validation
-        confirmPassword.addEventListener('input', function() {
-            const error = this.value !== signupPassword.value ? 
-                "Passwords do not match" : "";
-            const errorElement = document.getElementById('signup-confirm-password-validation');
-            errorElement.textContent = error;
-            this.classList.toggle('error', error !== '');
-        });
-
-        // Signup form submission
-        signupForm.addEventListener('submit', function(e) {
-            const usernameError = validateUsername(signupUsername.value);
-            const emailError = validateEmail(signupEmail.value);
-            const passwordError = validatePassword(signupPassword.value);
-            const confirmError = signupPassword.value !== confirmPassword.value;
-
-            if (usernameError || emailError || passwordError || confirmError) {
-                e.preventDefault();
-                document.getElementById('signup-username-validation').textContent = usernameError;
-                document.getElementById('signup-email-validation').textContent = emailError;
-                document.getElementById('signup-password-validation').textContent = passwordError;
-                document.getElementById('signup-confirm-password-validation').textContent = 
-                    confirmError ? "Passwords do not match" : "";
-                document.getElementById('signup-error-message').textContent = 
-                    "Please fix the errors before submitting";
-            }
-        });
-
-        const profileImage = document.getElementById('profile-image');
-        const previewImage = document.getElementById('previewImage');
-        const imageError = document.getElementById('image-error');
-
-        profileImage.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            
-            // Validate file
-            if (file) {
-                // Check file size (5MB max)
-                if (file.size > 5 * 1024 * 1024) {
-                    imageError.textContent = "Image size must be less than 5MB";
-                    this.value = '';
-                    return;
-                }
-
-                // Check file type
-                const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-                if (!validTypes.includes(file.type)) {
-                    imageError.textContent = "Please upload a JPG or PNG image";
-                    this.value = '';
-                    return;
-                }
-
-                // Preview image
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    previewImage.src = e.target.result;
-                    imageError.textContent = '';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // Add image validation to form submission
-        signupForm.addEventListener('submit', function(e) {
-            // ... existing validation ...
-
-            const file = profileImage.files[0];
-            if (file && file.size > 5 * 1024 * 1024) {
-                e.preventDefault();
-                imageError.textContent = "Image size must be less than 5MB";
-            }
-        });
-
-        // Add this to your existing scripts
-        document.addEventListener('DOMContentLoaded', function() {
-            const userProfile = document.querySelector('.user-profile');
-            if (userProfile) {
-                userProfile.addEventListener('click', function(e) {
-                    const dropdown = this.querySelector('.dropdown-content');
-                    if (e.target.closest('.dropdown-content')) {
-                        // If clicking a dropdown item, let it process normally
-                        return;
-                    }
-                    // Toggle dropdown visibility
-                    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-                });
-
-                // Close dropdown when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (!userProfile.contains(e.target)) {
-                        userProfile.querySelector('.dropdown-content').style.display = 'none';
-                    }
-                });
-            }
-        });
-
-       
-    </script>
-
-
-
-   
-
-    <script>
-    function showSignupModal() {
-        // Show the modal
-        const modal = document.getElementById('loginModal');
-        modal.style.display = 'flex';
-        
-        // Switch to signup tab
-        document.getElementById('loginForm').classList.remove('active');
-        document.getElementById('signupForm').classList.add('active');
-        document.querySelector('.tab:first-child').classList.remove('active');
-        document.querySelector('.tab:last-child').classList.add('active');
-    }
-    </script>
-
-    <script>
-    function scrollToSupport(event) {
-        event.preventDefault();
-        const supportSection = document.getElementById('support');
-        supportSection.scrollIntoView({ 
-            behavior: 'smooth',
-            block: 'start'
-        });
-    }
-    </script>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Define the showLoginModal function
-        function showLoginModal() {
-            const modal = document.getElementById('loginModal');
-            if (modal) {
-                modal.style.display = 'flex';
-            } else {
-                console.error('Login modal element not found');
-            }
-        }
-
-        // Add tab switching functions
-        function showLoginTab() {
-            document.getElementById('loginForm').classList.add('active');
-            document.getElementById('signupForm').classList.remove('active');
-            document.getElementById('loginTab').classList.add('active');
-            document.getElementById('signupTab').classList.remove('active');
-        }
-
-        function showSignupTab() {
-            document.getElementById('loginForm').classList.remove('active');
-            document.getElementById('signupForm').classList.add('active');
-            document.getElementById('loginTab').classList.remove('active');
-            document.getElementById('signupTab').classList.add('active');
-        }
-
-        // Add click handler to login/signup button
-        const loginButton = document.getElementById('loginSignupBtn');
-        if (loginButton) {
-            loginButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                showLoginModal();
-            });
-        }
-
-        // Add click handlers for tab switching
-        const loginTab = document.getElementById('loginTab');
-        const signupTab = document.getElementById('signupTab');
-
-        if (loginTab) {
-            loginTab.addEventListener('click', function(e) {
-                e.preventDefault();
-                showLoginTab();
-            });
-        }
-
-        if (signupTab) {
-            signupTab.addEventListener('click', function(e) {
-                e.preventDefault();
-                showSignupTab();
-            });
-        }
-    });
-    </script>
-
-    <!-- Add this script section after your existing scripts -->
-    <script>
-    // Global functions for modal control
-    function showLoginModal() {
-        const modal = document.getElementById('loginModal');
-        modal.style.display = 'flex';
-        showLoginTab(new Event('click')); // Reset to login tab by default
-    }
-
-    function closeLoginModal() {
         const modal = document.getElementById('loginModal');
         modal.style.display = 'none';
         
@@ -3825,55 +3381,30 @@ function isApprovedStationOwner($userId) {
         document.querySelectorAll('.validation-message').forEach(msg => msg.textContent = '');
     }
 
-    function showLoginTab(event) {
-        event.preventDefault();
-        // Update tab styles
-        document.querySelector('.tabs .tab:first-child').classList.add('active');
-        document.querySelector('.tabs .tab:last-child').classList.remove('active');
-        
-        // Update form visibility
-        document.getElementById('loginForm').classList.add('active');
-        document.getElementById('signupForm').classList.remove('active');
-    }
-
-    function showSignupTab(event) {
-        event.preventDefault();
-        // Update tab styles
-        document.querySelector('.tabs .tab:first-child').classList.remove('active');
-        document.querySelector('.tabs .tab:last-child').classList.add('active');
-        
-        // Update form visibility
-        document.getElementById('loginForm').classList.remove('active');
-        document.getElementById('signupForm').classList.add('active');
-    }
-
     // Initialize event listeners when the document is ready
     document.addEventListener('DOMContentLoaded', function() {
-        // Add click handler for the login/signup button
-        const loginSignupBtn = document.getElementById('loginSignupBtn');
-        if (loginSignupBtn) {
-            loginSignupBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                showLoginModal();
-            });
-        }
-
+        const modal = document.getElementById('loginModal');
+        const modalContent = document.querySelector('.login-container');
+        
         // Add click handler for the close button
         const closeBtn = document.querySelector('.close-modal');
         if (closeBtn) {
-            closeBtn.addEventListener('click', closeLoginModal);
-        }
-
-        // Close modal when clicking outside
-        const modal = document.getElementById('loginModal');
-        if (modal) {
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    closeLoginModal();
-                }
+            closeBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent event from bubbling up
+                closeLoginModal();
             });
         }
 
+        // Prevent modal from closing when clicking inside the modal content
+        if (modalContent) {
+            modalContent.addEventListener('click', function(e) {
+                e.stopPropagation(); // Stop the click from reaching the modal backdrop
+            });
+        }
+
+        // Remove the click outside listener by not adding it at all
+        // The modal will now only close via the close button
+        
         // Add form submission handlers
         const loginForm = document.getElementById('loginForm');
         if (loginForm) {
@@ -3920,10 +3451,6 @@ function isApprovedStationOwner($userId) {
         }
         </style>
     `);
-    </script>
-
-    <script>
-    // ... existing code ...
 
     // Add this function to handle live validation
     function setupLiveValidation() {
@@ -4019,38 +3546,6 @@ function isApprovedStationOwner($userId) {
                 }
             });
         }
-    }
-
-    // Call setupLiveValidation when the modal is shown
-    function showLoginModal() {
-        const modal = document.getElementById('loginModal');
-        if (modal) {
-            modal.style.display = 'flex';
-            showLoginTab(new Event('click'));
-            // Set up live validation after modal is shown
-            setupLiveValidation();
-        } else {
-            console.error('Login modal element not found');
-        }
-    }
-
-    // Also set up validation when switching tabs
-    function showLoginTab(event) {
-        event.preventDefault();
-        document.getElementById('loginForm').classList.add('active');
-        document.getElementById('signupForm').classList.remove('active');
-        document.querySelector('.tab:first-child').classList.add('active');
-        document.querySelector('.tab:last-child').classList.remove('active');
-        setupLiveValidation();
-    }
-
-    function showSignupTab(event) {
-        event.preventDefault();
-        document.getElementById('loginForm').classList.remove('active');
-        document.getElementById('signupForm').classList.add('active');
-        document.querySelector('.tab:first-child').classList.remove('active');
-        document.querySelector('.tab:last-child').classList.add('active');
-        setupLiveValidation();
     }
 
     // Keep the validation functions as they are
@@ -4171,33 +3666,20 @@ function isApprovedStationOwner($userId) {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Show success message and redirect
-                const successDiv = document.createElement('div');
-                successDiv.className = 'success-message';
-                successDiv.textContent = data.message || 'Registration successful!';
-                this.insertBefore(successDiv, this.firstChild);
-                
-                // Redirect after a short delay
-                setTimeout(() => {
-                    window.location.href = data.redirect || 'index.php';
-                }, 1500);
-            } else {
-                // Show error message
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'error-message';
-                errorDiv.textContent = data.error || 'Registration failed. Please try again.';
-                this.insertBefore(errorDiv, this.firstChild);
+        .then(response => response.json().then(data => ({status: response.status, data: data})))
+        .then(({status, data}) => {
+            if (!data.success) {
+                displayError(data.error);
+                return;
+            }
+            
+            if (data.redirect) {
+                window.location.href = data.redirect;
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            errorDiv.textContent = 'An error occurred. Please try again.';
-            this.insertBefore(errorDiv, this.firstChild);
+            displayError('An unexpected error occurred. Please try again.');
         });
     });
     </script>
@@ -4309,48 +3791,20 @@ function isApprovedStationOwner($userId) {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const successDiv = document.createElement('div');
-                    successDiv.className = 'success-message';
-                    successDiv.textContent = data.message || 'Registration successful!';
-                    this.insertBefore(successDiv, this.firstChild);
-                    
-                    setTimeout(() => {
-                        window.location.href = data.redirect || 'index.php';
-                    }, 1500);
-                } else {
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'error-message';
-                    errorDiv.textContent = data.error || 'Registration failed. Please try again.';
-                    
-                    const closeBtn = document.createElement('span');
-                    closeBtn.className = 'error-close';
-                    closeBtn.innerHTML = '&times;';
-                    closeBtn.onclick = function() {
-                        errorDiv.remove();
-                    };
-                    errorDiv.appendChild(closeBtn);
-                    
-                    this.insertBefore(errorDiv, this.firstChild);
+            .then(response => response.json().then(data => ({status: response.status, data: data})))
+            .then(({status, data}) => {
+                if (!data.success) {
+                    displayError(data.error);
+                    return;
+                }
+                
+                if (data.redirect) {
+                    window.location.href = data.redirect;
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'error-message';
-                errorDiv.textContent = 'An error occurred. Please try again.';
-                
-                const closeBtn = document.createElement('span');
-                closeBtn.className = 'error-close';
-                closeBtn.innerHTML = '&times;';
-                closeBtn.onclick = function() {
-                    errorDiv.remove();
-                };
-                errorDiv.appendChild(closeBtn);
-                
-                this.insertBefore(errorDiv, this.firstChild);
+                displayError('An unexpected error occurred. Please try again.');
             });
         }
 
@@ -4377,5 +3831,98 @@ function isApprovedStationOwner($userId) {
         initializeFormHandlers();
     });
     </script>
+
+    <!-- After user registration logic -->
+    <?php
+    if (isset($_POST['signup-username']) && isset($_POST['signup-email']) && isset($_POST['signup-password'])) {
+        try {
+            $username = $_POST['signup-username'];
+            $email = $_POST['signup-email'];
+            $password = $_POST['signup-password'];
+            
+            // Hash password
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            
+            // Generate OTP
+            $otp = sprintf("%06d", mt_rand(100000, 999999));
+            $otpExpiration = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+            
+            // Begin transaction
+            $pdo->beginTransaction();
+            
+            // Insert user data
+            $stmt = $pdo->prepare("INSERT INTO tbl_users (username, email, password, otp, otp_expiration, is_verified) VALUES (?, ?, ?, ?, ?, 0)");
+            $stmt->execute([$username, $email, $hashedPassword, $otp, $otpExpiration]);
+            
+            // Get the user ID
+            $userId = $pdo->lastInsertId();
+            
+            // Send OTP email
+            if (sendOtpEmail($email, $otp)) {
+                $pdo->commit();
+                
+                // Start session and store necessary data
+                $_SESSION['temp_user_id'] = $userId;
+                $_SESSION['temp_email'] = $email;
+                
+                // Return success response for AJAX
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Registration successful! Please check your email for OTP verification.',
+                    'redirect' => 'verify_otp.php'
+                ]);
+                exit;
+            } else {
+                throw new Exception("Failed to send OTP email");
+            }
+            
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            echo json_encode([
+                'success' => false,
+                'error' => 'Registration failed: ' . $e->getMessage()
+            ]);
+            exit;
+        }
+    }
+
+    function sendOtpEmail($email, $otp) {
+        require 'vendor/autoload.php'; // Make sure you have PHPMailer installed
+        
+        $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+        
+        try {
+            // Server settings
+            $mail->isSMTP();
+            $mail->Host = 'smtp.gmail.com';
+            $mail->SMTPAuth = true;
+            $mail->Username = 'evolve1829@gmail.com';
+            $mail->Password = 'qgmg ijoz obaw wvth';
+            $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = 587;
+            
+            // Recipients
+            $mail->setFrom('evolve1829@gmail.com', 'EVolve');
+            $mail->addAddress($email);
+            
+            // Content
+            $mail->isHTML(true);
+            $mail->Subject = 'Your EVolve Verification Code';
+            $mail->Body = "
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                    <h2>Welcome to EVolve!</h2>
+                    <p>Your verification code is: <strong style='font-size: 24px;'>{$otp}</strong></p>
+                    <p>This code will expire in 10 minutes.</p>
+                    <p>If you didn't request this code, please ignore this email.</p>
+                </div>";
+            
+            $mail->send();
+            return true;
+        } catch (Exception $e) {
+            error_log("Email sending failed: " . $mail->ErrorInfo);
+            return false;
+        }
+    }
+    ?>
 </body>
 </html>

@@ -553,17 +553,19 @@ try {
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="user_list.php" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        <span>Users</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="station_owner_details.php" class="nav-link active">
                         <i class="fas fa-users"></i>
                         <span>Station Owner Details</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="bookings.php" class="nav-link">
-                        <i class="fas fa-bookmark"></i>
-                        <span>Bookings</span>
-                    </a>
-                </li>
+                
+
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="fas fa-chart-bar"></i>

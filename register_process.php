@@ -1,16 +1,12 @@
 <?php
 session_start();
 require_once 'config.php';
+require 'vendor/autoload.php'; // For PHPMailer
 
 header('Content-Type: application/json');
-error_reporting(E_ALL);
-ini_set('display_errors', 0); // Don't display errors to users
+ini_set('display_errors', 0);
 
 try {
-    // Log incoming data (for debugging)
-    error_log("Registration attempt - POST data: " . print_r($_POST, true));
-    
-    // Validate input
     $required_fields = ['username', 'email', 'password'];
     foreach ($required_fields as $field) {
         if (empty($_POST[$field])) {
@@ -22,41 +18,46 @@ try {
     $email = trim($_POST['email']);
     $password = $_POST['password'];
 
-    // Validate username (at least 3 characters, alphanumeric and underscore only)
     if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_]{2,}$/', $username)) {
         throw new Exception('Username must start with a letter and contain only letters, numbers, and underscores (minimum 3 characters)');
     }
 
-    // Validate email
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         throw new Exception('Invalid email format');
     }
 
-    // Validate password strength (at least 8 characters)
     if (strlen($password) < 8) {
         throw new Exception('Password must be at least 8 characters long');
     }
 
-    // Check for existing user with more detailed error messages
     $stmt = $pdo->prepare("SELECT username, email FROM tbl_users WHERE username = ? OR email = ?");
     $stmt->execute([$username, $email]);
     $existing = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if ($existing) {
         if ($existing['username'] === $username) {
-            throw new Exception('Username is already taken');
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Username is already taken'
+            ]);
+            exit();
         }
         if ($existing['email'] === $email) {
-            throw new Exception('Email is already registered');
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Email is already registered'
+            ]);
+            exit();
         }
     }
 
-    // Handle profile picture (if provided)
     $profilePicturePath = null;
     if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
         $file = $_FILES['profile_picture'];
         $allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-        $maxSize = 5 * 1024 * 1024; // 5MB
+        $maxSize = 5 * 1024 * 1024;
 
         if (!in_array($file['type'], $allowedTypes)) {
             throw new Exception('Invalid file type. Only JPG and PNG are allowed.');
@@ -80,19 +81,23 @@ try {
         $profilePicturePath = $uploadPath;
     }
 
-    // Begin transaction
+    $otp = sprintf("%06d", mt_rand(100000, 999999));
+    $otpExpiration = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+
     $pdo->beginTransaction();
 
     try {
-        // Insert new user
         $stmt = $pdo->prepare("
             INSERT INTO tbl_users (
                 email, 
                 passwordhash, 
-                username, 
-                profile_picture, 
-                status
-            ) VALUES (?, ?, ?, ?, 'active')
+                username,
+                profile_picture,
+                status,
+                otp,
+                otp_expiration,
+                is_verified
+            ) VALUES (?, ?, ?, ?, 'pending', ?, ?, 0)
         ");
         
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
@@ -101,24 +106,31 @@ try {
             $email,
             $hashedPassword,
             $username,
-            $profilePicturePath
+            $profilePicturePath,
+            $otp,
+            $otpExpiration
         ]);
 
         $userId = $pdo->lastInsertId();
-        
-        // Commit transaction
-        $pdo->commit();
 
-        // Set session variables
-        $_SESSION['user_id'] = $userId;
-        $_SESSION['username'] = $username;
-        $_SESSION['profile_picture'] = $profilePicturePath;
+        if (sendOtpEmail($email, $otp)) {
+            $pdo->commit();
+            
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
+            
+            $_SESSION['temp_user_id'] = $userId;
+            $_SESSION['temp_email'] = $email;
 
-        echo json_encode([
-            'success' => true,
-            'message' => 'Registration successful!',
-            'redirect' => 'index.php'
-        ]);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Registration successful! Please check your email for verification code.',
+                'redirect' => 'verify_otp.php'
+            ]);
+        } else {
+            throw new Exception('Failed to send verification email');
+        }
 
     } catch (Exception $e) {
         $pdo->rollBack();
@@ -126,10 +138,41 @@ try {
     }
 
 } catch (Exception $e) {
-    error_log("Registration error: " . $e->getMessage());
     echo json_encode([
         'success' => false,
         'error' => $e->getMessage()
     ]);
+}
+
+function sendOtpEmail($email, $otp) {
+    $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+    
+    try {
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'evolve1829@gmail.com';
+        $mail->Password = 'qgmg ijoz obaw wvth';
+        $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
+        
+        $mail->setFrom('evolve1829@gmail.com', 'EVolve');
+        $mail->addAddress($email);
+        
+        $mail->isHTML(true);
+        $mail->Subject = 'Your EVolve Verification Code';
+        $mail->Body = "
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
+                <h2>Welcome to EVolve!</h2>
+                <p>Your verification code is: <strong style='font-size: 24px;'>{$otp}</strong></p>
+                <p>This code will expire in 10 minutes.</p>
+                <p>If you didn't request this code, please ignore this email.</p>
+            </div>";
+        
+        $mail->send();
+        return true;
+    } catch (Exception $e) {
+        return false;
+    }
 }
 ?> 
