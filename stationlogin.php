@@ -1,3 +1,6 @@
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -440,59 +443,77 @@
         }
 
         #stationOwnerFields {
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
+            max-height: none;
+            opacity: 1;
+            overflow: visible;
             transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
         }
     </style>
 </head>
 <body>
-    <?php include 'header.php'; ?>
+    <?php
+    // Check if user is logged in
+    $userLoggedIn = isset($_SESSION['user_id']);
+    $userData = null;
+    
+    if ($userLoggedIn) {
+        // Database connection
+        $servername = "localhost";
+        $username = "root";
+        $password = "";
+        $dbname = "evolve1";
+        
+        try {
+            $conn = new mysqli($servername, $username, $password, $dbname);
+            if ($conn->connect_error) {
+                throw new Exception("Connection failed: " . $conn->connect_error);
+            }
+            
+            // Fetch user data
+            $stmt = $conn->prepare("SELECT name, email, username, phone_number FROM tbl_users WHERE user_id = ?");
+            $stmt->bind_param("i", $_SESSION['user_id']);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $userData = $result->fetch_assoc();
+            
+            $stmt->close();
+            $conn->close();
+        } catch (Exception $e) {
+            // Handle error silently
+            error_log("Error fetching user data: " . $e->getMessage());
+        }
+    }
+    ?>
+
     <div class="page-wrapper">
         <div class="container">
-            <!-- Login Form -->
-            <div class="auth-form" id="loginContainer">
-                <h1>Sign In</h1>
-                <form id="loginForm">
-                    <div class="form-group">
-                        <label for="loginEmail">Email</label>
-                        <input type="email" id="loginEmail" placeholder="Email Address" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="loginPassword">Password</label>
-                        <input type="password" id="loginPassword" placeholder="Password" required>
-                    </div>
-                    <button type="submit" class="auth-btn" id="loginButton">Sign In</button>
-                    <div class="form-footer">
-                        <div class="remember-me">
-                            <input type="checkbox" id="remember">
-                            <label for="remember">Remember Me</label>
-                        </div>
-                        <a href="#" id="forgotPassword">Forgot Password</a>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Signup Form (initially hidden) -->
-            <div class="auth-form hidden" id="signupContainer">
+            <!-- Signup Form -->
+            <div class="auth-form" id="signupContainer">
                 <h1>Sign Up</h1>
                 <form id="signupForm">
                     <div class="form-group">
                         <label for="signupFullName">Full Name</label>
-                        <input type="text" id="signupFullName" placeholder="Full Name" required>
+                        <input type="text" id="signupFullName" placeholder="Full Name" required 
+                               value="<?php echo $userLoggedIn ? htmlspecialchars($userData['name']) : ''; ?>" 
+                               <?php echo $userLoggedIn ? 'readonly' : ''; ?>>
                         <div class="error-message" id="signupFullName-error"></div>
                     </div>
                     <div class="form-group">
                         <label for="signupEmail">Email Address</label>
-                        <input type="email" id="signupEmail" placeholder="Email Address" required>
+                        <input type="email" id="signupEmail" placeholder="Email Address" required 
+                               value="<?php echo $userLoggedIn ? htmlspecialchars($userData['email']) : ''; ?>"
+                               <?php echo $userLoggedIn ? 'readonly' : ''; ?>>
                         <div class="error-message" id="signupEmail-error"></div>
                     </div>
                     <div class="form-group">
                         <label for="signupUsername">Username</label>
-                        <input type="text" id="signupUsername" placeholder="Username" required>
+                        <input type="text" id="signupUsername" placeholder="Username" required 
+                               value="<?php echo $userLoggedIn ? htmlspecialchars($userData['username']) : ''; ?>"
+                               <?php echo $userLoggedIn ? 'readonly' : ''; ?>>
                         <div class="error-message" id="signupUsername-error"></div>
                     </div>
+
+                    <?php if (!$userLoggedIn): ?>
                     <div class="form-group">
                         <label for="signupPassword">Password</label>
                         <input type="password" id="signupPassword" placeholder="Password" required>
@@ -506,61 +527,63 @@
                         <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
                         <div class="error-message" id="confirmPassword-error"></div>
                     </div>
+                    <?php endif; ?>
+
                     <div class="form-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="isStationOwner"> I want to register as a Station Owner
-                        </label>
-                    </div>
-                    <div id="stationOwnerFields" style="display: none;">
-                        <div class="form-group">
-                            <label for="businessName">Business Name</label>
-                            <input type="text" id="businessName" placeholder="Business Name">
-                            <div class="error-message" id="businessName-error"></div>
+                        <div class="remember-me">
+                            <input type="checkbox" id="isStationOwner" checked disabled>
+                            <label for="isStationOwner">Register as Station Owner</label>
                         </div>
+                    </div>
+
+                    <div class="form-group">
+                        <h3>Station Owner Details</h3>
+                    </div>
+                    <div id="stationOwnerFields">
                         <div class="form-group">
                             <label for="phone">Phone Number</label>
-                            <input type="tel" id="phone" placeholder="Phone Number">
+                            <input type="tel" id="phone" placeholder="Phone Number" required 
+                                   value="<?php echo $userLoggedIn ? htmlspecialchars($userData['phone_number']) : ''; ?>">
                             <div class="error-message" id="phone-error"></div>
                         </div>
                         <div class="form-group">
                             <label for="address">Address</label>
-                            <textarea id="address" placeholder="Full Address"></textarea>
+                            <textarea id="address" placeholder="Full Address" required></textarea>
                             <div class="error-message" id="address-error"></div>
                         </div>
                         <div class="form-group">
                             <label for="city">City</label>
-                            <input type="text" id="city" placeholder="City">
+                            <input type="text" id="city" placeholder="City" required>
                             <div class="error-message" id="city-error"></div>
                         </div>
                         <div class="form-group">
                             <label for="state">State</label>
-                            <input type="text" id="state" placeholder="State">
+                            <input type="text" id="state" placeholder="State" required>
                             <div class="error-message" id="state-error"></div>
                         </div>
                         <div class="form-group">
                             <label for="postalCode">Postal Code</label>
-                            <input type="text" id="postalCode" placeholder="Postal Code">
+                            <input type="text" id="postalCode" placeholder="Postal Code" required>
                             <div class="error-message" id="postalCode-error"></div>
                         </div>
                         <div class="form-group">
                             <label for="businessRegistration">Business Registration Number</label>
-                            <input type="text" id="businessRegistration" placeholder="Business Registration Number">
+                            <input type="text" id="businessRegistration" placeholder="Business Registration Number" required>
                             <div class="error-message" id="businessRegistration-error"></div>
                         </div>
                     </div>
-                    <button type="submit" class="auth-btn" id="signupButton">Create Account</button>
+                    <button type="submit" class="auth-btn" id="signupButton">Register as Station Owner</button>
                     <div class="terms">
                         By signing up, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
                     </div>
                 </form>
             </div>
 
-            <!-- Welcome Section - Changes based on current form -->
+            <!-- Welcome Section -->
             <div class="welcome-section" id="welcomeSection">
                 <div class="welcome-content" id="welcomeContent">
-                    <h2>Welcome to login</h2>
-                    <p>Don't have an account?</p>
-                    <button class="toggle-btn" id="toggleSignup">Sign Up</button>
+                    <h2>Register Your Station</h2>
+                    <p>Join our network of charging stations</p>
                 </div>
             </div>
         </div>
@@ -568,21 +591,16 @@
 
     <script>
         // DOM Elements
-        const loginContainer = document.getElementById('loginContainer');
         const signupContainer = document.getElementById('signupContainer');
         const welcomeSection = document.getElementById('welcomeSection');
         const welcomeContent = document.getElementById('welcomeContent');
-        const toggleBtn = document.getElementById('toggleSignup');
-        const loginForm = document.getElementById('loginForm');
         const signupForm = document.getElementById('signupForm');
         const passwordInput = document.getElementById('signupPassword');
         const passwordStrength = document.getElementById('passwordStrength');
         const confirmPassword = document.getElementById('confirmPassword');
-        const loginButton = document.getElementById('loginButton');
         const signupButton = document.getElementById('signupButton');
 
         // State variable to track current form
-        let isLoginForm = true;
         let isAnimating = false;
 
         // Function to show error message
@@ -731,15 +749,8 @@
             
             setTimeout(() => {
                 // Update content
-                if (isLoginForm) {
-                    welcomeContent.querySelector('h2').textContent = 'Welcome to login';
-                    welcomeContent.querySelector('p').textContent = "Don't have an account?";
-                    toggleBtn.textContent = 'Sign Up';
-                } else {
-                    welcomeContent.querySelector('h2').textContent = 'Welcome Back';
-                    welcomeContent.querySelector('p').textContent = 'Already have an account?';
-                    toggleBtn.textContent = 'Sign In';
-                }
+                welcomeContent.querySelector('h2').textContent = 'Register Your Station';
+                welcomeContent.querySelector('p').textContent = 'Join our network of charging stations';
                 
                 // Prepare for slide in
                 welcomeContent.classList.remove('slide-out');
@@ -750,66 +761,6 @@
                     isAnimating = false;
                 }, 300);
             }, 300);
-        }
-
-        // Function to toggle between login and signup forms
-        function toggleForms() {
-            if (isAnimating) return;
-            isLoginForm = !isLoginForm;
-            
-            // Animate welcome section
-            animateWelcomeSection();
-            
-            // Change background color based on form
-            document.body.style.backgroundColor = isLoginForm ? '#f5f5f5' : '#f8f8f8';
-            
-            if (isLoginForm) {
-                // Hide signup, then show login
-                signupContainer.style.opacity = '0';
-                signupContainer.style.transform = 'translateX(50px)';
-                
-                setTimeout(() => {
-                    signupContainer.classList.add('hidden');
-                    loginContainer.classList.remove('hidden');
-                    
-                    // Set initial state for login container
-                    loginContainer.style.opacity = '0';
-                    loginContainer.style.transform = 'translateX(-50px)';
-                    
-                    // Trigger reflow
-                    void loginContainer.offsetWidth;
-                    
-                    // Animate login container in
-                    loginContainer.style.opacity = '1';
-                    loginContainer.style.transform = 'translateX(0)';
-                    
-                    // Animate form groups
-                    animateFormGroups('loginForm');
-                }, 300);
-            } else {
-                // Hide login, then show signup
-                loginContainer.style.opacity = '0';
-                loginContainer.style.transform = 'translateX(-50px)';
-                
-                setTimeout(() => {
-                    loginContainer.classList.add('hidden');
-                    signupContainer.classList.remove('hidden');
-                    
-                    // Set initial state for signup container
-                    signupContainer.style.opacity = '0';
-                    signupContainer.style.transform = 'translateX(50px)';
-                    
-                    // Trigger reflow
-                    void signupContainer.offsetWidth;
-                    
-                    // Animate signup container in
-                    signupContainer.style.opacity = '1';
-                    signupContainer.style.transform = 'translateX(0)';
-                    
-                    // Animate form groups
-                    animateFormGroups('signupForm');
-                }, 300);
-            }
         }
 
         // Function to simulate API call with loading state
@@ -831,16 +782,11 @@
 
         // Initialize form animations on page load
         window.addEventListener('DOMContentLoaded', () => {
-            animateFormGroups('loginForm');
+            animateFormGroups('signupForm');
         });
-
-        // Toggle button event listener
-        toggleBtn.addEventListener('click', toggleForms);
 
         // Password strength meter
-        passwordInput.addEventListener('input', function() {
-            checkPasswordStrength(this.value);
-        });
+   
 
         // Function to validate password
         function validatePassword(password) {
@@ -1103,184 +1049,149 @@
             }
         });
 
-        // Login form submit handler
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const email = document.getElementById('loginEmail');
-            const password = document.getElementById('loginPassword');
-            const remember = document.getElementById('remember');
-            
-            // Create form data
-            const formData = {
-                action: 'login',
-                email: email.value.trim(),
-                password: password.value,
-                remember: remember.checked
-            };
-            
-            // Debug log
-            console.log('Sending login request with data:', formData);
-            
-            simulateAPICall(loginButton, () => {
-                fetch('auth.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Server response:', data);
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get form element
+            const signupForm = document.getElementById('signupForm');
+            const passwordInput = document.getElementById('signupPassword');
+            const passwordStrength = document.getElementById('passwordStrength');
+            const confirmPassword = document.getElementById('confirmPassword');
+            const signupButton = document.getElementById('signupButton');
+
+            if (signupForm) {
+                // Signup form submit handler
+                signupForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
                     
-                    if (data.success) {
-                        // Check user status and role
-                        if (data.user.role === 'station_owner') {
-                            if (data.user.status === 'pending') {
-                                alert('Your station owner account is pending approval. Please wait for admin verification.');
-                                return;
-                            } else if (data.user.status === 'approved') {
-                                window.location.href = 'station-owner-dashboard.php';
-                                return;
-                            }
-                        } else if (data.user.role === 'admin') {
-                            window.location.href = 'admin-dashboard.php';
-                            return;
-                        }
-                        // Default redirect for regular users
-                        window.location.href = 'index.php';
-                    } else {
-                        alert(data.message || 'Invalid email or password');
-                    }
-                })
-                .catch(error => {
-                    console.error('Login error:', error);
-                    alert('An error occurred during login. Please try again.');
-                });
-            });
-        });
-
-        // Signup form submit handler
-        signupForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            let isValid = true;
-            const isStationOwner = document.getElementById('isStationOwner').checked;
-            
-            // Clear all previous error messages
-            document.querySelectorAll('.error-message').forEach(error => {
-                error.style.display = 'none';
-                error.textContent = '';
-            });
-            
-            // Validate required fields
-            const requiredFields = ['signupFullName', 'signupEmail', 'signupUsername', 'signupPassword', 'confirmPassword'];
-            requiredFields.forEach(field => {
-                const element = document.getElementById(field);
-                if (!element.value.trim()) {
-                    isValid = false;
-                    showError(field, `${element.placeholder} is required`);
-                }
-            });
-            
-            // Email validation
-            const email = document.getElementById('signupEmail').value.trim();
-            if (email && !isValidEmail(email)) {
-                isValid = false;
-                // Error message is already shown by isValidEmail function
-            }
-            
-            const password = document.getElementById('signupPassword').value;
-            const confirmPass = document.getElementById('confirmPassword').value;
-            if (password !== confirmPass) {
-                isValid = showError('confirmPassword', 'Passwords do not match');
-            }
-            
-            if (isStationOwner) {
-                const ownerFields = ['businessName', 'phone', 'address', 'city', 'state', 'postalCode'];
-                ownerFields.forEach(field => {
-                    const element = document.getElementById(field);
-                    if (!element.value.trim()) {
-                        isValid = showError(field, `${element.placeholder} is required`);
-                    }
-                });
-            }
-            
-            if (isValid) {
-                const formData = {
-                    action: 'register',
-                    fullName: document.getElementById('signupFullName').value.trim(),
-                    email: document.getElementById('signupEmail').value.trim(),
-                    username: document.getElementById('signupUsername').value.trim(),
-                    password: document.getElementById('signupPassword').value,
-                    isStationOwner: isStationOwner
-                };
-
-                if (isStationOwner) {
-                    formData.stationOwner = {
-                        owner_name: document.getElementById('signupFullName').value.trim(),
-                        business_name: document.getElementById('businessName').value.trim(),
-                        email: document.getElementById('signupEmail').value.trim(),
-                        phone: document.getElementById('phone').value.trim(),
-                        address: document.getElementById('address').value.trim(),
-                        city: document.getElementById('city').value.trim(),
-                        state: document.getElementById('state').value.trim(),
-                        postal_code: document.getElementById('postalCode').value.trim(),
-                        business_registration: document.getElementById('businessRegistration').value.trim()
-                    };
-                }
-
-                simulateAPICall(signupButton, () => {
-                    fetch('auth.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(formData)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            if (isStationOwner) {
-                                alert('Your station owner registration request has been submitted and is pending approval.');
-                            } else {
-                                alert('Registration successful! Please login.');
-                            }
-                            signupForm.reset();
-                            passwordStrength.style.width = '0';
-                            if (!isLoginForm) {
-                                toggleForms();
-                            }
-                        } else {
-                            showError('signupUsername', data.message || 'Registration failed. Please try again.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Registration error:', error);
-                        showError('signupUsername', 'Unable to connect to the server. Please check your internet connection and try again.');
+                    let isValid = true;
+                    
+                    // Clear all previous error messages
+                    document.querySelectorAll('.error-message').forEach(error => {
+                        error.style.display = 'none';
+                        error.textContent = '';
                     });
+                    
+                    // Validate required fields
+                    const requiredFields = <?php echo $userLoggedIn ? 
+                        "['phone', 'address', 'city', 'state', 'postalCode', 'businessRegistration']" : 
+                        "['signupFullName', 'signupEmail', 'signupUsername', 'signupPassword', 'confirmPassword', 'phone', 'address', 'city', 'state', 'postalCode', 'businessRegistration']"; ?>;
+                    
+                    requiredFields.forEach(field => {
+                        const element = document.getElementById(field);
+                        if (element && !element.value.trim()) {
+                            isValid = false;
+                            showError(field, `${element.placeholder || field} is required`);
+                        }
+                    });
+                    
+                    // Only validate email and password if user is not logged in
+                    <?php if (!$userLoggedIn): ?>
+                    // Email validation
+                    const email = document.getElementById('signupEmail').value.trim();
+                    if (email && !isValidEmail(email)) {
+                        isValid = false;
+                    }
+                    
+                    const password = document.getElementById('signupPassword').value;
+                    const confirmPass = document.getElementById('confirmPassword').value;
+                    if (password !== confirmPass) {
+                        isValid = showError('confirmPassword', 'Passwords do not match');
+                    }
+                    <?php endif; ?>
+                    
+                    if (isValid) {
+                        const formData = {
+                            <?php if (!$userLoggedIn): ?>
+                            fullName: document.getElementById('signupFullName').value.trim(),
+                            email: document.getElementById('signupEmail').value.trim(),
+                            username: document.getElementById('signupUsername').value.trim(),
+                            password: document.getElementById('signupPassword').value,
+                            <?php else: ?>
+                            user_id: <?php echo $_SESSION['user_id']; ?>,
+                            owner_name: document.getElementById('signupFullName').value.trim(),
+                            email: document.getElementById('signupEmail').value.trim(),
+                            <?php endif; ?>
+                            phone: document.getElementById('phone').value.trim(),
+                            address: document.getElementById('address').value.trim(),
+                            city: document.getElementById('city').value.trim(),
+                            state: document.getElementById('state').value.trim(),
+                            postalCode: document.getElementById('postalCode').value.trim(),
+                            businessRegistration: document.getElementById('businessRegistration').value.trim()
+                        };
+
+                        console.log('Sending data:', formData); // Debug log
+
+                        // Show loading state
+                        signupButton.disabled = true;
+                        signupButton.textContent = 'Registering...';
+
+                        fetch('register_station_owner.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(formData)
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                alert('Your station owner registration request has been submitted and is pending approval.');
+                                window.location.href = 'dashboard.php'; // Redirect to dashboard after successful registration
+                            } else {
+                                showError('signupUsername', data.message || 'Registration failed. Please try again.');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Registration error:', error);
+                            showError('signupUsername', 'Unable to connect to the server. Please try again.');
+                        })
+                        .finally(() => {
+                            signupButton.disabled = false;
+                            signupButton.textContent = 'Register as Station Owner';
+                        });
+                    }
                 });
             }
-        });
 
-        // Forgot password handler
-        document.getElementById('forgotPassword').addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            const email = prompt('Enter your email address to reset your password:');
-            if (email) {
-                if (!isValidEmail(email)) {
-                    alert('Please enter a valid email address.');
-                    return;
+            // Password strength meter
+            if (passwordInput) {
+                passwordInput.addEventListener('input', function() {
+                    checkPasswordStrength(this.value);
+                });
+            }
+
+            // Rest of your existing event listeners with null checks
+            document.querySelectorAll('input, textarea').forEach(input => {
+                if (input) {
+                    input.addEventListener('input', function() {
+                        // ... existing input handler code ...
+                    });
+
+                    input.addEventListener('blur', function() {
+                        // ... existing blur handler code ...
+                    });
                 }
-                
-                alert(`Password reset instructions have been sent to ${email}. Please check your inbox.`);
+            });
+
+            // Phone number formatting
+            const phoneInput = document.getElementById('phone');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function(e) {
+                    // ... existing phone formatting code ...
+                });
+            }
+
+            // Station owner checkbox
+            const isStationOwner = document.getElementById('isStationOwner');
+            if (isStationOwner) {
+                isStationOwner.addEventListener('change', function() {
+                    // ... existing station owner handler code ...
+                });
             }
         });
 
@@ -1289,15 +1200,13 @@
             if (e.key === 'Tab') {
                 const focusedElement = document.activeElement;
                 
-                // If tab pressed on last element of current form, focus toggle button
+                // If tab pressed on last element of current form, focus signup button
                 if (!e.shiftKey) {
-                    const lastElement = isLoginForm
-                        ? document.getElementById('forgotPassword')
-                        : document.querySelector('.terms a:last-child');
+                    const lastElement = document.querySelector('.terms a:last-child');
                         
                     if (focusedElement === lastElement) {
                         e.preventDefault();
-                        toggleBtn.focus();
+                        signupButton.focus();
                     }
                 }
             }

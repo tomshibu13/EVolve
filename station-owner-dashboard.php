@@ -2,41 +2,36 @@
 session_start();
 require_once 'config.php';
 
-// Check if user is logged in and is a station owner
+// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: stationlogin.php");
     exit();
 }
 
-// Initialize stations array
+// Initialize variables
 $stations = [];
+$error = null;
 
-// Verify if the user is a station owner
 try {
-    $stmt = $mysqli->prepare("
+    // First verify if the user is a station owner
+    $stmt = $pdo->prepare("
         SELECT sor.owner_name, sor.status 
         FROM station_owner_requests sor 
         WHERE sor.user_id = ? AND sor.status = 'approved'
     ");
     
-    if ($stmt === false) {
-        throw new Exception($mysqli->error);
-    }
+    $stmt->execute([$_SESSION['user_id']]);
+    $result = $stmt->fetch();
     
-    $stmt->bind_param("i", $_SESSION['user_id']);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result->num_rows === 0) {
+    if (!$result) {
         header("Location: stationlogin.php");
         exit();
     }
     
-    $owner_data = $result->fetch_assoc();
-    $_SESSION['owner_name'] = $owner_data['owner_name'];
+    $_SESSION['owner_name'] = $result['owner_name'];
     
-    // Now fetch the stations with simplified query
-    $stmt = $mysqli->prepare("
+    // Now fetch the stations with user booking details
+    $stmt = $pdo->prepare("
         SELECT 
             s.station_id,
             s.name,
@@ -53,9 +48,13 @@ try {
             COUNT(DISTINCT b.booking_id) as total_bookings,
             SUM(CASE WHEN DATE(b.booking_date) = CURDATE() THEN 1 ELSE 0 END) as today_bookings,
             SUM(CASE WHEN b.status = 'completed' THEN 1 ELSE 0 END) as completed_bookings,
-            GROUP_CONCAT(DISTINCT CONCAT(u.name, '|', u.email, '|', 
-                (SELECT COUNT(*) FROM bookings b3 WHERE b3.user_id = u.user_id AND b3.station_id = s.station_id)
-            ) SEPARATOR ';;') as user_details
+            GROUP_CONCAT(
+                DISTINCT 
+                CONCAT(u.name, '|', u.email, '|', 
+                    (SELECT COUNT(*) FROM bookings b2 WHERE b2.user_id = u.user_id AND b2.station_id = s.station_id)
+                ) 
+                SEPARATOR ';;'
+            ) as user_details
         FROM charging_stations s
         LEFT JOIN bookings b ON s.station_id = b.station_id
         LEFT JOIN tbl_users u ON b.user_id = u.user_id
@@ -74,28 +73,26 @@ try {
             s.created_at,
             s.updated_at
     ");
+    
+    $stmt->execute([$_SESSION['owner_name']]);
+    $stations = $stmt->fetchAll();
 
-    if ($stmt === false) {
-        throw new Exception($mysqli->error);
-    }
-    
-    $stmt->bind_param("s", $_SESSION['owner_name']);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    while ($row = $result->fetch_assoc()) {
-        $stations[] = $row;
-    }
+    // Calculate dashboard metrics
+    $total_stations = count($stations);
+    $active_stations = array_filter($stations, fn($s) => $s['status'] === 'active');
+    $total_active_stations = count($active_stations);
+    $total_slots = array_sum(array_column($stations, 'total_slots'));
+    $available_slots = array_sum(array_column($stations, 'available_slots'));
+
+} catch (PDOException $e) {
+    error_log("Database error: " . $e->getMessage());
+    $error = "An error occurred while loading the dashboard. Please try again later.";
 } catch (Exception $e) {
-    $error = "Error fetching stations: " . $e->getMessage();
+    error_log("General error: " . $e->getMessage());
+    $error = "An error occurred while loading the dashboard. Please try again later.";
 }
 
-// Calculate dashboard metrics
-$total_stations = count($stations);
-$active_stations = array_filter($stations, fn($s) => $s['status'] === 'active');
-$total_active_stations = count($active_stations);
-$total_slots = array_sum(array_column($stations, 'total_slots'));
-$available_slots = array_sum(array_column($stations, 'available_slots'));
+// Rest of your HTML remains the same...
 ?>
 
 <!DOCTYPE html>
@@ -283,9 +280,7 @@ $available_slots = array_sum(array_column($stations, 'available_slots'));
     </style>
 </head>
 <body>
-<?php
-include 'header.php';
-?>
+<?php include 'header.php'; ?>
 
     <div class="sidebar" id="sidebar">
         <a href="station-owner-dashboard.php" class="sidebar-link active">
@@ -311,7 +306,7 @@ include 'header.php';
     <div class="main-content">
         <div class="container-fluid">
             <?php if (isset($error)): ?>
-                <div class="alert alert-danger"><?php echo $error; ?></div>
+                <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
             <?php endif; ?>
 
             <!-- Dashboard Summary -->
@@ -357,15 +352,10 @@ include 'header.php';
                 </a>
             </div>
 
-            <div class="row g-4">
+            <div class="row">
                 <?php foreach ($stations as $station): ?>
-                    <div class="col-md-6 col-xl-4">
+                    <div class="col-md-6 col-xl-4 mb-4">
                         <div class="card station-card">
-                            <div class="status-badge">
-                                <span class="badge <?php echo $station['status'] === 'active' ? 'bg-success' : 'bg-danger'; ?>">
-                                    <?php echo ucfirst($station['status']); ?>
-                                </span>
-                            </div>
                             <?php if ($station['image']): ?>
                                 <img src="<?php echo htmlspecialchars($station['image']); ?>" class="card-img-top" alt="Station Image" style="height: 200px; object-fit: cover;">
                             <?php endif; ?>
@@ -376,7 +366,7 @@ include 'header.php';
                                         <p class="card-text">
                                             <i class='bx bx-map'></i> <strong>Address:</strong><br>
                                             <?php echo htmlspecialchars($station['address']); ?><br>
-                                            <i ></i> <strong>₹Price:</strong> 
+                                            <i class='bx bx-money'></i> <strong>Price:</strong> 
                                             ₹<?php echo number_format($station['price'], 2); ?>/kWh<br>
                                             <i class='bx bx-plug'></i> <strong>Slots:</strong> 
                                             <?php echo $station['available_slots']; ?>/<?php echo $station['total_slots']; ?>
@@ -385,59 +375,63 @@ include 'header.php';
                                     <div class="col-md-6">
                                         <p class="card-text">
                                             <i class='bx bx-calendar'></i> <strong>Today's Bookings:</strong> 
-                                            <?php echo $station['today_bookings']; ?><br>
+                                            <?php echo $station['today_bookings'] ?? 0; ?><br>
                                             <i class='bx bx-check-double'></i> <strong>Total Bookings:</strong> 
-                                            <?php echo $station['total_bookings']; ?><br>
+                                            <?php echo $station['total_bookings'] ?? 0; ?><br>
                                             <i class='bx bx-time'></i> <strong>Completion Rate:</strong>
-                                            <?php echo $station['total_bookings'] ? 
-                                                round(($station['completed_bookings'] / $station['total_bookings']) * 100) : 0; ?>%
+                                            <?php 
+                                                $total = $station['total_bookings'] ?? 0;
+                                                $completed = $station['completed_bookings'] ?? 0;
+                                                echo $total > 0 ? round(($completed / $total) * 100) : 0;
+                                            ?>%
                                         </p>
                                     </div>
                                 </div>
+                                
+                                <!-- Recent Users Section -->
                                 <div class="mt-3">
                                     <h6><i class='bx bx-user-circle'></i> Recent Users:</h6>
-                                    <?php 
-                                    if ($station['user_details']) {
-                                        $users = explode(';;', $station['user_details']);
-                                        echo '<div class="table-responsive"><table class="table table-sm">
+                                    <?php if (!empty($station['user_details'])): ?>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
                                                 <thead>
                                                     <tr>
                                                         <th>Name</th>
                                                         <th>Email</th>
-                                                        <th>Total Bookings</th>
+                                                        <th>Bookings</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody>';
-                                        foreach ($users as $user) {
-                                            list($name, $email, $bookings) = explode('|', $user);
-                                            if ($name && $email) {
-                                                echo "<tr>
-                                                        <td>" . htmlspecialchars($name) . "</td>
-                                                        <td>" . htmlspecialchars($email) . "</td>
-                                                        <td>$bookings</td>
-                                                    </tr>";
-                                            }
-                                        }
-                                        echo '</tbody></table></div>';
-                                    } else {
-                                        echo '<p class="text-muted">No users have booked this station yet.</p>';
-                                    }
-                                    ?>
+                                                <tbody>
+                                                    <?php 
+                                                    $users = explode(';;', $station['user_details']);
+                                                    foreach ($users as $user) {
+                                                        $userInfo = explode('|', $user);
+                                                        if (count($userInfo) === 3) {
+                                                            echo "<tr>
+                                                                <td>" . htmlspecialchars($userInfo[0]) . "</td>
+                                                                <td>" . htmlspecialchars($userInfo[1]) . "</td>
+                                                                <td>" . htmlspecialchars($userInfo[2]) . "</td>
+                                                            </tr>";
+                                                        }
+                                                    }
+                                                    ?>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    <?php else: ?>
+                                        <p class="text-muted">No users have booked this station yet.</p>
+                                    <?php endif; ?>
                                 </div>
-                                <div class="btn-group w-100">
-                                    <a href="edit-station.php?id=<?php echo $station['station_id']; ?>" 
+
+                                <div class="btn-group w-100 mt-3">
+                                    <a href="update_booking_status.php?id=<?php echo $station['station_id']; ?>" 
                                        class="btn btn-primary">
                                         <i class='bx bx-edit'></i> Edit
                                     </a>
-                                    <a href="station_owner/so_bookings_view.php?station_id=<?php echo $station['station_id']; ?>" 
+                                    <a href="so_bookings_view.php?id=<?php echo $station['station_id']; ?>" 
                                        class="btn btn-info">
                                         <i class='bx bx-calendar'></i> Bookings
                                     </a>
-                                    <button class="btn btn-warning toggle-status" 
-                                            data-station-id="<?php echo $station['station_id']; ?>">
-                                        <i class='bx bx-power-off'></i>
-                                        <?php echo $station['status'] === 'active' ? 'Deactivate' : 'Activate'; ?>
-                                    </button>
                                 </div>
                             </div>
                         </div>

@@ -1,87 +1,63 @@
 <?php
 session_start();
-require_once 'config.php'; // Ensure this file correctly initializes $mysqli
+require_once 'config.php';
 
-// Enable error reporting for debugging
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+header('Content-Type: application/json');
 
-// Function to send JSON response
-function sendJsonResponse($success, $message, $redirect = null) {
-    $response = [
-        'success' => $success,
-        'error' => $success ? null : $message,
-        'message' => $success ? $message : null
-    ];
-    if ($redirect) {
-        $response['redirect'] = $redirect;
+try {
+    // Get and validate input
+    $email = filter_var($_POST['email'], FILTER_VALIDATE_EMAIL);
+    $password = $_POST['password'];
+    $remember = isset($_POST['remember']) ? true : false;
+
+    if (!$email) {
+        throw new Exception('Invalid email format');
     }
-    header('Content-Type: application/json');
-    echo json_encode($response);
-    exit();
-}
 
-// Check if the form was submitted
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    try {
-        // Log received data (for debugging)
-        error_log("Login attempt - Request data: " . json_encode($_POST));
+    if (empty($password)) {
+        throw new Exception('Password is required');
+    }
 
-        $username = trim($_POST['username'] ?? '');
-        $password = $_POST['password'] ?? '';
+    // Prepare SQL statement using PDO
+    $stmt = $pdo->prepare("SELECT user_id, email, passwordhash, name, is_admin FROM tbl_users WHERE email = ? AND status = 'active'");
+    if (!$stmt) {
+        throw new Exception('Database error: ' . implode(' ', $pdo->errorInfo()));
+    }
 
-        // Basic validation
-        if (empty($username) || empty($password)) {
-            sendJsonResponse(false, 'Please enter both username and password');
-        }
+    $stmt->execute([$email]);
+    $user = $stmt->fetch();
 
-        // First, verify the table exists
-        $table_check = $mysqli->query("SHOW TABLES LIKE 'tbl_users'");
-        if ($table_check->num_rows === 0) {
-            throw new Exception("Database error: Table 'tbl_users' does not exist");
-        }
+    if (!$user || !password_verify($password, $user['passwordhash'])) {
+        throw new Exception('Invalid email or password');
+    }
 
-        // Prepare statement
-        $stmt = $mysqli->prepare("SELECT user_id, username, passwordhash, is_admin FROM tbl_users WHERE username = ?");
-        if (!$stmt) {
-            throw new Exception("Database error: " . $mysqli->error);
-        }
+    // Set session variables
+    $_SESSION['user_id'] = $user['user_id'];
+    $_SESSION['email'] = $user['email'];
+    $_SESSION['name'] = $user['name'];
+    $_SESSION['is_admin'] = $user['is_admin'];
 
-        $stmt->bind_param("s", $username);
-        if (!$stmt->execute()) {
-            throw new Exception("Database error: " . $stmt->error);
-        }
-
-        $result = $stmt->get_result();
-
-        if ($result->num_rows === 1) {
-            $user = $result->fetch_assoc();
-            
-            // Verify the password
-            if (password_verify($password, $user['passwordhash'])) {
-                // Password is correct, set session variables
-                $_SESSION['user_id'] = $user['user_id'];
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['is_admin'] = $user['is_admin'];
-                
-                // Log successful login
-                error_log("Successful login for user: " . $username);
-                
-                // Return success response
-                sendJsonResponse(true, 'Login successful', $user['is_admin'] ? 'admindash.php' : 'index.php');
-            }
-        }
+    // Handle remember me functionality
+    if ($remember) {
+        $token = bin2hex(random_bytes(32));
+        $expires = date('Y-m-d H:i:s', strtotime('+30 days'));
         
-        // Invalid credentials
-        error_log("Failed login attempt for username: " . $username);
-        sendJsonResponse(false, 'Invalid username or password');
-
-    } catch (Exception $e) {
-        // Log the error message with more context
-        error_log("Login error: " . $e->getMessage() . " | Request Data: " . json_encode($_POST));
-        sendJsonResponse(false, 'An error occurred: ' . $e->getMessage());
+        $rememberStmt = $pdo->prepare("INSERT INTO remember_tokens (user_id, token, expires) VALUES (?, ?, ?)");
+        $rememberStmt->execute([$user['user_id'], $token, $expires]);
+        
+        setcookie('remember_token', $token, strtotime('+30 days'), '/', '', true, true);
     }
-} else {
-    sendJsonResponse(false, 'Invalid request method');
+
+    echo json_encode([
+        'success' => true,
+        'message' => 'Login successful',
+        'redirect' => 'index.php'
+    ]);
+
+} catch (Exception $e) {
+    echo json_encode([
+        'success' => false,
+        'message' => $e->getMessage()
+    ]);
 }
 ?>

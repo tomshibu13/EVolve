@@ -1,74 +1,135 @@
 <?php
-// Database connection credentials
-$servername = "localhost";
-$username = "root"; 
-$password = "";    
-$dbname = "evolve1";
+session_start();
+require_once 'config.php';
 
-// Create a connection
-$conn = new mysqli($servername, $username, $password, $dbname);
+header('Content-Type: application/json');
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // Don't display errors to users
 
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
-// Get the form data
-$username = $_POST['username'] ?? '';
-$email = $_POST['email'] ?? '';
-$password = $_POST['password'] ?? '';
-$confirm_password = $_POST['confirm_password'] ?? '';
-
-// Validate input
-$errors = [];
-if (empty($username) || empty($email) || empty($password) || empty($confirm_password)) {
-    $errors[] = "All fields are required.";
-}
-if ($password !== $confirm_password) {
-    $errors[] = "Passwords do not match.";
-}
-
-// Check if the email already exists
-if (empty($errors)) {
-    $stmt = $conn->prepare("SELECT * FROM tbl_users WHERE email = ?");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
+try {
+    // Log incoming data (for debugging)
+    error_log("Registration attempt - POST data: " . print_r($_POST, true));
     
-    if ($result->num_rows > 0) {
-        $errors[] = "Email is already registered.";
+    // Validate input
+    $required_fields = ['username', 'email', 'password'];
+    foreach ($required_fields as $field) {
+        if (empty($_POST[$field])) {
+            throw new Exception("Field '$field' is required");
+        }
     }
-    $stmt->close();
-}
 
-// If there are no errors, proceed to insert the user
-if (empty($errors)) {
-    $passwordhash = password_hash($password, PASSWORD_DEFAULT);
-    
-    $stmt = $conn->prepare("INSERT INTO tbl_users (email, passwordhash, username) VALUES (?, ?, ?)");
-    if (!$stmt) {
-        error_log("Prepare failed: " . $conn->error);
-        echo json_encode(['success' => false, 'message' => 'Registration failed. Please try again later.']);
-        exit;
+    $username = trim($_POST['username']);
+    $email = trim($_POST['email']);
+    $password = $_POST['password'];
+
+    // Validate username (at least 3 characters, alphanumeric and underscore only)
+    if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_]{2,}$/', $username)) {
+        throw new Exception('Username must start with a letter and contain only letters, numbers, and underscores (minimum 3 characters)');
     }
-    
-    $stmt->bind_param("sss", $email, $passwordhash, $username);
-    
-    $result = $stmt->execute();
-    if ($result) {
-        echo json_encode(['success' => true, 'message' => 'Registration successful!']);
-    } else {
-        error_log("Execute failed: " . $stmt->error);
-        echo json_encode(['success' => false, 'message' => 'Registration failed. Please try again later.']);
+
+    // Validate email
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        throw new Exception('Invalid email format');
     }
+
+    // Validate password strength (at least 8 characters)
+    if (strlen($password) < 8) {
+        throw new Exception('Password must be at least 8 characters long');
+    }
+
+    // Check for existing user with more detailed error messages
+    $stmt = $pdo->prepare("SELECT username, email FROM tbl_users WHERE username = ? OR email = ?");
+    $stmt->execute([$username, $email]);
+    $existing = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    $stmt->close();
-} else {
-    echo json_encode(['success' => false, 'message' => implode(", ", $errors)]);
+    if ($existing) {
+        if ($existing['username'] === $username) {
+            throw new Exception('Username is already taken');
+        }
+        if ($existing['email'] === $email) {
+            throw new Exception('Email is already registered');
+        }
+    }
+
+    // Handle profile picture (if provided)
+    $profilePicturePath = null;
+    if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES['profile_picture'];
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        $maxSize = 5 * 1024 * 1024; // 5MB
+
+        if (!in_array($file['type'], $allowedTypes)) {
+            throw new Exception('Invalid file type. Only JPG and PNG are allowed.');
+        }
+
+        if ($file['size'] > $maxSize) {
+            throw new Exception('File size too large. Maximum size is 5MB.');
+        }
+
+        $uploadDir = 'uploads/profile_pictures/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        $fileName = uniqid() . '_' . basename($file['name']);
+        $uploadPath = $uploadDir . $fileName;
+
+        if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
+            throw new Exception('Failed to upload profile picture');
+        }
+        $profilePicturePath = $uploadPath;
+    }
+
+    // Begin transaction
+    $pdo->beginTransaction();
+
+    try {
+        // Insert new user
+        $stmt = $pdo->prepare("
+            INSERT INTO tbl_users (
+                email, 
+                passwordhash, 
+                username, 
+                profile_picture, 
+                status
+            ) VALUES (?, ?, ?, ?, 'active')
+        ");
+        
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        
+        $stmt->execute([
+            $email,
+            $hashedPassword,
+            $username,
+            $profilePicturePath
+        ]);
+
+        $userId = $pdo->lastInsertId();
+        
+        // Commit transaction
+        $pdo->commit();
+
+        // Set session variables
+        $_SESSION['user_id'] = $userId;
+        $_SESSION['username'] = $username;
+        $_SESSION['profile_picture'] = $profilePicturePath;
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Registration successful!',
+            'redirect' => 'index.php'
+        ]);
+
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        throw $e;
+    }
+
+} catch (Exception $e) {
+    error_log("Registration error: " . $e->getMessage());
+    echo json_encode([
+        'success' => false,
+        'error' => $e->getMessage()
+    ]);
 }
-
-// Log the input data for debugging
-error_log("Registration attempt: Username: $username, Email: $email");
-
-$conn->close();
 ?> 

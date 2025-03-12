@@ -1,0 +1,25 @@
+[11-Mar-2025 19:21:40 Europe/Berlin] PHP Warning:  require(vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\Project\register_process.php on line 7
+[11-Mar-2025 19:21:40 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required 'vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\Project\register_process.php:7
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\Project\register_process.php on line 7
+[11-Mar-2025 19:21:40 Europe/Berlin] PHP Warning:  require(vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\Project\register_process.php on line 7
+[11-Mar-2025 19:21:40 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required 'vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\Project\register_process.php:7
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\Project\register_process.php on line 7
+[11-Mar-2025 19:23:09 Europe/Berlin] PHP Warning:  require(vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\Project\register_process.php on line 7
+[11-Mar-2025 19:23:09 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required 'vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\Project\register_process.php:7
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\Project\register_process.php on line 7
+[11-Mar-2025 19:23:09 Europe/Berlin] PHP Warning:  require(vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\Project\register_process.php on line 7
+[11-Mar-2025 19:23:09 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required 'vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\Project\register_process.php:7
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\Project\register_process.php on line 7
+[11-Mar-2025 19:23:09 Europe/Berlin] PHP Warning:  require(vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\Project\register_process.php on line 7
+[11-Mar-2025 19:23:09 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required 'vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\Project\register_process.php:7
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\Project\register_process.php on line 7

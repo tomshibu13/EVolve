@@ -43,33 +43,47 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
     $email = $_POST['email'];
     $phone_number = $_POST['phone_number'];
 
-    // Handle profile picture upload
-    if (!empty($_FILES['profile_picture']['name'])) {
-        $targetDir = "uploads/";
-        $fileName = basename($_FILES['profile_picture']['name']);
-        $targetFile = $targetDir . $fileName;
-
-        // Move the uploaded file
-        if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $targetFile)) {
-            // Update with new profile picture
-            $updateSql = "UPDATE tbl_users SET name=?, username=?, email=?, phone_number=?, profile_picture=? WHERE user_id=?";
-            $stmt = $conn->prepare($updateSql);
-            $stmt->bind_param("sssssi", $name, $username, $email, $phone_number, $targetFile, $user_id);
-        } else {
-            $error_message = "Error uploading profile picture.";
-        }
-    } else {
-        // Update without profile picture
-        $updateSql = "UPDATE tbl_users SET name=?, username=?, email=?, phone_number=? WHERE user_id=?";
-        $stmt = $conn->prepare($updateSql);
-        $stmt->bind_param("ssssi", $name, $username, $email, $phone_number, $user_id);
+    // Check if any changes were made
+    $changes_made = false;
+    if ($name !== $userData['name'] || 
+        $username !== $userData['username'] || 
+        $email !== $userData['email'] || 
+        $phone_number !== $userData['phone_number'] || 
+        !empty($_FILES['profile_picture']['name'])) {
+        $changes_made = true;
     }
 
-    if ($stmt->execute()) {
-        $success_message = "Profile updated successfully.";
-        header("Refresh:0"); // Refresh the page to show updated data
+    if (!$changes_made) {
+        $error_message = "No changes were made to update.";
     } else {
-        $error_message = "Error updating profile.";
+        // Handle profile picture upload
+        if (!empty($_FILES['profile_picture']['name'])) {
+            $targetDir = "uploads/";
+            $fileName = basename($_FILES['profile_picture']['name']);
+            $targetFile = $targetDir . $fileName;
+
+            // Move the uploaded file
+            if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $targetFile)) {
+                // Update with new profile picture
+                $updateSql = "UPDATE tbl_users SET name=?, username=?, email=?, phone_number=?, profile_picture=? WHERE user_id=?";
+                $stmt = $conn->prepare($updateSql);
+                $stmt->bind_param("sssssi", $name, $username, $email, $phone_number, $targetFile, $user_id);
+            } else {
+                $error_message = "Error uploading profile picture.";
+            }
+        } else {
+            // Update without profile picture
+            $updateSql = "UPDATE tbl_users SET name=?, username=?, email=?, phone_number=? WHERE user_id=?";
+            $stmt = $conn->prepare($updateSql);
+            $stmt->bind_param("ssssi", $name, $username, $email, $phone_number, $user_id);
+        }
+
+        if ($stmt->execute()) {
+            $success_message = "Profile updated successfully.";
+            header("Refresh:0"); // Refresh the page to show updated data
+        } else {
+            $error_message = "Error updating profile.";
+        }
     }
 }
 ?>
@@ -233,6 +247,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
             color: #a94442;
             border: 1px solid #ebccd1;
         }
+
+        .error-text {
+            color: #dc3545;
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+            display: block;
+        }
+
+        .form-group input.invalid {
+            border-color: #dc3545;
+        }
+
+        .form-group input.valid {
+            border-color: #28a745;
+        }
     </style>
 </head>
 <body>
@@ -245,9 +274,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
             <div class="message error"><?php echo htmlspecialchars($error_message); ?></div>
         <?php endif; ?>
 
+        <div class="message error" id="validationMessage" style="display: none;"></div>
+
         <div class="profile-section">
             <h2>Edit Profile</h2>
-            <form method="POST" enctype="multipart/form-data">
+            <form method="POST" enctype="multipart/form-data" id="profileForm" novalidate>
                 <div class="profile-photo">
                     <img src="<?php echo htmlspecialchars($userData['profile_picture'] ?? 'uploads/default.jpg'); ?>" 
                          alt="Profile Photo" id="profileImage">
@@ -258,21 +289,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
                 <div class="form-group">
                     <label>Name</label>
                     <input type="text" name="name" value="<?php echo htmlspecialchars($userData['name']); ?>" required>
+                    <small class="error-text"></small>
                 </div>
 
                 <div class="form-group">
                     <label>Username</label>
                     <input type="text" name="username" value="<?php echo htmlspecialchars($userData['username']); ?>" required>
+                    <small class="error-text"></small>
                 </div>
 
                 <div class="form-group">
                     <label>Email</label>
                     <input type="email" name="email" value="<?php echo htmlspecialchars($userData['email']); ?>" required>
+                    <small class="error-text"></small>
                 </div>
 
                 <div class="form-group">
                     <label>Phone Number</label>
                     <input type="text" name="phone_number" value="<?php echo htmlspecialchars($userData['phone_number']); ?>">
+                    <small class="error-text"></small>
                 </div>
 
                 <div class="buttons-container">
@@ -291,6 +326,105 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
                     document.getElementById("profileImage").src = e.target.result;
                 };
                 reader.readAsDataURL(file);
+            }
+        });
+
+        // Form validation
+        const form = document.getElementById('profileForm');
+        const inputs = form.querySelectorAll('input[required]');
+        const phoneInput = form.querySelector('input[name="phone_number"]');
+        const validationMessage = document.getElementById('validationMessage');
+
+        const validationRules = {
+            name: {
+                pattern: /^[a-zA-Z\s]{2,50}$/,
+                message: 'Name should be 2-50 characters long and contain only letters'
+            },
+            username: {
+                pattern: /^[a-zA-Z0-9_]{3,20}$/,
+                message: 'Username should be 3-20 characters long and contain only letters, numbers, and underscores'
+            },
+            email: {
+                pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                message: 'Please enter a valid email address'
+            },
+            phone_number: {
+                pattern: /^\+?[\d\s-]{10,15}$/,
+                message: 'Please enter a valid phone number (10-15 digits)'
+            }
+        };
+
+        function validateInput(input) {
+            const field = input.name;
+            const value = input.value.trim();
+            const errorElement = input.nextElementSibling;
+            
+            if (validationRules[field]) {
+                const isValid = validationRules[field].pattern.test(value);
+                input.classList.toggle('valid', isValid);
+                input.classList.toggle('invalid', !isValid);
+                
+                if (!isValid) {
+                    errorElement.textContent = validationRules[field].message;
+                    return false;
+                }
+            }
+            
+            errorElement.textContent = '';
+            return true;
+        }
+
+        // Live validation
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                validateInput(input);
+            });
+        });
+
+        phoneInput.addEventListener('input', () => {
+            validateInput(phoneInput);
+        });
+
+        // Form submission validation
+        form.addEventListener('submit', (e) => {
+            let isValid = true;
+            let isChanged = false;
+            
+            // Check if any field has been modified
+            inputs.forEach(input => {
+                if (!validateInput(input)) {
+                    isValid = false;
+                }
+                // Compare with original value
+                const originalValue = '<?php echo isset($userData) ? addslashes($userData[input.name]) : ""; ?>';
+                if (input.value !== originalValue) {
+                    isChanged = true;
+                }
+            });
+
+            if (phoneInput.value.trim() !== '' && !validateInput(phoneInput)) {
+                isValid = false;
+            }
+
+            // Check if phone number changed
+            const originalPhone = '<?php echo isset($userData["phone_number"]) ? addslashes($userData["phone_number"]) : ""; ?>';
+            if (phoneInput.value !== originalPhone) {
+                isChanged = true;
+            }
+
+            // Check if profile picture is selected
+            if (document.getElementById('profilePictureInput').files.length > 0) {
+                isChanged = true;
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+                validationMessage.style.display = 'block';
+                validationMessage.textContent = 'Please correct the errors before submitting.';
+            } else if (!isChanged) {
+                e.preventDefault();
+                validationMessage.style.display = 'block';
+                validationMessage.textContent = 'No changes were made to update.';
             }
         });
     </script>

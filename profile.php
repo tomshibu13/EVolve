@@ -23,7 +23,7 @@ if ($conn->connect_error) {
 // Fetch user data
 $sql = "SELECT * FROM tbl_users WHERE user_id = ?";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $user_id);
+$stmt->bind_param("i", $_SESSION['user_id']);
 $stmt->execute();
 $result = $stmt->get_result();
 $userData = $result->fetch_assoc();
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['profile_picture'])) {
         if (move_uploaded_file($profilePicture['tmp_name'], $targetFile)) {
             $updateSql = "UPDATE tbl_users SET profile_picture = ? WHERE user_id = ?";
             $stmt = $conn->prepare($updateSql);
-            $stmt->bind_param("si", $targetFile, $user_id);
+            $stmt->bind_param("si", $targetFile, $_SESSION['user_id']);
             $stmt->execute();
             $success_message = "Profile picture updated successfully.";
         } else {
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['change_password'])) {
 
     $sql = "SELECT passwordhash FROM tbl_users WHERE user_id = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $user_id);
+    $stmt->bind_param("i", $_SESSION['user_id']);
     $stmt->execute();
     $result = $stmt->get_result();
     $user = $result->fetch_assoc();
@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['change_password'])) {
             $newPasswordHash = password_hash($newPassword, PASSWORD_DEFAULT);
             $updateSql = "UPDATE tbl_users SET passwordhash = ? WHERE user_id = ?";
             $stmt = $conn->prepare($updateSql);
-            $stmt->bind_param("si", $newPasswordHash, $user_id);
+            $stmt->bind_param("si", $newPasswordHash, $_SESSION['user_id']);
             $stmt->execute();
             $success_message = "Password updated successfully.";
         } else {
@@ -92,10 +92,10 @@ $conn->close();
    
     <style>
         :root {
-            --primary-color: #ff5a73;
+            --primary-color: #4a90e2;
             --secondary-color: #f5f5f5;
             --text-color: #333;
-            --error-color: #ff3a57;
+            --error-color: #e74c3c;
             --success-color: #2ecc71;
             --border-radius: 8px;
         }
@@ -345,15 +345,15 @@ $conn->close();
     <div class="profile-section">
         <div class="profile-header">
             <div class="profile-photo">
-                <img src="<?php echo htmlspecialchars($userData['profile_picture'] ?? '/api/placeholder/150/150'); ?>" 
+                <img src="<?php echo htmlspecialchars($userData['profile_picture'] ?? 'placeholder.jpg'); ?>" 
                      alt="Profile Photo" id="profileImage">
                 <form id="profilePictureForm" method="POST" enctype="multipart/form-data" style="display: none;">
                     <input type="file" name="profile_picture" id="profilePictureInput">
                 </form>
             </div>
             <div class="profile-info">
-                <h1 class="profile-name"><?php echo htmlspecialchars($userData['name'] ?? 'User Name'); ?></h1>
-                <!-- <p class="profile-username">@<?php echo htmlspecialchars($userData['username'] ?? 'username'); ?></p> -->
+                <h1 class="profile-name"><?php echo htmlspecialchars($userData['name']); ?></h1>
+                <p class="profile-username">@<?php echo htmlspecialchars($userData['username']); ?></p>
             </div>
         </div>
     </div>
@@ -373,7 +373,7 @@ $conn->close();
                 <i class="fas fa-envelope"></i>
                 <div class="detail-content">
                     <span class="detail-label">Email</span>
-                    <span class="detail-value"><?php echo htmlspecialchars($userData['email'] ?? 'email@example.com'); ?></span>
+                    <span class="detail-value"><?php echo htmlspecialchars($userData['email']); ?></span>
                 </div>
             </div>
             <div class="detail-item">
@@ -383,13 +383,13 @@ $conn->close();
                     <span class="detail-value"><?php echo htmlspecialchars($userData['phone_number'] ?? 'Not provided'); ?></span>
                 </div>
             </div>
-            <!-- <div class="detail-item">
+            <div class="detail-item">
                 <i class="fas fa-circle-check"></i>
                 <div class="detail-content">
                     <span class="detail-label">Status</span>
-                    <span class="detail-value"><?php echo $userData['status_at'] ? 'Active' : 'Inactive'; ?></span>
+                    <span class="detail-value"><?php echo htmlspecialchars(ucfirst($userData['status'])); ?></span>
                 </div>
-            </div> -->
+            </div>
         </div>
     </div>
 
@@ -432,13 +432,7 @@ $conn->close();
         </form>
     </div>
 
-    <div class="buttons-container">
-        <form method="POST" action="home.php">
-            <button type="submit" class="action-button secondary-button">
-                <i class="fas fa-home"></i> Home
-            </button>
-        </form>
-    </div>
+    
 </div>
 <script src="profile.js"></script>
 <script>

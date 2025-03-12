@@ -16,7 +16,7 @@ try {
         name,
         address,
         ST_X(location) as lng,
-        ST_Y(location) as lat,nibodot873@lxheir.com
+        ST_Y(location) as lat,
         status,
         available_slots as availableSlots,
         total_slots as totalSlots,
@@ -979,6 +979,60 @@ function isApprovedStationOwner($userId) {
         .owner-button i {
             font-size: 16px;
         }
+
+        .google-signin-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .google-login-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: #fff;
+            color: #757575;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .google-login-btn:hover {
+            background: #f8f8f8;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .google-login-btn i {
+            color: #4285f4;
+            font-size: 18px;
+        }
+
+        /* Add a divider between regular login and Google login */
+        .google-signin-container::before {
+            content: "or";
+            display: block;
+            text-align: center;
+            color: #757575;
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .google-signin-container::before::after {
+            content: "";
+            display: block;
+            height: 1px;
+            background: #ddd;
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            z-index: -1;
+        }
     </style>
 </head>
 <body>
@@ -1024,7 +1078,7 @@ function isApprovedStationOwner($userId) {
                 <img src="images/default-avatar.png" alt="Default Profile Photo" class="profile-image">
             <?php endif; ?>
         </div> -->
-        <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
+        <span class="username"><?php echo htmlspecialchars($_SESSION['name'] ?? 'User'); ?></span>
         <i class="fas fa-chevron-down"></i>
         <div class="dropdown-content">
             <a href="example.php">
@@ -2762,9 +2816,9 @@ function isApprovedStationOwner($userId) {
             <!-- Login Form -->
                 <form id="loginForm" action="login_process.php" method="post" class="tab-content active">
                 <div class="input-group">
-                    <label for="login-username">Username</label>
-                    <input type="text" id="login-username" name="username" required>
-                    <div class="validation-message" id="login-username-validation"></div>
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" name="email" required>
+                    <div class="validation-message" id="login-email-validation"></div>
                 </div>
 
                 <div class="input-group">
@@ -2773,11 +2827,36 @@ function isApprovedStationOwner($userId) {
                     <div class="validation-message" id="login-password-validation"></div>
                 </div>
 
+                <div class="remember-me">
+                    <input type="checkbox" id="remember" name="remember">
+                    <label for="remember">Remember me</label>
+                </div>
+
                 <button type="submit" class="submit-button">Log In</button>
 
                 <p class="forgot-password">
                     <a href="forgot_password.php">Forgot Password?</a>
                 </p>
+
+                <!-- Google Login Button -->
+                <div class="google-signin-container">
+                    <?php
+                    $client_id = "767546662883-n1srtf3ane5krtkm89okulrq4fr12ekq.apps.googleusercontent.com";
+                    $redirect_uri = "http://localhost/project/";
+                    $auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" . http_build_query([
+                        "response_type" => "code",
+                        "client_id" => $client_id,
+                        "redirect_uri" => $redirect_uri,
+                        "scope" => "email profile",
+                        "access_type" => "offline",
+                        "prompt" => "consent"
+                    ]);
+                    ?>
+                    <a href="<?php echo htmlspecialchars($auth_url); ?>" class="google-login-btn">
+                        <i class="fab fa-google"></i>
+                        Login with Google
+                    </a>
+                </div>
             </form>
 
             <!-- Signup Form -->
@@ -2807,6 +2886,14 @@ function isApprovedStationOwner($userId) {
                 </div>
 
                 <button type="submit" class="submit-button">Sign Up</button>
+
+                <!-- Add Google Login Button -->
+                <div class="google-signin-container">
+                    <a href="<?php echo htmlspecialchars($auth_url); ?>" class="google-login-btn">
+                        <i class="fab fa-google"></i>
+                        Sign up with Google
+                    </a>
+                </div>
             </form>
         </div>
     </div>
@@ -3137,7 +3224,59 @@ function isApprovedStationOwner($userId) {
     color: #666;
 }
 
+.google-signin-container {
+    margin-top: 20px;
+    text-align: center;
+}
 
+.google-login-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 24px;
+    background: #fff;
+    color: #757575;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.google-login-btn:hover {
+    background: #f8f8f8;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.google-login-btn i {
+    color: #4285f4;
+    font-size: 18px;
+}
+
+/* Add a divider between regular login and Google login */
+.google-signin-container::before {
+    content: "or";
+    display: block;
+    text-align: center;
+    color: #757575;
+    margin: 15px 0;
+    position: relative;
+}
+
+.google-signin-container::before::after {
+    content: "";
+    display: block;
+    height: 1px;
+    background: #ddd;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    z-index: -1;
+}
 </style>
 
     <script>
@@ -3201,63 +3340,64 @@ function isApprovedStationOwner($userId) {
     }
 
     // Update the login form submission handler to include error cleanup
-    loginForm.addEventListener('submit', function(e) {
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
         // Clear any existing error messages
         const existingErrors = this.querySelectorAll('.error-message');
         existingErrors.forEach(error => error.remove());
         
-        // Create FormData object
-        const formData = new FormData(this);
+        // Create FormData object and convert to JSON
+        const formData = {
+            email: document.getElementById('login-email').value,
+            password: document.getElementById('login-password').value,
+            remember: document.getElementById('remember').checked
+        };
 
-        // Debug log
-        console.log('Submitting login form...');
+        // Show loading state
+        const submitButton = this.querySelector('.submit-button');
+        const originalButtonText = submitButton.textContent;
+        submitButton.textContent = 'Logging in...';
+        submitButton.disabled = true;
 
         // Send AJAX request
         fetch('login_process.php', {
             method: 'POST',
-            body: formData,
             headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
         })
-        .then(response => {
-            console.log('Response status:', response.status);
-            // Check if response is ok
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            console.log('Response data:', data);
             if (data.success) {
-                // Redirect on success
-                window.location.href = data.redirect;
+                // Show success message
+                const successDiv = document.createElement('div');
+                successDiv.className = 'success-message';
+                successDiv.textContent = data.message;
+                this.insertBefore(successDiv, this.firstChild);
+                
+                // Redirect after brief delay
+                setTimeout(() => {
+                    window.location.href = data.redirect;
+                }, 1000);
             } else {
                 // Show error message
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'error-message';
-                errorDiv.textContent = data.error || 'Login failed. Please try again.';
-                
-                // Add close button
-                const closeBtn = document.createElement('span');
-                closeBtn.className = 'error-close';
-                closeBtn.innerHTML = '&times;';
-                closeBtn.onclick = function() {
-                    errorDiv.remove();
-                };
-                errorDiv.appendChild(closeBtn);
-                
+                errorDiv.textContent = data.message;
                 this.insertBefore(errorDiv, this.firstChild);
+                
+                // Reset button
+                submitButton.textContent = originalButtonText;
+                submitButton.disabled = false;
             }
         })
         .catch(error => {
-            console.error('Fetch Error:', error);
+            console.error('Error:', error);
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-message';
-            errorDiv.textContent = 'Server error: ' + error.message;
+            errorDiv.textContent = 'An error occurred. Please try again.';
             
             const closeBtn = document.createElement('span');
             closeBtn.className = 'error-close';
@@ -3268,6 +3408,10 @@ function isApprovedStationOwner($userId) {
             errorDiv.appendChild(closeBtn);
             
             this.insertBefore(errorDiv, this.firstChild);
+            
+            // Reset button
+            submitButton.textContent = originalButtonText;
+            submitButton.disabled = false;
         });
     });
 
@@ -4088,6 +4232,12 @@ function isApprovedStationOwner($userId) {
             // Create FormData object
             const formData = new FormData(this);
 
+            // Show loading state
+            const submitButton = this.querySelector('.submit-button');
+            const originalButtonText = submitButton.textContent;
+            submitButton.textContent = 'Logging in...';
+            submitButton.disabled = true;
+
             // Send AJAX request
             fetch('login_process.php', {
                 method: 'POST',
@@ -4099,25 +4249,26 @@ function isApprovedStationOwner($userId) {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Redirect on success
-                    window.location.href = data.redirect || 'index.php';
+                    // Show success message
+                    const successDiv = document.createElement('div');
+                    successDiv.className = 'success-message';
+                    successDiv.textContent = data.message;
+                    this.insertBefore(successDiv, this.firstChild);
+                    
+                    // Redirect after brief delay
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 1000);
                 } else {
                     // Show error message
                     const errorDiv = document.createElement('div');
                     errorDiv.className = 'error-message';
-                    errorDiv.textContent = data.error || 'Login failed. Please try again.';
-                    
-                    // Add close button
-                    const closeBtn = document.createElement('span');
-                    closeBtn.className = 'error-close';
-                    closeBtn.innerHTML = '&times;';
-                    closeBtn.onclick = function() {
-                        errorDiv.remove();
-                    };
-                    errorDiv.appendChild(closeBtn);
-                    
-                    // Insert error at the top of the form
+                    errorDiv.textContent = data.message;
                     this.insertBefore(errorDiv, this.firstChild);
+                    
+                    // Reset button
+                    submitButton.textContent = originalButtonText;
+                    submitButton.disabled = false;
                 }
             })
             .catch(error => {
@@ -4135,6 +4286,10 @@ function isApprovedStationOwner($userId) {
                 errorDiv.appendChild(closeBtn);
                 
                 this.insertBefore(errorDiv, this.firstChild);
+                
+                // Reset button
+                submitButton.textContent = originalButtonText;
+                submitButton.disabled = false;
             });
         }
 

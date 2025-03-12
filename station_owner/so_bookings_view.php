@@ -1,20 +1,20 @@
 <?php
 session_start();
-require_once '../config.php';
+require_once 'config.php';
 
 // Check if user is logged in and is a station owner
 if (!isset($_SESSION['user_id'])) {
-    header("Location: stationlogin.php");
+    header("Location: ../stationlogin.php");
     exit();
 }
 
-// Check if station_id is provided
-if (!isset($_GET['station_id'])) {
-    header("Location: station-owner-dashboard.php");
+// Validate station_id parameter
+if (!isset($_GET['station_id']) || !is_numeric($_GET['station_id'])) {
+    header("Location: ../station-owner-dashboard.php");
     exit();
 }
 
-$station_id = $_GET['station_id'];
+$station_id = (int)$_GET['station_id'];
 $bookings = [];
 $station_info = null;
 
@@ -38,7 +38,7 @@ try {
     $result = $stmt->get_result();
     
     if ($result->num_rows === 0) {
-        header("Location: station-owner-dashboard.php");
+        header("Location: ../station-owner-dashboard.php");
         exit();
     }
     
@@ -116,7 +116,7 @@ try {
                 <i class='bx bx-calendar'></i> 
                 Bookings for <?php echo htmlspecialchars($station_info['name']); ?>
             </h2>
-            <a href="../station-owner-dashboard.php" class="btn btn-primary">
+            <a href="station-owner-dashboard.php" class="btn btn-primary">
                 <i class='bx bx-arrow-back'></i> Back to Dashboard
             </a>
         </div>
@@ -215,7 +215,7 @@ try {
             }
             
             try {
-                const response = await fetch('update-booking-status.php', {
+                const response = await fetch('../update-booking-status.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

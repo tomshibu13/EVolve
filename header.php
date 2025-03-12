@@ -7,142 +7,183 @@
     <link rel="stylesheet" href="header.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        .nav-link {
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .nav-link:hover {
-            text-decoration: none;
-            transform: translateY(-2px);
-            color: #0066FF;
-        }
-        
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -4px;
-            left: 0;
-            background-color: #0066FF;
-            transition: width 0.3s ease;
-        }
-        
-        .nav-link:hover::after {
-            width: 100%;
-        }
-        
-        .logo {
-            transition: transform 0.3s ease;
-        }
-        
-        .logo:hover {
-            transform: scale(1.05);
-        }
-        
-        .logo i {
-            transition: transform 0.3s ease;
-        }
-        
-        .logo:hover i {
-            transform: rotate(360deg);
-        }
-        
-        .login-btn {
-            background: #0066FF;
-            border: none;
-            border-radius: 25px;
-            padding: 10px 24px;
-            cursor: pointer;
-            font-size: 1em;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-            transition: background-color 0.3s ease;
-        }
-        
-        .login-btn:hover {
-            background: #0052cc;
-            color: white;
-            text-decoration: none;
-        }
-        
-        /* Dropdown styles */
-        .user-profile {
-            position: relative;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 4px;
-            transition: background-color 0.3s ease;
-        }
-        
-        .user-profile:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-        
-        .username {
-            font-weight: 500;
-        }
-        
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background-color: white;
-            min-width: 200px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            padding: 8px 0;
-            z-index: 1000;
-        }
-        
-        .dropdown-content a {
-            color: #333;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: background-color 0.3s ease;
-        }
-        
-        .dropdown-content a:hover {
-            background-color: #f5f5f5;
-            color: #0066FF;
-        }
-        
-        .dropdown-content i {
-            width: 20px;
-            text-align: center;
-        }
-        
-        .dropdown-divider {
-            height: 1px;
-            background-color: #eee;
-            margin: 8px 0;
-        }
-        
-        .logout-link {
-            color: #ff4444 !important;
-            
-        }
-        
-        .logout-link:hover {
-            background-color: #fff1f1 !important;
-            color: #ff4444 !important;
-        }
-        
-        /* Show dropdown when parent is hovered */
-        .user-profile:hover .dropdown-content {
-            display: block;
-        }
+       /* Header and Navigation */
+.header {
+    background-color: rgba(255, 255, 255, 0.98);
+    padding: 1.2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    backdrop-filter: blur(8px);
+}
+
+.nav-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+}
+
+/* Logo Styles */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #0066FF;
+    text-decoration: none;
+}
+
+/* Navigation Links */
+.nav-links {
+    display: flex;
+    gap: 2.5rem;
+    align-items: center;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 500;
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all var(--transition-speed) ease;
+    position: relative;
+}
+
+/* Hover Effects */
+.nav-links a:hover {
+    color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+/* Active Link Style */
+.nav-links a.active {
+    color: var(--primary-color);
+    background-color: rgba(42, 157, 143, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .nav-container {
+        padding: 0 1rem;
+    }
+    
+    .nav-links {
+        gap: 1.5rem;
+    }
+    
+    .nav-links a {
+        font-size: 1rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .logo {
+        font-size: 1.5rem;
+    }
+}
+
+.nav-link:hover {
+    text-decoration: underline;
+}
+
+.logo-text:hover {
+    text-decoration: underline;
+}
+/* Header and Navigation */
+.header {
+    background-color: rgba(255, 255, 255, 0.98);
+    padding: 1.2rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    backdrop-filter: blur(8px);
+}
+
+.nav-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+}
+
+/* Logo Styles */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #0066FF;
+    text-decoration: none;
+}
+
+/* Navigation Links */
+.nav-links {
+    display: flex;
+    gap: 2.5rem;
+    align-items: center;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--text-color);
+    font-weight: 500;
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all var(--transition-speed) ease;
+    position: relative;
+}
+
+/* Hover Effects */
+.nav-links a:hover {
+    color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+/* Active Link Style */
+.nav-links a.active {
+    color: var(--primary-color);
+    background-color: rgba(42, 157, 143, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .nav-container {
+        padding: 0 1rem;
+    }
+    
+    .nav-links {
+        gap: 1.5rem;
+    }
+    
+    .nav-links a {
+        font-size: 1rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .logo {
+        font-size: 1.5rem;
+    }
+}
+
+.nav-link:hover {
+    text-decoration: underline;
+}
+
+.logo-text:hover {
+    text-decoration: underline;
+}
+
     </style>
 </head>
 <body>
