@@ -240,6 +240,24 @@ try {
             </a>
         </div>
 
+        <?php if (isset($_SESSION['message'])): ?>
+            <div class="success-message">
+                <?php 
+                    echo htmlspecialchars($_SESSION['message']); 
+                    unset($_SESSION['message']);
+                ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error'])): ?>
+            <div class="error-message">
+                <?php 
+                    echo htmlspecialchars($_SESSION['error']); 
+                    unset($_SESSION['error']);
+                ?>
+            </div>
+        <?php endif; ?>
+
         <?php if (isset($error)): ?>
             <div class="error-message">
                 <?php echo htmlspecialchars($error); ?>
@@ -252,6 +270,21 @@ try {
                     <p>You haven't made any bookings yet.</p>
                 </div>
             <?php else: ?>
+                <!-- Add debugging section -->
+                <?php if (isset($_GET['debug'])): ?>
+                    <div style="margin-bottom: 20px; padding: 10px; background: #f5f5f5; border-radius: 5px;">
+                        <h3>Debug Information:</h3>
+                        <pre><?php 
+                            foreach ($bookings as $booking) {
+                                echo "Booking ID: " . $booking['booking_id'] . "\n";
+                                echo "Raw Date: " . $booking['booking_date'] . "\n";
+                                echo "Raw Time: " . $booking['booking_time'] . "\n";
+                                echo "Combined: " . $booking['booking_date'] . " " . $booking['booking_time'] . "\n";
+                                echo "------------------------\n";
+                            }
+                        ?></pre>
+                    </div>
+                <?php endif; ?>
                 <div class="booking-grid">
                     <?php foreach ($bookings as $booking): ?>
                         <div class="booking-card">

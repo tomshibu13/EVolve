@@ -1069,6 +1069,99 @@ function isApprovedStationOwner($userId) {
             color: #333;
             background: #e9ecef;
         }
+
+        /* Add these styles for recent bookings */
+        .recent-booking {
+            position: relative;
+            border-left: 4px solid #4CAF50;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .recent-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Update existing booking card styles */
+        .booking-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .booking-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        /* Add styles for see more link */
+        .see-more-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            background-color: #f8f9fa;
+            color: #2196F3;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .see-more-link:hover {
+            background-color: #e9ecef;
+            color: #1976D2;
+        }
+
+        .see-more-link i {
+            font-size: 0.9em;
+            transition: transform 0.3s ease;
+        }
+
+        .see-more-link:hover i {
+            transform: translateX(4px);
+        }
+
+        .validation-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .error-message {
+            background-color: #fee2e2;
+            color: #dc2626;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -1362,12 +1455,14 @@ function isApprovedStationOwner($userId) {
             </div>
 
             <div class="ev-feature-card">
-                <div class="ev-feature-icon-box">
-                    <svg class="ev-feature-icon" viewBox="0 0 24 24">
-                        <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
-                    </svg>
-                </div>
-                <div class="ev-feature-label">Notifications</div>
+                <a href="notifications.php" style="text-decoration: none; color: inherit;">
+                    <div class="ev-feature-icon-box">
+                        <svg class="ev-feature-icon" viewBox="0 0 24 24">
+                            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+                        </svg>
+                    </div>
+                    <div class="ev-feature-label">Notifications</div>
+                </a>
             </div>
 
             <div class="ev-feature-card">
@@ -2477,11 +2572,66 @@ function isApprovedStationOwner($userId) {
             </button>
         </div>
         <div class="booking-content">
-            <?php if (isset($_SESSION['user_id'])): ?>
-                <?php if (!empty($userBookings)): ?>
-                    <div id="bookingsList">
-                        <?php foreach ($userBookings as $booking): ?>
-                            <div class="booking-card">
+            <?php 
+            // Database connection check
+            $dbConnected = false;
+            try {
+                $conn = new mysqli($servername, $username, $password, $dbname);
+                if ($conn->connect_error) {
+                    throw new Exception("Connection failed: " . $conn->connect_error);
+                }
+                $dbConnected = true;
+            } catch (Exception $e) {
+                error_log("Database connection error: " . $e->getMessage());
+            ?>
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Unable to connect to the server. Please try again later.</p>
+                    <button class="retry-btn" onclick="location.reload()">Retry</button>
+                </div>
+            <?php
+            }
+            ?>
+
+            <?php if (isset($_SESSION['user_id']) && $dbConnected): ?>
+                <?php 
+                try {
+                    // Fetch bookings with error handling
+                    $stmt = $conn->prepare("SELECT * FROM bookings WHERE user_id = ?");
+                    if (!$stmt) {
+                        throw new Exception("Prepare failed: " . $conn->error);
+                    }
+                    
+                    $stmt->bind_param("i", $_SESSION['user_id']);
+                    if (!$stmt->execute()) {
+                        throw new Exception("Execute failed: " . $stmt->error);
+                    }
+                    
+                    $result = $stmt->get_result();
+                    $userBookings = $result->fetch_all(MYSQLI_ASSOC);
+                    
+                    if (!empty($userBookings)): 
+                ?>
+                    <div id="bookingsList" class="bookings-list">
+                        <?php 
+                        // Sort bookings by date and time in descending order
+                        usort($userBookings, function($a, $b) {
+                            $dateTimeA = strtotime($a['booking_date'] . ' ' . $a['booking_time']);
+                            $dateTimeB = strtotime($b['booking_date'] . ' ' . $b['booking_time']);
+                            return $dateTimeB - $dateTimeA;
+                        });
+
+                        // Get only first 2 bookings
+                        $recentBookings = array_slice($userBookings, 0, 2);
+                        
+                        foreach ($recentBookings as $booking): 
+                            $bookingDateTime = strtotime($booking['booking_date'] . ' ' . $booking['booking_time']);
+                            $isRecent = (time() - $bookingDateTime) < (24 * 60 * 60);
+                        ?>
+                            <div class="booking-card <?php echo $isRecent ? 'recent-booking' : ''; ?>">
+                                <?php if ($isRecent): ?>
+                                    <div class="recent-badge">Recent</div>
+                                <?php endif; ?>
                                 <div class="booking-station">
                                     <h3><?php echo htmlspecialchars($booking['station_name']); ?></h3>
                                     <p><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($booking['station_address']); ?></p>
@@ -2501,13 +2651,45 @@ function isApprovedStationOwner($userId) {
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
+
+                        <?php if (count($userBookings) > 2): ?>
+                            <a href="my-bookings.php" class="see-more-link">
+                                See All Bookings (<?php echo count($userBookings); ?>)
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        <?php endif; ?>
                     </div>
                 <?php else: ?>
                     <div class="no-bookings">
                         <i class="fas fa-calendar-times"></i>
                         <p>No bookings found</p>
                     </div>
-                <?php endif; ?>
+                <?php 
+                    endif;
+                } catch (Exception $e) {
+                    error_log("Error fetching bookings: " . $e->getMessage());
+                ?>
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Unable to load bookings. Please try again later.</p>
+                        <button class="retry-btn" onclick="location.reload()">Retry</button>
+                    </div>
+                <?php
+                } finally {
+                    if (isset($stmt)) {
+                        $stmt->close();
+                    }
+                    if (isset($conn)) {
+                        $conn->close();
+                    }
+                }
+                ?>
+            <?php elseif (!$dbConnected): ?>
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Unable to connect to the server. Please try again later.</p>
+                    <button class="retry-btn" onclick="location.reload()">Retry</button>
+                </div>
             <?php else: ?>
                 <div class="login-prompt">
                     <i class="fas fa-user-lock"></i>
@@ -2518,108 +2700,42 @@ function isApprovedStationOwner($userId) {
         </div>
     </div>
 
-    <!-- Add this JavaScript for handling booking cancellation -->
-    <script>
-    function cancelBooking(bookingId) {
-        if (confirm('Are you sure you want to cancel this booking?')) {
-            fetch('cancel_booking.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ booking_id: bookingId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Refresh the bookings panel
-                    location.reload();
-                } else {
-                    alert(data.message || 'Failed to cancel booking');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to cancel booking');
-            });
-        }
-    }
-    </script>
-
-    <!-- Add these additional styles -->
     <style>
-    .booking-card {
-        background: white;
-        border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 15px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
+        /* Previous styles remain unchanged */
 
-    .booking-station h3 {
-        margin: 0 0 5px 0;
-        color: #333;
-    }
+        /* Add styles for error message */
+        .error-message {
+            text-align: center;
+            padding: 20px;
+            background-color: #fff3f3;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
 
-    .booking-details {
-        margin: 10px 0;
-        color: #666;
-    }
+        .error-message i {
+            color: #ff3a57;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
 
-    .booking-details p {
-        margin: 5px 0;
-    }
+        .error-message p {
+            color: #666;
+            margin-bottom: 15px;
+        }
 
-    .booking-status {
-        display: inline-block;
-        padding: 5px 10px;
-        border-radius: 15px;
-        font-size: 0.9em;
-        font-weight: 500;
-    }
+        .retry-btn {
+            padding: 8px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
 
-    .booking-status.pending {
-        background: #fff3e0;
-        color: #f57c00;
-    }
-
-    .booking-status.confirmed {
-        background: #e8f5e9;
-        color: #2e7d32;
-    }
-
-    .booking-status.cancelled {
-        background: #ffebee;
-        color: #c62828;
-    }
-
-    .cancel-booking-btn {
-        display: block;
-        width: 100%;
-        padding: 8px;
-        margin-top: 10px;
-        background: #ff5252;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s;
-    }
-
-    .cancel-booking-btn:hover {
-        background: #d32f2f;
-    }
-
-    .login-prompt {
-        text-align: center;
-        padding: 20px;
-    }
-
-    .login-prompt i {
-        font-size: 2em;
-        color: #666;
-        margin-bottom: 10px;
-    }
+        .retry-btn:hover {
+            background-color: #2980b9;
+        }
     </style>
 
     <div id="mybBookingModal" class="myb-modal" style="display: none;">
@@ -2909,7 +3025,7 @@ function isApprovedStationOwner($userId) {
             </form>
 
             <!-- Signup Form -->
-            <form id="signupForm" action="verify_otp.php" method="post" class="tab-content">
+            <form id="signupForm" action="register_process.php" method="post" class="tab-content">
                 <div class="input-group">
                     <label for="signup-username">Username</label>
                     <input type="text" id="signup-username" name="username" required>
@@ -3457,14 +3573,13 @@ function isApprovedStationOwner($userId) {
         console.log('Setting up live validation'); // Debug log
 
         // Login form validation
-        const loginUsername = document.getElementById('login-username');
+        const loginEmail = document.getElementById('login-email');
         const loginPassword = document.getElementById('login-password');
 
-        if (loginUsername) {
-            loginUsername.addEventListener('input', function() {
-                console.log('Login username input detected'); // Debug log
-                const error = validateUsername(this.value);
-                const validationElement = document.getElementById('login-username-validation');
+        if (loginEmail) {
+            loginEmail.addEventListener('input', function() {
+                const error = validateEmail(this.value);
+                const validationElement = document.getElementById('login-email-validation');
                 if (validationElement) {
                     validationElement.textContent = error;
                     this.classList.toggle('error', error !== '');
@@ -3474,7 +3589,6 @@ function isApprovedStationOwner($userId) {
 
         if (loginPassword) {
             loginPassword.addEventListener('input', function() {
-                console.log('Login password input detected'); // Debug log
                 const error = validatePassword(this.value);
                 const validationElement = document.getElementById('login-password-validation');
                 if (validationElement) {
@@ -3548,7 +3662,7 @@ function isApprovedStationOwner($userId) {
         }
     }
 
-    // Keep the validation functions as they are
+    // Move validation functions to the top so they're defined first
     function validateUsername(username) {
         if (!username) return "Username is required";
         if (!/^[a-zA-Z]/.test(username)) return "Username must start with a letter";
@@ -3559,9 +3673,7 @@ function isApprovedStationOwner($userId) {
 
     function validateEmail(email) {
         if (!email) return "Email is required";
-        if (!/^[a-zA-Z]/.test(email)) return "Email must start with a letter";
-        const emailRegex = /^[a-zA-Z][\w.-]*[a-zA-Z0-9]@[a-zA-Z0-9][\w.-]*[a-zA-Z0-9]\.[a-zA-Z][a-zA-Z.]*[a-zA-Z]$/;
-        if (!emailRegex.test(email)) return "Please enter a valid email address";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Please enter a valid email address";
         return "";
     }
 
@@ -3573,6 +3685,137 @@ function isApprovedStationOwner($userId) {
         if (!/[0-9]/.test(password)) return "Password must contain at least one number";
         return "";
     }
+
+    // Function to setup live validation
+    function setupLiveValidation() {
+        // Login form validation
+        const loginEmail = document.getElementById('login-email');
+        const loginPassword = document.getElementById('login-password');
+
+        if (loginEmail) {
+            loginEmail.addEventListener('input', function() {
+                const error = validateEmail(this.value);
+                const validationElement = document.getElementById('login-email-validation');
+                if (validationElement) {
+                    validationElement.textContent = error;
+                    this.classList.toggle('error', error !== '');
+                }
+            });
+        }
+
+        if (loginPassword) {
+            loginPassword.addEventListener('input', function() {
+                const error = validatePassword(this.value);
+                const validationElement = document.getElementById('login-password-validation');
+                if (validationElement) {
+                    validationElement.textContent = error;
+                    this.classList.toggle('error', error !== '');
+                }
+            });
+        }
+
+        // Signup form validation
+        const signupUsername = document.getElementById('signup-username');
+        const signupEmail = document.getElementById('signup-email');
+        const signupPassword = document.getElementById('signup-password');
+        const signupConfirmPassword = document.getElementById('signup-confirm-password');
+
+        if (signupUsername) {
+            signupUsername.addEventListener('input', function() {
+                const error = validateUsername(this.value);
+                const validationElement = document.getElementById('signup-username-validation');
+                if (validationElement) {
+                    validationElement.textContent = error;
+                    this.classList.toggle('error', error !== '');
+                }
+            });
+        }
+
+        if (signupEmail) {
+            signupEmail.addEventListener('input', function() {
+                const error = validateEmail(this.value);
+                const validationElement = document.getElementById('signup-email-validation');
+                if (validationElement) {
+                    validationElement.textContent = error;
+                    this.classList.toggle('error', error !== '');
+                }
+            });
+        }
+
+        if (signupPassword) {
+            signupPassword.addEventListener('input', function() {
+                const error = validatePassword(this.value);
+                const validationElement = document.getElementById('signup-password-validation');
+                if (validationElement) {
+                    validationElement.textContent = error;
+                    this.classList.toggle('error', error !== '');
+                }
+
+                // Check confirm password match if it has a value
+                if (signupConfirmPassword && signupConfirmPassword.value) {
+                    const confirmError = signupConfirmPassword.value !== this.value ? 
+                        "Passwords do not match" : "";
+                    const confirmValidationElement = document.getElementById('signup-confirm-password-validation');
+                    if (confirmValidationElement) {
+                        confirmValidationElement.textContent = confirmError;
+                        signupConfirmPassword.classList.toggle('error', confirmError !== '');
+                    }
+                }
+            });
+        }
+
+        if (signupConfirmPassword) {
+            signupConfirmPassword.addEventListener('input', function() {
+                const signupPassword = document.getElementById('signup-password');
+                const error = this.value !== signupPassword.value ? 
+                    "Passwords do not match" : "";
+                const validationElement = document.getElementById('signup-confirm-password-validation');
+                if (validationElement) {
+                    validationElement.textContent = error;
+                    this.classList.toggle('error', error !== '');
+                }
+            });
+        }
+    }
+
+    // Update showLoginModal function to include validation setup
+    function showLoginModal() {
+        const modal = document.getElementById('loginModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            showLoginTab(new Event('click'));
+            setupLiveValidation(); // Set up validation when modal is shown
+        }
+    }
+
+    // Add event listeners when the document is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set up initial validation
+        setupLiveValidation();
+
+        // Add click handler for login/signup button
+        const loginButton = document.getElementById('loginSignupBtn');
+        if (loginButton) {
+            loginButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                showLoginModal();
+            });
+        }
+
+        // Set up tab switching with validation
+        const tabs = document.querySelectorAll('.tabs .tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (this.textContent.includes('Log In')) {
+                    showLoginTab(e);
+                } else if (this.textContent.includes('Register')) {
+                    showSignupTab(e);
+                }
+                setupLiveValidation(); // Reset validation when switching tabs
+            });
+        });
+    });
     </script>
 
     <script>
@@ -3924,5 +4167,108 @@ function isApprovedStationOwner($userId) {
         }
     }
     ?>
+
+    <!-- Add this script section before your existing scripts, but after your form -->
+    <script>
+    // Function to display error messages
+    function displayError(message, elementId = 'signup-error') {
+        const errorElement = document.getElementById(elementId);
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            
+            // Automatically hide the error after 5 seconds
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 5000);
+        }
+    }
+
+    // Updated signup form handling
+    document.addEventListener('DOMContentLoaded', function() {
+        const signupForm = document.getElementById('signupForm');
+        
+        if (signupForm) {
+            console.log('Signup form found');
+            
+            signupForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                console.log('Signup form submitted');
+                
+                try {
+                    const formData = new FormData(this);
+                    
+                    // Validate passwords match
+                    const password = formData.get('password');
+                    const confirmPassword = formData.get('confirm_password');
+                    
+                    if (password !== confirmPassword) {
+                        displayError('Passwords do not match');
+                        return;
+                    }
+                    
+                    // Send registration request
+                    const response = await fetch('register_process.php', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    console.log('Response:', data);
+                    
+                    if (data.success) {
+                        // Success - redirect to OTP verification
+                        window.location.href = data.redirect || 'verify_otp.php';
+                    } else {
+                        // Display error message
+                        displayError(data.error || 'Registration failed. Please try again.');
+                        
+                        // Show field-specific validation messages
+                        if (data.error.includes('Username')) {
+                            document.getElementById('signup-username-validation').textContent = data.error;
+                        }
+                        if (data.error.includes('Email')) {
+                            document.getElementById('signup-email-validation').textContent = data.error;
+                        }
+                        if (data.error.includes('Password')) {
+                            document.getElementById('signup-password-validation').textContent = data.error;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    displayError('An error occurred. Please try again.');
+                }
+            });
+            
+            // Real-time validation
+            const passwordInput = document.getElementById('signup-password');
+            const confirmPasswordInput = document.getElementById('signup-confirm-password');
+            
+            if (confirmPasswordInput && passwordInput) {
+                confirmPasswordInput.addEventListener('input', function() {
+                    const validation = document.getElementById('signup-confirm-password-validation');
+                    if (this.value !== passwordInput.value) {
+                        validation.textContent = 'Passwords do not match';
+                    } else {
+                        validation.textContent = '';
+                    }
+                });
+            }
+            
+            // Username validation
+            const usernameInput = document.getElementById('signup-username');
+            if (usernameInput) {
+                usernameInput.addEventListener('input', function() {
+                    const validation = document.getElementById('signup-username-validation');
+                    if (!this.value.match(/^[a-zA-Z][a-zA-Z0-9_]{2,}$/)) {
+                        validation.textContent = 'Username must start with a letter and contain only letters, numbers, and underscores';
+                    } else {
+                        validation.textContent = '';
+                    }
+                });
+            }
+        }
+    });
+    </script>
 </body>
 </html>

@@ -33,7 +33,7 @@ try {
         email VARCHAR(255) UNIQUE NOT NULL,
         passwordhash VARCHAR(255) NOT NULL,
         name VARCHAR(100) NOT NULL,
-        username VARCHAR(100) NOT NULL,
+        username VARCHAR(100) UNIQUE NOT NULL,
         phone_number VARCHAR(20),
         profile_picture VARCHAR(255),
         verification_token VARCHAR(64) NULL,
@@ -41,7 +41,9 @@ try {
         is_admin BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         status ENUM('pending', 'active', 'inactive') DEFAULT 'pending',
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_email (email),
+        INDEX idx_username (username)
     )";
 
     if ($conn->query($tableSql) === TRUE) {
@@ -95,62 +97,59 @@ try {
             if ($conn->query($stationsSql) === TRUE) {
                 echo "Table charging_stations created successfully\n";
                 
-                // Create bookings table
-                $bookingsSql = "CREATE TABLE IF NOT EXISTS bookings (
-                    booking_id INT PRIMARY KEY AUTO_INCREMENT,
-                    user_id INT NOT NULL,
-                    station_id INT NOT NULL,
-                    booking_date DATE NOT NULL,
-                    booking_time TIME NOT NULL,
-                    duration INT NOT NULL,
-                    status VARCHAR(20) NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (user_id) REFERENCES tbl_users(user_id),
-                    FOREIGN KEY (station_id) REFERENCES charging_stations(station_id)
-                )";
+               
+                // Add to the existing bookings table creation SQL
+$bookingsSql = "CREATE TABLE IF NOT EXISTS bookings (
+    booking_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    station_id INT NOT NULL,
+    booking_date DATE NOT NULL,
+    booking_time TIME NOT NULL,
+    duration INT NOT NULL,
+    amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    payment_status ENUM('pending', 'completed', 'failed') DEFAULT 'pending',
+    razorpay_order_id VARCHAR(255),
+    razorpay_payment_id VARCHAR(255),
+    status ENUM('pending', 'confirmed', 'cancelled', 'completed') NOT NULL DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES tbl_users(user_id),
+    FOREIGN KEY (station_id) REFERENCES charging_stations(station_id),
+    INDEX idx_user_booking (user_id, booking_date),
+    INDEX idx_station_booking (station_id, booking_date),
+    INDEX idx_razorpay_order (razorpay_order_id)
+)";
 
                 if ($conn->query($bookingsSql) === TRUE) {
                     echo "Table bookings created successfully\n";
                     
-                    // Add status column to charging_stations table
-                    $alterTableSql = "ALTER TABLE charging_stations 
-                                      ADD COLUMN IF NOT EXISTS status ENUM('active', 'inactive') 
-                                      DEFAULT 'active' 
-                                      AFTER total_slots";
+                    // Add admin user
+                    $adminEmail = "tomshibu666@gmail.com";
+                    $adminUsername = "tomshibu1829";
+                    $adminName = "Tom Shibu";
+                    $adminPassword = password_hash("Admin@123", PASSWORD_DEFAULT);
+                    $isAdmin = true;  // Set admin flag
                     
-                    if ($conn->query($alterTableSql) === TRUE) {
-                        echo "Status column added successfully\n";
-                        
-                        // Add admin user
-                        $adminEmail = "tomshibu666@gmail.com";
-                        $adminUsername = "tomshibu1829";
-                        $adminName = "Tom Shibu";
-                        $adminPassword = password_hash("Admin@123", PASSWORD_DEFAULT);
-                        $isAdmin = true;  // Set admin flag
-                        
-                        $insertAdminSql = "INSERT INTO tbl_users (email, passwordhash, name, username, is_admin) 
-                                          VALUES (?, ?, ?, ?, ?)
-                                          ON DUPLICATE KEY UPDATE 
-                                          passwordhash = VALUES(passwordhash),
-                                          is_admin = VALUES(is_admin)";
-                        
-                        $stmt = $conn->prepare($insertAdminSql);
-                        if ($stmt === false) {
-                            throw new Exception("Error preparing statement: " . $conn->error);
-                        }
-                        
-                        if (!$stmt->bind_param("ssssi", $adminEmail, $adminPassword, $adminName, $adminUsername, $isAdmin)) {
-                            throw new Exception("Error binding parameters: " . $stmt->error);
-                        }
-                        
-                        if (!$stmt->execute()) {
-                            throw new Exception("Error creating admin user: " . $stmt->error);
-                        }
-                        echo "Admin user created successfully\n";
-                        $stmt->close();
-                    } else {
-                        throw new Exception("Error adding status column: " . $conn->error);
+                    $insertAdminSql = "INSERT INTO tbl_users (email, passwordhash, name, username, is_admin) 
+                                      VALUES (?, ?, ?, ?, ?)
+                                      ON DUPLICATE KEY UPDATE 
+                                      passwordhash = VALUES(passwordhash),
+                                      is_admin = VALUES(is_admin)";
+                    
+                    $stmt = $conn->prepare($insertAdminSql);
+                    if ($stmt === false) {
+                        throw new Exception("Error preparing statement: " . $conn->error);
                     }
+                    
+                    if (!$stmt->bind_param("ssssi", $adminEmail, $adminPassword, $adminName, $adminUsername, $isAdmin)) {
+                        throw new Exception("Error binding parameters: " . $stmt->error);
+                    }
+                    
+                    if (!$stmt->execute()) {
+                        throw new Exception("Error creating admin user: " . $stmt->error);
+                    }
+                    echo "Admin user created successfully\n";
+                    $stmt->close();
                 } else {
                     throw new Exception("Error creating bookings table: " . $conn->error);
                 }
@@ -180,6 +179,49 @@ try {
         echo "Table remember_tokens created successfully\n";
     } else {
         throw new Exception("Error creating remember_tokens table: " . $conn->error);
+    }
+
+    // Create notifications table
+    $notificationsSql = "CREATE TABLE IF NOT EXISTS notifications (
+        notification_id INT PRIMARY KEY AUTO_INCREMENT,
+        user_id INT NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        type ENUM('booking', 'system', 'alert') NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_read BOOLEAN DEFAULT FALSE,
+        FOREIGN KEY (user_id) REFERENCES tbl_users(user_id)
+    )";
+
+    if ($conn->query($notificationsSql) === TRUE) {
+        echo "Table notifications created successfully\n";
+    } else {
+        throw new Exception("Error creating notifications table: " . $conn->error);
+    }
+
+    // Create payment_details table
+    $paymentDetailsSql = "CREATE TABLE IF NOT EXISTS payment_details (
+        payment_id INT PRIMARY KEY AUTO_INCREMENT,
+        booking_id INT NOT NULL,
+        user_id INT NOT NULL,
+        station_id INT NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        payment_method VARCHAR(50),
+        transaction_id VARCHAR(255),
+        status ENUM('completed', 'failed', 'refunded') DEFAULT 'completed',
+        FOREIGN KEY (booking_id) REFERENCES bookings(booking_id),
+        FOREIGN KEY (user_id) REFERENCES tbl_users(user_id),
+        FOREIGN KEY (station_id) REFERENCES charging_stations(station_id),
+        INDEX idx_payment_date (payment_date),
+        INDEX idx_user_payment (user_id),
+        INDEX idx_station_payment (station_id)
+    )";
+
+    if ($conn->query($paymentDetailsSql) === TRUE) {
+        echo "Table payment_details created successfully\n";
+    } else {
+        throw new Exception("Error creating payment_details table: " . $conn->error);
     }
 
 } catch (Exception $e) {

@@ -212,7 +212,8 @@ try {
         <?php if ($station): ?>
 
 
-            <form class="booking-form" method="POST">
+            <form class="booking-form" method="POST" action="create_order.php">
+                <input type="hidden" name="station_id" value="<?php echo htmlspecialchars($station_id); ?>">
                 <div class="form-group">
                     <label for="booking_date">Date</label>
                     <input type="date" id="booking_date" name="booking_date" class="form-control" required>
@@ -226,25 +227,27 @@ try {
                 <div class="form-group">
                     <label for="duration">Duration (minutes)</label>
                     <select id="duration" name="duration" class="form-control" required>
-                        <option value="30">30 minutes</option>
-                        <option value="60">1 hour</option>
+                        <option value="30">30 minutes </option>
+                        <option value="60">1 hour </option>
                         <option value="90">1.5 hours</option>
                         <option value="120">2 hours</option>
                     </select>
                 </div>
 
-                <button type="submit" class="btn-primary">
-                    <i class="fas fa-bolt"></i> Confirm Booking
-                </button>
+                <button type="submit" class="btn-primary">Proceed to Payment</button>
             </form>
         <?php endif; ?>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Removed time restrictions
-            const dateInput = document.getElementById('booking_date');
-            const timeInput = document.getElementById('booking_time');
+            const bookingForm = document.getElementById('bookingForm');
+            
+            bookingForm.addEventListener('submit', function(e) {
+                if (!confirm('Confirm booking?')) {
+                    e.preventDefault();
+                }
+            });
         });
     </script>
 </body>

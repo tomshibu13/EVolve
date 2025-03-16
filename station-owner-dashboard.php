@@ -277,166 +277,333 @@ try {
                 padding: 0 10px;
             }
         }
+
+        /* Updated container styles */
+        .page-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Updated sidebar styles */
+        .sidebar-container {
+            width: 250px;
+            background: linear-gradient(180deg, #4e73df 0%, #224abe 100%);
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-brand:hover {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .sidebar-link {
+            padding: 0.8rem 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .sidebar-link:hover, .sidebar-link.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: white;
+        }
+
+        /* Updated main content styles */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            background: #f8f9fc;
+            min-height: 100vh;
+        }
+
+        .main-header {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar-container {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar-container.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
     </style>
 </head>
 <body>
-<?php include 'header.php'; ?>
-
-    <div class="sidebar" id="sidebar">
-        <a href="station-owner-dashboard.php" class="sidebar-link active">
-            <i class='bx bx-home'></i> Dashboard
-        </a>
-        <a href="so_add_station.php" class="sidebar-link">
-            <i class='bx bx-plus-circle'></i> Add Station
-        </a>
-        <a href="manage-bookings.php" class="sidebar-link">
-            <i class='bx bx-calendar'></i> Manage Bookings
-        </a>
-        <a href="station_owner/so_profile.php" class="sidebar-link">
-            <i class='bx bx-calendar'></i> Profile
-        </a>
-        <a href="reports.php" class="sidebar-link">
-            <i class='bx bx-line-chart'></i> Reports
-        </a>
-        <a href="settings.php" class="sidebar-link">
-            <i class='bx bx-cog'></i> Settings
-        </a>
-    </div>
-
-    <div class="main-content">
-        <div class="container-fluid">
-            <?php if (isset($error)): ?>
-                <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
-            <?php endif; ?>
-
-            <!-- Dashboard Summary -->
-            <div class="row g-4 mb-4">
-                <div class="col-md-3">
-                    <div class="card dashboard-card bg-primary text-white">
-                        <div class="card-body">
-                            <h6><i class='bx bx-station'></i> Total Stations</h6>
-                            <h2><?php echo $total_stations; ?></h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card dashboard-card bg-success text-white">
-                        <div class="card-body">
-                            <h6><i class='bx bx-check-circle'></i> Active Stations</h6>
-                            <h2><?php echo $total_active_stations; ?></h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card dashboard-card bg-info text-white">
-                        <div class="card-body">
-                            <h6><i class='bx bx-plug'></i> Total Slots</h6>
-                            <h2><?php echo $total_slots; ?></h2>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card dashboard-card bg-warning text-white">
-                        <div class="card-body">
-                            <h6><i class='bx bx-battery'></i> Available Slots</h6>
-                            <h2><?php echo $available_slots; ?></h2>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2><i class='bx bx-list-ul'></i> My Charging Stations</h2>
-                <a href="so_add_station.php" class="btn btn-primary">
-                    <i class='bx bx-plus'></i> Add New Station
+    <div class="page-container">
+        <!-- Sidebar Container -->
+        <div class="sidebar-container" id="sidebar">
+            <div class="sidebar-header">
+                <a href="station-owner-dashboard.php" class="sidebar-brand">
+                    <i class='bx bx-car'></i>
+                    <span>EV Station</span>
                 </a>
             </div>
+            
+            <div class="sidebar-nav">
+                <a href="station-owner-dashboard.php" class="sidebar-link active">
+                    <i class='bx bx-home'></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="so_add_station.php" class="sidebar-link">
+                    <i class='bx bx-plus-circle'></i>
+                    <span>Add Station</span>
+                </a>
+                <a href="manage-bookings.php" class="sidebar-link">
+                    <i class='bx bx-calendar'></i>
+                    <span>Manage Bookings</span>
+                </a>
+                <a href="station_owner/payment_analytics.php" class="sidebar-link">
+                    <i class='bx bx-money'></i>
+                    <span>Payment Analytics</span>
+                </a>
+                <a href="station_owner/so_profile.php" class="sidebar-link">
+                    <i class='bx bx-user'></i>
+                    <span>Profile</span>
+                </a>
+                <a href="reports.php" class="sidebar-link">
+                    <i class='bx bx-line-chart'></i>
+                    <span>Reports</span>
+                </a>
+                <a href="settings.php" class="sidebar-link">
+                    <i class='bx bx-cog'></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </div>
 
-            <div class="row">
-                <?php foreach ($stations as $station): ?>
-                    <div class="col-md-6 col-xl-4 mb-4">
-                        <div class="card station-card">
-                            <?php if ($station['image']): ?>
-                                <img src="<?php echo htmlspecialchars($station['image']); ?>" class="card-img-top" alt="Station Image" style="height: 200px; object-fit: cover;">
-                            <?php endif; ?>
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="main-header">
+                <button class="btn btn-link" id="sidebarToggle">
+                    <!-- <i class='bx bx-menu'></i> -->
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-info">
+                        <div class="user-name"><?php echo htmlspecialchars($_SESSION['owner_name']); ?></div>
+                        <div class="user-role">Station Owner</div>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-link" type="button" id="userMenuButton" data-bs-toggle="dropdown">
+                            <i class='bx bx-user-circle fs-4'></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
+                            <li><a class="dropdown-item" href="station_owner/so_profile.php">Profile</a></li>
+                            <li><a class="dropdown-item" href="settings.php">Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="logout.php">Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="container-fluid py-4">
+                <?php if (isset($error)): ?>
+                    <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+                <?php endif; ?>
+
+                <!-- Dashboard Summary -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="card dashboard-card bg-primary text-white">
                             <div class="card-body">
-                                <h5 class="card-title"><?php echo htmlspecialchars($station['name']); ?></h5>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <p class="card-text">
-                                            <i class='bx bx-map'></i> <strong>Address:</strong><br>
-                                            <?php echo htmlspecialchars($station['address']); ?><br>
-                                            <i class='bx bx-money'></i> <strong>Price:</strong> 
-                                            ₹<?php echo number_format($station['price'], 2); ?>/kWh<br>
-                                            <i class='bx bx-plug'></i> <strong>Slots:</strong> 
-                                            <?php echo $station['available_slots']; ?>/<?php echo $station['total_slots']; ?>
-                                        </p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <p class="card-text">
-                                            <i class='bx bx-calendar'></i> <strong>Today's Bookings:</strong> 
-                                            <?php echo $station['today_bookings'] ?? 0; ?><br>
-                                            <i class='bx bx-check-double'></i> <strong>Total Bookings:</strong> 
-                                            <?php echo $station['total_bookings'] ?? 0; ?><br>
-                                            <i class='bx bx-time'></i> <strong>Completion Rate:</strong>
-                                            <?php 
-                                                $total = $station['total_bookings'] ?? 0;
-                                                $completed = $station['completed_bookings'] ?? 0;
-                                                echo $total > 0 ? round(($completed / $total) * 100) : 0;
-                                            ?>%
-                                        </p>
-                                    </div>
-                                </div>
-                                
-                                <!-- Recent Users Section -->
-                                <div class="mt-3">
-                                    <h6><i class='bx bx-user-circle'></i> Recent Users:</h6>
-                                    <?php if (!empty($station['user_details'])): ?>
-                                        <div class="table-responsive">
-                                            <table class="table table-sm">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Name</th>
-                                                        <th>Email</th>
-                                                        <th>Bookings</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <?php 
-                                                    $users = explode(';;', $station['user_details']);
-                                                    foreach ($users as $user) {
-                                                        $userInfo = explode('|', $user);
-                                                        if (count($userInfo) === 3) {
-                                                            echo "<tr>
-                                                                <td>" . htmlspecialchars($userInfo[0]) . "</td>
-                                                                <td>" . htmlspecialchars($userInfo[1]) . "</td>
-                                                                <td>" . htmlspecialchars($userInfo[2]) . "</td>
-                                                            </tr>";
-                                                        }
-                                                    }
-                                                    ?>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    <?php else: ?>
-                                        <p class="text-muted">No users have booked this station yet.</p>
-                                    <?php endif; ?>
-                                </div>
-
-                                <div class="btn-group w-100 mt-3">
-                                    <a href="update_booking_status.php?id=<?php echo $station['station_id']; ?>" 
-                                       class="btn btn-primary">
-                                        <i class='bx bx-edit'></i> Edit
-                                    </a>
-                                    <a href="so_bookings_view.php?id=<?php echo $station['station_id']; ?>" 
-                                       class="btn btn-info">
-                                        <i class='bx bx-calendar'></i> Bookings
-                                    </a>
-                                </div>
+                                <h6><i class='bx bx-station'></i> Total Stations</h6>
+                                <h2><?php echo $total_stations; ?></h2>
                             </div>
                         </div>
                     </div>
-                <?php endforeach; ?>
+                    <div class="col-md-3">
+                        <div class="card dashboard-card bg-success text-white">
+                            <div class="card-body">
+                                <h6><i class='bx bx-check-circle'></i> Active Stations</h6>
+                                <h2><?php echo $total_active_stations; ?></h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card dashboard-card bg-info text-white">
+                            <div class="card-body">
+                                <h6><i class='bx bx-plug'></i> Total Slots</h6>
+                                <h2><?php echo $total_slots; ?></h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card dashboard-card bg-warning text-white">
+                            <div class="card-body">
+                                <h6><i class='bx bx-battery'></i> Available Slots</h6>
+                                <h2><?php echo $available_slots; ?></h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class='bx bx-list-ul'></i> My Charging Stations</h2>
+                    <a href="so_add_station.php" class="btn btn-primary">
+                        <i class='bx bx-plus'></i> Add New Station
+                    </a>
+                </div>
+
+                <div class="row">
+                    <?php foreach ($stations as $station): ?>
+                        <div class="col-md-6 col-xl-4 mb-4">
+                            <div class="card station-card">
+                                <?php if ($station['image']): ?>
+                                    <img src="<?php echo htmlspecialchars($station['image']); ?>" class="card-img-top" alt="Station Image" style="height: 200px; object-fit: cover;">
+                                <?php endif; ?>
+                                <div class="card-body">
+                                    <h5 class="card-title"><?php echo htmlspecialchars($station['name']); ?></h5>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p class="card-text">
+                                                <i class='bx bx-map'></i> <strong>Address:</strong><br>
+                                                <?php echo htmlspecialchars($station['address']); ?><br>
+                                                <i class='bx bx-money'></i> <strong>Price:</strong> 
+                                                ₹<?php echo number_format($station['price'], 2); ?>/kWh<br>
+                                                <i class='bx bx-plug'></i> <strong>Slots:</strong> 
+                                                <?php echo $station['available_slots']; ?>/<?php echo $station['total_slots']; ?>
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="card-text">
+                                                <i class='bx bx-calendar'></i> <strong>Today's Bookings:</strong> 
+                                                <?php echo $station['today_bookings'] ?? 0; ?><br>
+                                                <i class='bx bx-check-double'></i> <strong>Total Bookings:</strong> 
+                                                <?php echo $station['total_bookings'] ?? 0; ?><br>
+                                                <i class='bx bx-time'></i> <strong>Completion Rate:</strong>
+                                                <?php 
+                                                    $total = $station['total_bookings'] ?? 0;
+                                                    $completed = $station['completed_bookings'] ?? 0;
+                                                    echo $total > 0 ? round(($completed / $total) * 100) : 0;
+                                                ?>%
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Recent Users Section -->
+                                    <div class="mt-3">
+                                        <h6><i class='bx bx-user-circle'></i> Recent Users:</h6>
+                                        <?php if (!empty($station['user_details'])): ?>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Email</th>
+                                                            <th>Bookings</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <?php 
+                                                        $users = explode(';;', $station['user_details']);
+                                                        foreach ($users as $user) {
+                                                            $userInfo = explode('|', $user);
+                                                            if (count($userInfo) === 3) {
+                                                                echo "<tr>
+                                                                    <td>" . htmlspecialchars($userInfo[0]) . "</td>
+                                                                    <td>" . htmlspecialchars($userInfo[1]) . "</td>
+                                                                    <td>" . htmlspecialchars($userInfo[2]) . "</td>
+                                                                </tr>";
+                                                            }
+                                                        }
+                                                        ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        <?php else: ?>
+                                            <p class="text-muted">No users have booked this station yet.</p>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <div class="btn-group w-100 mt-3">
+                                        <a href="update_booking_status.php?id=<?php echo $station['station_id']; ?>" 
+                                           class="btn btn-primary">
+                                            <i class='bx bx-edit'></i> Edit
+                                        </a>
+                                        <a href="so_bookings_view.php?id=<?php echo $station['station_id']; ?>" 
+                                           class="btn btn-info">
+                                            <i class='bx bx-calendar'></i> Bookings
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
         </div>
     </div>
@@ -444,7 +611,7 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.getElementById('sidebarToggle').addEventListener('click', () => {
-            document.getElementById('sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-container').classList.toggle('active');
         });
 
         document.querySelectorAll('.toggle-status').forEach(button => {

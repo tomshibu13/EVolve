@@ -50,7 +50,11 @@ try {
                 b.*,
                 u.name as user_name,
                 u.email as user_email,
-                u.phone_number as user_phone
+                u.phone_number as user_phone,
+                COALESCE(b.amount, 0) as payment_amount,
+                COALESCE(b.payment_status, 'pending') as payment_status,
+                b.razorpay_payment_id,
+                b.razorpay_order_id
             FROM bookings b
             JOIN tbl_users u ON b.user_id = u.user_id
             WHERE b.station_id = ?
@@ -108,8 +112,28 @@ try {
 </head>
 <body>
 
+    <div class="sidebar">
+        <div class="logo-details">
+            <i class='bx bx-bolt-circle'></i>
+            <span class="logo_name">EVolve</span>
+        </div>
+        <ul class="nav-links">
+            <li>
+                <a href="station-owner-dashboard.php">
+                    <i class='bx bx-grid-alt'></i>
+                    <span class="link_name">Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="payment_analytics.php">
+                    <i class='bx bx-money'></i>
+                    <span class="link_name">Payment Analytics</span>
+                </a>
+            </li>
+            <!-- ... other sidebar items ... -->
+        </ul>
+    </div>
 
-    
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>
@@ -143,7 +167,34 @@ try {
                 </div>
             </div>
 
-            <div class="col-md-8">
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Payment Summary</h5>
+                        <?php
+                        $total_earnings = 0;
+                        $pending_payments = 0;
+                        $completed_payments = 0;
+                        
+                        foreach ($bookings as $booking) {
+                            if ($booking['payment_status'] === 'completed') {
+                                $total_earnings += $booking['payment_amount'];
+                                $completed_payments++;
+                            } elseif ($booking['payment_status'] === 'pending') {
+                                $pending_payments++;
+                            }
+                        }
+                        ?>
+                        <p class="card-text">
+                            <strong>Total Earnings:</strong> ₹<?php echo number_format($total_earnings, 2); ?><br>
+                            <strong>Completed Payments:</strong> <?php echo $completed_payments; ?><br>
+                            <strong>Pending Payments:</strong> <?php echo $pending_payments; ?>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-12">
                 <?php if (empty($bookings)): ?>
                     <div class="alert alert-info">No bookings found for this station.</div>
                 <?php else: ?>
@@ -187,14 +238,35 @@ try {
                                     </span>
                                 </div>
                                 
-                                <?php if ($booking['status'] === 'pending'): ?>
+                                <div class="mt-3 booking-details">
+                                    <hr>
+                                    <h6>Payment Details</h6>
+                                    <p class="mb-2">
+                                        <strong>Amount:</strong> ₹<?php echo number_format($booking['payment_amount'], 2); ?><br>
+                                        <strong>Status:</strong> 
+                                        <span class="badge <?php 
+                                            echo $booking['payment_status'] === 'completed' ? 'bg-success' : 
+                                                ($booking['payment_status'] === 'pending' ? 'bg-warning' : 'bg-danger'); 
+                                        ?>">
+                                            <?php echo ucfirst($booking['payment_status']); ?>
+                                        </span><br>
+                                        <?php if ($booking['razorpay_payment_id']): ?>
+                                            <strong>Payment ID:</strong> <?php echo htmlspecialchars($booking['razorpay_payment_id']); ?><br>
+                                        <?php endif; ?>
+                                        <?php if ($booking['razorpay_order_id']): ?>
+                                            <strong>Order ID:</strong> <?php echo htmlspecialchars($booking['razorpay_order_id']); ?>
+                                        <?php endif; ?>
+                                    </p>
+                                </div>
+
+                                <?php if ($booking['status'] === 'pending' || $booking['status'] === 'confirmed'): ?>
                                     <div class="mt-3">
                                         <button class="btn btn-success btn-sm me-2" 
-                                                onclick="updateBookingStatus(<?php echo $booking['booking_id']; ?>, 'completed')">
+                                                onclick="updateBookingStatus(<?php echo $booking['booking_id']; ?>, 'completed', <?php echo $station_id; ?>)">
                                             <i class='bx bx-check'></i> Mark Complete
                                         </button>
                                         <button class="btn btn-danger btn-sm" 
-                                                onclick="updateBookingStatus(<?php echo $booking['booking_id']; ?>, 'cancelled')">
+                                                onclick="updateBookingStatus(<?php echo $booking['booking_id']; ?>, 'cancelled', <?php echo $station_id; ?>)">
                                             <i class='bx bx-x'></i> Cancel Booking
                                         </button>
                                     </div>
@@ -209,34 +281,53 @@ try {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        async function updateBookingStatus(bookingId, status) {
+        function updateBookingStatus(bookingId, status, stationId) {
             if (!confirm(`Are you sure you want to mark this booking as ${status}?`)) {
                 return;
             }
             
-            try {
-                const response = await fetch('../update-booking-status.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ 
-                        booking_id: bookingId,
-                        status: status 
-                    })
-                });
-                
-                const data = await response.json();
-                
+            const formData = new FormData();
+            formData.append('booking_id', bookingId);
+            formData.append('status', status);
+            formData.append('station_id', stationId);
+            
+            // Add loading state to buttons
+            const buttons = document.querySelectorAll(`button[onclick*="${bookingId}"]`);
+            buttons.forEach(button => {
+                button.disabled = true;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
+            });
+
+            fetch('./update_booking_status.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
                 if (data.success) {
-                    window.location.reload();
+                    location.reload();
                 } else {
                     alert(data.message || 'Error updating booking status');
+                    // Re-enable buttons on error
+                    buttons.forEach(button => {
+                        button.disabled = false;
+                        button.innerHTML = status === 'completed' ? 
+                            '<i class="bx bx-check"></i> Mark Complete' : 
+                            '<i class="bx bx-x"></i> Cancel Booking';
+                    });
                 }
-            } catch (error) {
+            })
+            .catch(error => {
                 console.error('Error:', error);
-                alert('Error updating booking status');
-            }
+                alert('An error occurred while updating the booking status');
+                // Re-enable buttons on error
+                buttons.forEach(button => {
+                    button.disabled = false;
+                    button.innerHTML = status === 'completed' ? 
+                        '<i class="bx bx-check"></i> Mark Complete' : 
+                        '<i class="bx bx-x"></i> Cancel Booking';
+                });
+            });
         }
     </script>
 </body>
