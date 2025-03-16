@@ -1,3 +1,164 @@
+<?php
+session_start();
+
+// Database connection
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "evolve1";
+
+try {
+    $conn = new mysqli($servername, $username, $password, $dbname);
+
+    if ($conn->connect_error) {
+        throw new Exception("Connection failed: " . $conn->connect_error);
+    }
+
+    // Test query to check data
+    $test_query = "SELECT * FROM charging_stations LIMIT 1";
+    $result = $conn->query($test_query);
+    
+    if ($result) {
+        $row = $result->fetch_assoc();
+        error_log("Test row: " . print_r($row, true));  // This will log the data to PHP error log
+    } else {
+        error_log("Query failed: " . $conn->error);
+    }
+
+    // Function to get nearby stations based on coordinates
+    function getNearbyStations($lat, $lng, $radius = 10) {
+        global $conn;
+        
+        // Set user location as MySQL variables
+        $conn->query("SET @lat = {$lat}");
+        $conn->query("SET @lng = {$lng}");
+        
+        $sql = "SELECT 
+                station_id,
+                owner_name,
+                name,
+                ST_X(location) as lng,
+                ST_Y(location) as lat,
+                status,
+                address,
+                price,
+                total_slots,
+                available_slots,
+                charger_types,
+                image,
+                (
+                    6371 * acos(
+                        cos(radians(@lat)) * cos(radians(ST_Y(location))) *
+                        cos(radians(ST_X(location)) - radians(@lng)) +
+                        sin(radians(@lat)) * sin(radians(ST_Y(location)))
+                    )
+                ) AS distance
+                FROM charging_stations 
+                WHERE status = 'active'
+                HAVING distance <= ?
+                ORDER BY distance";
+                
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("d", $radius);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Execute failed: " . $stmt->error);
+        }
+
+        $result = $stmt->get_result();
+        
+        $stations = array();
+        while($row = $result->fetch_assoc()) {
+            $stations[] = array(
+                'id' => $row['station_id'],
+                'ownerName' => $row['owner_name'],
+                'name' => $row['name'],
+                'lat' => floatval($row['lat']),
+                'lng' => floatval($row['lng']),
+                'status' => $row['status'],
+                'address' => $row['address'],
+                'price' => $row['price'],
+                'totalSlots' => $row['total_slots'],
+                'availableSlots' => $row['available_slots'],
+                'chargerTypes' => json_decode($row['charger_types'], true),
+                'image' => $row['image'],
+                'distance' => round($row['distance'], 2)
+            );
+        }
+        
+        return $stations;
+    }
+
+    // Handle AJAX requests
+    if (isset($_GET['action'])) {
+        // Disable error display in output
+        ini_set('display_errors', 0);
+        error_reporting(E_ALL);
+        
+        // Ensure no output before headers
+        ob_clean();
+        header('Content-Type: application/json');
+        
+        switch ($_GET['action']) {
+            case 'getNearby':
+                try {
+                    if (!isset($_GET['lat']) || !isset($_GET['lng'])) {
+                        throw new Exception("Latitude and longitude are required");
+                    }
+                    
+                    $lat = floatval($_GET['lat']);
+                    $lng = floatval($_GET['lng']);
+                    $radius = floatval($_GET['radius'] ?? 10);
+                    
+                    // Validate coordinates
+                    if ($lat == 0 && $lng == 0) {
+                        throw new Exception("Invalid coordinates");
+                    }
+                    
+                    // Log the input parameters
+                    error_log("Searching with parameters - lat: $lat, lng: $lng, radius: $radius");
+                    
+                    $stations = getNearbyStations($lat, $lng, $radius);
+                    
+                    // Log the result
+                    error_log("Found " . count($stations) . " stations");
+                    
+                    $response = [
+                        'success' => true,
+                        'stations' => $stations,
+                        'count' => count($stations)
+                    ];
+                    
+                    echo json_encode($response, JSON_THROW_ON_ERROR);
+                    
+                } catch (Exception $e) {
+                    error_log("Error in getNearby: " . $e->getMessage());
+                    http_response_code(500);
+                    echo json_encode([
+                        'success' => false,
+                        'error' => $e->getMessage()
+                    ], JSON_THROW_ON_ERROR);
+                }
+                break;
+            
+            default:
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Invalid action'
+                ], JSON_THROW_ON_ERROR);
+        }
+        exit;
+    }
+
+} catch (Exception $e) {
+    error_log("Error: " . $e->getMessage());
+}
+
+// Close the database connection
+$conn->close();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -199,7 +360,7 @@
                     updateMapView(lat, lng, radius);
 
                     // Fetch nearby stations
-                    fetch(`api.php?action=getNearby&lat=${lat}&lng=${lng}&radius=${radius}`)
+                    fetch(`geolocation.php?action=getNearby&lat=${lat}&lng=${lng}&radius=${radius}`)
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {

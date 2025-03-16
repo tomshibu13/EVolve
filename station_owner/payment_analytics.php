@@ -312,10 +312,10 @@ try {
             z-index: 999;
         }
 
-        .header-right {
+        .header-left {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 20px;
         }
 
         .user-menu {
@@ -325,8 +325,8 @@ try {
         }
 
         .user-info {
-            text-align: right;  /* Aligned to right */
-            margin-right: 15px; /* Added margin for spacing */
+            text-align: left;  /* Changed from right to left */
+            margin-left: 15px; /* Added margin for spacing */
         }
 
         .user-name {
@@ -340,17 +340,15 @@ try {
             color: #6c757d;
         }
 
-        .dropdown-toggle::after {
-            display: none; /* Removes the default dropdown arrow */
-        }
-
-        .btn-user {
-            padding: 0;
+        #sidebarToggle {
+            padding: 8px;
+            border-radius: 8px;
             color: #4e73df;
+            transition: all 0.3s ease;
         }
 
-        .btn-user:hover {
-            color: #224abe;
+        #sidebarToggle:hover {
+            background-color: #f8f9fa;
         }
     </style>
 </head>
@@ -401,28 +399,28 @@ try {
         <div class="main-content">
             <!-- Header -->
             <header class="main-header">
-                <button class="btn btn-link" id="sidebarToggle">
-                    <i class='bx bx-menu'></i>
-                </button>
-
-                <div class="header-right">
+                <div class="header-left">
+                    <button class="btn btn-link" id="sidebarToggle">
+                        <!-- <i class='bx bx-menu'></i> -->
+                    </button>
                     <div class="user-menu">
                         <div class="user-info">
                             <div class="user-name"><?php echo htmlspecialchars($_SESSION['owner_name']); ?></div>
                             <div class="user-role">Station Owner</div>
                         </div>
-                        <div class="dropdown">
-                            <button class="btn btn-link btn-user" type="button" id="userMenuButton" data-bs-toggle="dropdown">
-                                <i class='bx bx-user-circle fs-4'></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
-                                <li><a class="dropdown-item" href="so_profile.php">Profile</a></li>
-                                <li><a class="dropdown-item" href="../settings.php">Settings</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="../logout.php">Logout</a></li>
-                            </ul>
-                        </div>
                     </div>
+                </div>
+                
+                <div class="dropdown">
+                    <button class="btn btn-link" type="button" id="userMenuButton" data-bs-toggle="dropdown">
+                        <i class='bx bx-user-circle fs-4'></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
+                        <li><a class="dropdown-item" href="so_profile.php">Profile</a></li>
+                        <li><a class="dropdown-item" href="../settings.php">Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="../logout.php">Logout</a></li>
+                    </ul>
                 </div>
             </header>
 
