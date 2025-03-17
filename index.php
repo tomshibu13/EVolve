@@ -3003,25 +3003,7 @@ function isApprovedStationOwner($userId) {
                     <a href="forgot_password.php">Forgot Password?</a>
                 </p>
 
-                <!-- Google Login Button -->
-                <div class="google-signin-container">
-                    <?php
-                    $client_id = "767546662883-n1srtf3ane5krtkm89okulrq4fr12ekq.apps.googleusercontent.com";
-                    $redirect_uri = "http://localhost/project/";
-                    $auth_url = "https://accounts.google.com/o/oauth2/v2/auth?" . http_build_query([
-                        "response_type" => "code",
-                        "client_id" => $client_id,
-                        "redirect_uri" => $redirect_uri,
-                        "scope" => "email profile",
-                        "access_type" => "offline",
-                        "prompt" => "consent"
-                    ]);
-                    ?>
-                    <a href="<?php echo htmlspecialchars($auth_url); ?>" class="google-login-btn">
-                        <i class="fab fa-google"></i>
-                        Login with Google
-                    </a>
-                </div>
+                
             </form>
 
             <!-- Signup Form -->
@@ -3054,13 +3036,7 @@ function isApprovedStationOwner($userId) {
 
                 <button type="submit" class="submit-button">Sign Up</button>
 
-                <!-- Add Google Login Button -->
-                <div class="google-signin-container">
-                    <a href="<?php echo htmlspecialchars($auth_url); ?>" class="google-login-btn">
-                        <i class="fab fa-google"></i>
-                        Sign up with Google
-                    </a>
-                </div>
+               
             </form>
         </div>
     </div>
