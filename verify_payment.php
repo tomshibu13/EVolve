@@ -3,7 +3,8 @@ session_start();
 require 'vendor/autoload.php';
 use Razorpay\Api\Api;
 
-require 'config.php';
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/station_owner/send_payment_email.php';
 
 $key_id = "rzp_test_R6h0atxxQ4WsUU";  // Your Razorpay Key ID
 $key_secret = "5CyNCDCaDKmrRqPWX2K6uLGV";  // Your Razorpay Key Secret
@@ -32,6 +33,28 @@ try {
     $pdo->beginTransaction();
 
     try {
+        // First, get the booking and user details needed for email
+        $stmt = $pdo->prepare("
+            SELECT 
+                b.*,
+                u.email as user_email,
+                u.name as user_name,
+                cs.name as station_name
+            FROM bookings b
+            JOIN tbl_users u ON b.user_id = u.user_id
+            JOIN charging_stations cs ON b.station_id = cs.station_id
+            WHERE b.razorpay_order_id = ?
+        ");
+        $stmt->execute([$order_id]);
+        $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$booking) {
+            throw new Exception("Booking not found for order ID: $order_id");
+        }
+
+        // Log the booking details
+        error_log("Found booking: " . print_r($booking, true));
+
         // Update bookings table
         $stmt = $pdo->prepare("UPDATE bookings SET 
             payment_status = 'completed',
@@ -59,6 +82,20 @@ try {
         
         $stmt->execute([$amount, $payment_method, $payment_id, $order_id]);
 
+        // Send confirmation email
+        $emailResult = sendPaymentSuccessEmail(
+            $booking['user_email'],
+            $booking['user_name'],
+            $booking['station_name'],
+            $amount,
+            $booking['booking_date'],
+            $booking['booking_time'],
+            $booking['user_id']
+        );
+
+        // Log email result
+        error_log("Email sending result: " . print_r($emailResult, true));
+
         // Commit transaction
         $pdo->commit();
 
@@ -69,6 +106,7 @@ try {
     } catch (Exception $e) {
         // Rollback transaction on error
         $pdo->rollBack();
+        error_log("Transaction Error: " . $e->getMessage());
         throw $e;
     }
 

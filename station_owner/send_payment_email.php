@@ -1,31 +1,48 @@
 <?php
-session_start();
-require_once '../config.php';
+// Remove session_start since it's already started in the parent file
+// session_start();
+
+// Fix the config path using __DIR__ for absolute path
+require_once __DIR__ . '/../config.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require '../PHPMailer-master/src/Exception.php';
-require '../PHPMailer-master/src/PHPMailer.php';
-require '../PHPMailer-master/src/SMTP.php';
+// Fix the PHPMailer paths using __DIR__ for absolute paths
+require_once __DIR__ . '/../PHPMailer-master/src/Exception.php';
+require_once __DIR__ . '/../PHPMailer-master/src/PHPMailer.php';
+require_once __DIR__ . '/../PHPMailer-master/src/SMTP.php';
 
 function sendPaymentSuccessEmail($userEmail, $userName, $stationName, $amount, $bookingDate, $bookingTime, $userId) {
+    global $pdo; // Make sure $pdo is accessible
     try {
         $mail = new PHPMailer(true);
         
-        // Enable debug output to see what's happening
-        $mail->SMTPDebug = 2;
+        // Enable debug output
+        $mail->SMTPDebug = 3; // Increase debug level
+        $mail->Debugoutput = function($str, $level) {
+            error_log("PHPMailer Debug: $str");
+        };
         
         // Server settings
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'evolve1829@gmail.com';  // Your confirmed email
-        $mail->Password = 'qgmg ijoz obaw wvth';   // Your confirmed password
-        $mail->SMTPSecure = 'tls';                 // Changed to string 'tls'
+        $mail->Username = 'evolve1829@gmail.com';
+        $mail->Password = 'qgmg ijoz obaw wvth';
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
 
-        // Set timeout and other options
+        // Additional SMTP options for troubleshooting
+        $mail->SMTPOptions = array(
+            'ssl' => array(
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            )
+        );
+
+        // Set timeout
         $mail->Timeout = 60;
         $mail->CharSet = 'UTF-8';
 
@@ -35,7 +52,7 @@ function sendPaymentSuccessEmail($userEmail, $userName, $stationName, $amount, $
 
         // Content
         $mail->isHTML(true);
-        $mail->Subject = 'Payment Successful - EVolve EV Charging';
+        $mail->Subject = 'Booking Confirmation - EVolve EV Charging';
         
         // Email template
         $emailBody = "
@@ -79,18 +96,22 @@ function sendPaymentSuccessEmail($userEmail, $userName, $stationName, $amount, $
         $mail->Body = $emailBody;
         $mail->AltBody = strip_tags(str_replace(['<br>', '</p>'], ["\n", "\n\n"], $emailBody));
 
+        // Log before sending
+        error_log("Attempting to send email to: $userEmail");
+        
         $mail->send();
-        
-        // Insert into notifications table
-        global $pdo;
-        $notificationTitle = "Payment Successful";
-        $notificationMessage = "Your payment of ₹{$amount} for booking at {$stationName} has been processed successfully.";
-        
+        error_log("Email sent successfully to: $userEmail");
+
+        // Insert notification
         $stmt = $pdo->prepare("
             INSERT INTO notifications (user_id, title, message, type) 
             VALUES (?, ?, ?, 'booking')
         ");
-        $stmt->execute([$userId, $notificationTitle, $notificationMessage]);
+        $stmt->execute([
+            $userId,
+            "Booking Confirmed",
+            "Your booking at $stationName has been confirmed. Amount paid: ₹$amount"
+        ]);
 
         return [
             'success' => true,
@@ -100,7 +121,7 @@ function sendPaymentSuccessEmail($userEmail, $userName, $stationName, $amount, $
         error_log("Email sending failed: " . $e->getMessage());
         return [
             'success' => false,
-            'message' => 'Failed to send email: ' . $e->getMessage()
+            'message' => $e->getMessage()
         ];
     }
 }

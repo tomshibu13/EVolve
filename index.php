@@ -701,18 +701,50 @@ function isApprovedStationOwner($userId) {
         }
 
         .submit-button {
-            background: #3498db;
+            position: relative;
+            padding: 10px 20px;
+            background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 15px 30px;
-            font-size: 1rem;
+            border-radius: 5px;
             cursor: pointer;
-            width: 100%;
+            transition: all 0.3s ease;
         }
 
-        .submit-button:hover {
-            background: #2980b9;
-            transform: translateY(-2px);
+        .submit-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ffffff;
+            border-top: 3px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        @keyframes spin {
+            0% { transform: translateY(-50%) rotate(0deg); }
+            100% { transform: translateY(-50%) rotate(360deg); }
+        }
+
+        .button-text {
+            transition: all 0.3s ease;
+        }
+
+        .loading .button-text {
+            padding-right: 30px;
+        }
+
+        .loading .spinner {
+            display: block;
         }
 
         /* Responsive Design */
@@ -2997,7 +3029,10 @@ function isApprovedStationOwner($userId) {
                     <label for="remember">Remember me</label>
                 </div>
 
-                <button type="submit" class="submit-button">Log In</button>
+                <button type="submit" class="submit-button">
+                    <span class="button-text">Log In</span>
+                    <span class="spinner"></span>
+                </button>
 
                 <p class="forgot-password">
                     <a href="forgot_password.php">Forgot Password?</a>
@@ -3034,7 +3069,10 @@ function isApprovedStationOwner($userId) {
 
                 <div id="signup-error" class="error-message" style="display: none; color: red;"></div>
 
-                <button type="submit" class="submit-button">Sign Up</button>
+                <button type="submit" class="submit-button">
+                    <span class="button-text">Sign Up</span>
+                    <span class="spinner"></span>
+                </button>
 
                
             </form>
