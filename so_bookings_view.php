@@ -170,6 +170,10 @@ try {
                                         <strong>Time:</strong> <?php echo date('g:i A', strtotime($booking['booking_time'])); ?>
                                     </p>
                                     <p class="mb-1">
+                                        <i class='bx bx-plug'></i> 
+                                        <strong>Slot:</strong> <?php echo isset($booking['slot_number']) ? htmlspecialchars($booking['slot_number']) : 'Not assigned'; ?>
+                                    </p>
+                                    <p class="mb-1">
                                         <i class='bx bx-battery'></i> 
                                         <strong>Duration:</strong> <?php echo $booking['duration']; ?> hours
                                     </p>
@@ -179,21 +183,31 @@ try {
                                         echo match($booking['status']) {
                                             'completed' => 'success',
                                             'cancelled' => 'danger',
+                                            'active' => 'primary',
                                             'pending' => 'warning',
                                             default => 'secondary'
                                         };
-                                    ?>">
+                                    ?>"
+                                    data-booking-id="<?php echo $booking['booking_id']; ?>"
+                                    data-status="<?php echo $booking['status']; ?>">
                                         <?php echo ucfirst($booking['status']); ?>
                                     </span>
                                     <?php if ($booking['status'] === 'pending'): ?>
                                         <div class="mt-3">
-                                            <button class="btn btn-success btn-sm me-2" 
-                                                    onclick="updateBookingStatus(<?php echo $booking['booking_id']; ?>, 'completed')">
-                                                <i class='bx bx-check'></i> Complete
+                                            <button class="btn btn-primary btn-sm me-2" 
+                                                    onclick="updateBookingStatus(<?php echo $booking['booking_id']; ?>, 'active')">
+                                                <i class='bx bx-play'></i> Start
                                             </button>
                                             <button class="btn btn-danger btn-sm"
                                                     onclick="updateBookingStatus(<?php echo $booking['booking_id']; ?>, 'cancelled')">
                                                 <i class='bx bx-x'></i> Cancel
+                                            </button>
+                                        </div>
+                                    <?php elseif ($booking['status'] === 'active'): ?>
+                                        <div class="mt-3">
+                                            <button class="btn btn-success btn-sm" 
+                                                    onclick="updateBookingStatus(<?php echo $booking['booking_id']; ?>, 'completed')">
+                                                <i class='bx bx-check'></i> Complete
                                             </button>
                                         </div>
                                     <?php endif; ?>
@@ -214,6 +228,12 @@ try {
             }
 
             try {
+                // Get the current status before updating
+                const currentStatusElement = document.querySelector(`[data-booking-id="${bookingId}"]`);
+                const currentStatus = currentStatusElement ? currentStatusElement.dataset.status : null;
+                
+                console.log(`Changing booking #${bookingId} from ${currentStatus} to ${status}`);
+                
                 const response = await fetch('update_booking_status.php', {
                     method: 'POST',
                     headers: {
@@ -226,9 +246,53 @@ try {
                 });
 
                 if (response.ok) {
-                    window.location.reload();
+                    const stationId = <?php echo $station_id; ?>;
+                    let slotsAction = null;
+                    
+                    // Determine whether to increment or decrement available slots based on status change
+                    if (status === 'active' && currentStatus === 'pending') {
+                        // User is now active at the station - decrease available slots
+                        slotsAction = 'decrement';
+                        console.log('Decreasing available slots - user is now active');
+                    } else if ((status === 'completed' || status === 'cancelled') && 
+                              (currentStatus === 'active' || currentStatus === 'pending')) {
+                        // User is leaving the station - increase available slots
+                        slotsAction = 'increment';
+                        console.log('Increasing available slots - user is leaving');
+                    }
+                    
+                    // Only update slots if needed
+                    if (slotsAction) {
+                        console.log(`Updating slots: ${slotsAction}`);
+                        const slotsResponse = await fetch('update_available_slots.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                station_id: stationId,
+                                action: slotsAction
+                            })
+                        });
+                        
+                        const slotsResult = await slotsResponse.json();
+                        console.log('Slot update result:', slotsResult);
+                        
+                        if (slotsResponse.ok && slotsResult.success) {
+                            console.log(`Available slots updated to: ${slotsResult.available_slots}`);
+                        } else {
+                            console.error('Failed to update slots:', slotsResult.message);
+                        }
+                    }
+                    
+                    // Slight delay before reloading to ensure all updates are processed
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
                 } else {
-                    alert('Error updating booking status');
+                    const errorData = await response.json();
+                    console.error('Error response:', errorData);
+                    alert(`Error updating booking status: ${errorData.message || 'Unknown error'}`);
                 }
             } catch (error) {
                 console.error('Error:', error);

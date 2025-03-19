@@ -46,6 +46,8 @@ function sendOtpEmail($email, $otp) {
     $mail = new PHPMailer\PHPMailer\PHPMailer(true);
 
     try {
+        // Enable verbose debug output for troubleshooting
+        $mail->SMTPDebug = 2;
         $mail->isSMTP();
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
@@ -53,6 +55,15 @@ function sendOtpEmail($email, $otp) {
         $mail->Password = 'qgmg ijoz obaw wvth';
         $mail->SMTPSecure = 'tls';
         $mail->Port = 587;
+        
+        // Add SSL options to handle strict server requirements
+        $mail->SMTPOptions = array(
+            'ssl' => array(
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            )
+        );
 
         $mail->setFrom('evolve1829@gmail.com', 'EVolve');
         $mail->addAddress($email);
@@ -68,9 +79,12 @@ function sendOtpEmail($email, $otp) {
             </div>";
 
         $mail->send();
+        // Log successful email sending
+        error_log("Verification email sent successfully to $email");
         return true;
     } catch (Exception $e) {
         error_log("Email sending failed: " . $mail->ErrorInfo);
+        error_log("Full error details: " . $e->getMessage());
         return false;
     }
 }

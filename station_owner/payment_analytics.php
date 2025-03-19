@@ -364,23 +364,23 @@ try {
             </div>
             
             <div class="sidebar-nav">
-                <a href="station-owner-dashboard.php" class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) == 'station-owner-dashboard.php' ? 'active' : ''; ?>">
+                <a href="../station-owner-dashboard.php" class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) == 'station-owner-dashboard.php' ? 'active' : ''; ?>">
                     <i class='bx bx-home'></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="so_add_station.php" class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) == 'so_add_station.php' ? 'active' : ''; ?>">
+                <a href="../so_add_station.php" class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) == 'so_add_station.php' ? 'active' : ''; ?>">
                     <i class='bx bx-plus-circle'></i>
                     <span>Add Station</span>
                 </a>
-                <a href="manage-bookings.php" class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage-bookings.php' ? 'active' : ''; ?>">
+                <a href="../manage-booking.php" class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage-bookings.php' ? 'active' : ''; ?>">
                     <i class='bx bx-calendar'></i>
                     <span>Manage Bookings</span>
                 </a>
-                <a href="station_owner/payment_analytics.php" class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) == 'payment_analytics.php' ? 'active' : ''; ?>">
+                <a href="payment_analytics.php" class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) == 'payment_analytics.php' ? 'active' : ''; ?>">
                     <i class='bx bx-money'></i>
                     <span>Payment Analytics</span>
                 </a>
-                <a href="station_owner/so_profile.php" class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) == 'so_profile.php' ? 'active' : ''; ?>">
+                <a href="so_profile.php" class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) == 'so_profile.php' ? 'active' : ''; ?>">
                     <i class='bx bx-user'></i>
                     <span>Profile</span>
                 </a>

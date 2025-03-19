@@ -90,7 +90,8 @@ try {
             $amount,
             $booking['booking_date'],
             $booking['booking_time'],
-            $booking['user_id']
+            $booking['user_id'],
+            $booking['booking_id']
         );
 
         // Log email result

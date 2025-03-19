@@ -112,293 +112,421 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add New Charging Station - EVolve</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@2.0.7/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
-        /* Reuse most of your existing CSS styles */
-        :root {
-            --primary-color: #4CAF50;
-            --secondary-color: #2C3E50;
-            --background-color: #f5f6fa;
-            --card-bg: #ffffff;
-            --text-color: #2d3436;
-            --border-radius: 10px;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        body {
-            background-color: var(--background-color);
-            color: var(--text-color);
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background-color: var(--card-bg);
-            padding: 20px;
-            border-radius: var(--border-radius);
+        .analytics-card {
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             margin-bottom: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        .stat-card h3 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .stat-card p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Sidebar Styles */
+        .page-container {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--shadow);
+            min-height: 100vh;
         }
 
-        .back-button {
-            color: var(--secondary-color);
+        .sidebar-container {
+            width: 250px;
+            background: linear-gradient(180deg, #4e73df 0%, #224abe 100%);
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
             text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 8px;
-            transition: color 0.3s;
-        }
-
-        .back-button:hover {
-            color: var(--primary-color);
-        }
-
-        .form-container {
-            background-color: var(--card-bg);
-            padding: 30px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: var(--secondary-color);
-        }
-
-        .form-group input[type="text"],
-        .form-group input[type="number"],
-        .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-
-        .form-group input[type="file"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px dashed #ddd;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .location-input-group {
-            display: flex;
             gap: 10px;
-            margin-bottom: 10px;
         }
 
-        .geolocation-button {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: background-color 0.3s;
+        .sidebar-brand:hover {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
         }
 
-        .geolocation-button:hover {
-            background-color: #45a049;
+        .sidebar-nav {
+            padding: 1rem 0;
         }
 
-        #map {
-            height: 300px;
-            border-radius: var(--border-radius);
-            margin-top: 10px;
-        }
-
-        .submit-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            width: 100%;
-            transition: background-color 0.3s;
-        }
-
-        .submit-btn:hover {
-            background-color: #45a049;
-        }
-
-        .message {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: var(--border-radius);
-        }
-
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .image-preview {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .image-preview img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 5px;
-        }
-
-        #slots-container {
-            display: grid;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .slot-input {
+        .sidebar-link {
+            padding: 0.8rem 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
             display: flex;
             align-items: center;
             gap: 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            position: relative;
         }
 
-        .slot-input label {
-            min-width: 100px;
+        .sidebar-link:hover, .sidebar-link.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            text-decoration: none;
         }
 
-        .slot-input input {
-            width: 80px;
+        .sidebar-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: white;
+        }
+
+        /* Main Content adjustment */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            background: #f8f9fc;
+            min-height: 100vh;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar-container {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar-container.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        /* Header and user info styles */
+        .main-header {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info {
+            text-align: left;
+            margin-left: 15px;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--dark-color);
+            font-size: 1.1rem;
+        }
+
+        .user-role {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        #sidebarToggle {
             padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            border-radius: 8px;
+            color: #4e73df;
+            transition: all 0.3s ease;
         }
 
-        select[multiple] {
-            height: auto;
-            min-height: 100px;
+        #sidebarToggle:hover {
+            background-color: #f8f9fa;
         }
-
+        
+        /* Map styling */
+        #map {
+            height: 400px;
+            border-radius: 10px;
+            margin-top: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+        
         .coordinates-display {
             background: #f8f9fa;
-            padding: 5px 10px;
-            border-radius: 4px; 
-            margin: 5px 0;
-            font-size: 14px;
-            color: var(--secondary-color);
+            padding: 10px;
+            border-radius: 8px; 
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #2c3e50;
+        }
+        
+        .loading-indicator {
+            color: #4e73df;
+            margin-left: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(78, 115, 223, 0.3);
+        }
+        
+        .geolocation-button {
+            background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .geolocation-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(28, 200, 138, 0.3);
+            color: white;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <a href="station-owner-dashboard.php" class="back-button">
-                <i class="fas fa-arrow-left"></i>
-                Back to Dashboard
-            </a>
-            <h1>Add New Charging Station</h1>
+    <div class="page-container">
+        <!-- Sidebar Container -->
+        <div class="sidebar-container" id="sidebar">
+            <div class="sidebar-header">
+                <a href="station-owner-dashboard.php" class="sidebar-brand">
+                    <i class='bx bx-car'></i>
+                    <span>EV Station</span>
+                </a>
+            </div>
+            
+            <div class="sidebar-nav">
+                <a href="station-owner-dashboard.php" class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) == 'station-owner-dashboard.php' ? 'active' : ''; ?>">
+                    <i class='bx bx-home'></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="so_add_station.php" class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) == 'so_add_station.php' ? 'active' : ''; ?>">
+                    <i class='bx bx-plus-circle'></i>
+                    <span>Add Station</span>
+                </a>
+                <a href="manage-booking.php" class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage-bookings.php' ? 'active' : ''; ?>">
+                    <i class='bx bx-calendar'></i>
+                    <span>Manage Bookings</span>
+                </a>
+                <a href="station_owner/payment_analytics.php" class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) == 'payment_analytics.php' ? 'active' : ''; ?>">
+                    <i class='bx bx-money'></i>
+                    <span>Payment Analytics</span>
+                </a>
+                <a href="station_owner/so_profile.php" class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) == 'so_profile.php' ? 'active' : ''; ?>">
+                    <i class='bx bx-user'></i>
+                    <span>Profile</span>
+                </a>
+                <a href="reports.php" class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) == 'reports.php' ? 'active' : ''; ?>">
+                    <i class='bx bx-line-chart'></i>
+                    <span>Reports</span>
+                </a>
+                <a href="settings.php" class="sidebar-link <?php echo basename($_SERVER['PHP_SELF']) == 'settings.php' ? 'active' : ''; ?>">
+                    <i class='bx bx-cog'></i>
+                    <span>Settings</span>
+                </a>
+            </div>
         </div>
 
-        <?php if ($success_message): ?>
-            <div class="message success"><?php echo $success_message; ?></div>
-        <?php endif; ?>
-
-        <?php if ($error_message): ?>
-            <div class="message error"><?php echo $error_message; ?></div>
-        <?php endif; ?>
-
-        <div class="form-container">
-            <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
-                <div class="form-group">
-                    <label for="name">Station Name</label>
-                    <input type="text" id="name" name="name" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="owner_name">Owner Name</label>
-                    <input type="text" id="owner_name" name="owner_name" value="<?php echo htmlspecialchars($owner_name); ?>" readonly>
-                </div>
-
-                <div class="form-group">
-                    <label for="location">Location</label>
-                    <div class="location-input-group">
-                        <input type="text" id="address" name="address" placeholder="Enter station address" required>
-                        <div class="coordinates-display">
-                            <span id="coordinates-text">Lat: ---, Lng: ---</span>
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="main-header">
+                <div class="header-left">
+                    <button class="btn btn-link" id="sidebarToggle">
+                        <i class='bx bx-menu'></i>
+                    </button>
+                    <div class="user-menu">
+                        <div class="user-info">
+                            <div class="user-name"><?php echo htmlspecialchars($_SESSION['owner_name'] ?? ''); ?></div>
+                            <div class="user-role">Station Owner</div>
                         </div>
-                        <input type="hidden" id="latitude" name="latitude">
-                        <input type="hidden" id="longitude" name="longitude">
-                        <button type="button" class="geolocation-button" onclick="getCurrentLocation()">
-                            <i class="fas fa-location-arrow"></i>
-                            Use Current Location
-                        </button>
                     </div>
-                    <div id="map"></div>
+                </div>
+                
+                <div class="dropdown">
+                    <button class="btn btn-link" type="button" id="userMenuButton" data-bs-toggle="dropdown">
+                        <i class='bx bx-user-circle fs-4'></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
+                        <li><a class="dropdown-item" href="station_owner/so_profile.php">Profile</a></li>
+                        <li><a class="dropdown-item" href="settings.php">Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="logout.php">Logout</a></li>
+                    </ul>
+                </div>
+            </header>
+
+            <!-- Add Station Content -->
+            <div class="container-fluid py-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class='bx bx-plus-circle'></i> Add New Charging Station</h2>
+                    <a href="station-owner-dashboard.php" class="btn btn-primary">
+                        <i class='bx bx-arrow-back'></i> Back to Dashboard
+                    </a>
                 </div>
 
-                <div class="form-group">
-                    <label for="charger_types">Available Charger Types</label>
-                    <select id="charger_types" name="charger_types[]" multiple required>
-                        <option value="Type1">Type 1</option>
-                        <option value="Type2">Type 2</option>
-                        <option value="CCS">CCS</option>
-                        <option value="CHAdeMO">CHAdeMO</option>
-                    </select>
-                </div>
+                <?php if ($success_message): ?>
+                    <div class="alert alert-success"><?php echo $success_message; ?></div>
+                <?php endif; ?>
 
-                <div class="form-group">
-                    <label>Slots per Charger Type</label>
-                    <div id="slots-container"></div>
-                </div>
+                <?php if ($error_message): ?>
+                    <div class="alert alert-danger"><?php echo $error_message; ?></div>
+                <?php endif; ?>
 
-                <div class="form-group">
-                    <label for="total_slots">Total Charging Slots</label>
-                    <input type="number" id="total_slots" name="total_slots" min="1" required readonly>
-                </div>
+                <div class="form-container">
+                    <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="name" class="form-label">Station Name</label>
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="owner_name" class="form-label">Owner Name</label>
+                                    <input type="text" class="form-control" id="owner_name" name="owner_name" value="<?php echo htmlspecialchars($owner_name); ?>" readonly>
+                                </div>
+                            </div>
+                        </div>
 
-                <div class="form-group">
-                    <label for="price">Price per kWh (₹)</label>
-                    <input type="number" id="price" name="price" min="0" step="0.01" required>
-                </div>
+                        <div class="form-group mb-4">
+                            <label for="location" class="form-label">Location</label>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" id="address" name="address" placeholder="Enter station address" required>
+                                <button type="button" class="geolocation-button" onclick="getCurrentLocation()">
+                                    <i class='bx bx-current-location'></i>
+                                    Use Current Location
+                                </button>
+                            </div>
+                            <div class="coordinates-display">
+                                <span id="coordinates-text">Lat: ---, Lng: ---</span>
+                            </div>
+                            <input type="hidden" id="latitude" name="latitude">
+                            <input type="hidden" id="longitude" name="longitude">
+                            <div id="map"></div>
+                        </div>
 
-                <button type="submit" class="submit-btn">Add Station</button>
-            </form>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="charger_types" class="form-label">Available Charger Types</label>
+                                    <select class="form-select" id="charger_types" name="charger_types[]" multiple required>
+                                        <option value="Type1">Type 1</option>
+                                        <option value="Type2">Type 2</option>
+                                        <option value="CCS">CCS</option>
+                                        <option value="CHAdeMO">CHAdeMO</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Slots per Charger Type</label>
+                                    <div id="slots-container" class="p-3 bg-light rounded"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="total_slots" class="form-label">Total Charging Slots</label>
+                                    <input type="number" class="form-control" id="total_slots" name="total_slots" min="1" required readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="price" class="form-label">Price per kWh (₹)</label>
+                                    <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" class="btn btn-primary px-4 py-2">
+                                <i class='bx bx-plus-circle'></i> Add Station
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
- <!-- Replace Google Maps script with Leaflet -->
- <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <script>
         let map;
@@ -509,14 +637,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         function showLoadingIndicator() {
-            const locationGroup = document.querySelector('.location-input-group');
+            const locationGroup = document.querySelector('.input-group');
             // Remove any existing loading indicator first
             hideLoadingIndicator();
             
             const loader = document.createElement('div');
             loader.className = 'loading-indicator';
-            loader.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting your location...';
-            locationGroup.appendChild(loader);
+            loader.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Getting your location...';
+            locationGroup.after(loader);
         }
 
         function hideLoadingIndicator() {
@@ -564,15 +692,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Create input for each selected charger type
             selectedOptions.forEach(option => {
                 const div = document.createElement('div');
-                div.style.marginBottom = '10px';
+                div.className = 'mb-2';
                 div.innerHTML = `
-                    <label style="display: inline-block; width: 150px;">${option.text}:</label>
-                    <input type="number" 
-                           class="charger-slots" 
-                           data-type="${option.value}" 
-                           min="0" 
-                           value="0" 
-                           style="width: 100px;">
+                    <div class="input-group">
+                        <span class="input-group-text" style="width: 120px;">${option.text}</span>
+                        <input type="number" 
+                               class="form-control charger-slots" 
+                               data-type="${option.value}" 
+                               min="0" 
+                               value="0">
+                    </div>
                 `;
                 slotsContainer.appendChild(div);
             });
@@ -602,6 +731,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 e.preventDefault();
                 alert('Please select a location on the map or use current location');
             }
+        });
+        
+        // Toggle sidebar on mobile
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('active');
         });
     </script>
 </body>

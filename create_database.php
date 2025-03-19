@@ -97,31 +97,49 @@ try {
             if ($conn->query($stationsSql) === TRUE) {
                 echo "Table charging_stations created successfully\n";
                 
-               
                 // Add to the existing bookings table creation SQL
-$bookingsSql = "CREATE TABLE IF NOT EXISTS bookings (
-    booking_id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    station_id INT NOT NULL,
-    booking_date DATE NOT NULL,
-    booking_time TIME NOT NULL,
-    duration INT NOT NULL,
-    amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    payment_status ENUM('pending', 'completed', 'failed') DEFAULT 'pending',
-    razorpay_order_id VARCHAR(255),
-    razorpay_payment_id VARCHAR(255),
-    status ENUM('pending', 'confirmed', 'cancelled', 'completed') NOT NULL DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES tbl_users(user_id),
-    FOREIGN KEY (station_id) REFERENCES charging_stations(station_id),
-    INDEX idx_user_booking (user_id, booking_date),
-    INDEX idx_station_booking (station_id, booking_date),
-    INDEX idx_razorpay_order (razorpay_order_id)
-)";
+                $bookingsSql = "CREATE TABLE IF NOT EXISTS bookings (
+                    booking_id INT PRIMARY KEY AUTO_INCREMENT,
+                    user_id INT NOT NULL,
+                    station_id INT NOT NULL,
+                    booking_date DATE NOT NULL,
+                    booking_time TIME NOT NULL,
+                    duration INT NOT NULL,
+                    amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                    payment_status ENUM('pending', 'completed', 'failed') DEFAULT 'pending',
+                    razorpay_order_id VARCHAR(255),
+                    razorpay_payment_id VARCHAR(255),
+                    status ENUM('pending', 'confirmed', 'cancelled', 'in_progress', 'completed') NOT NULL DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES tbl_users(user_id),
+                    FOREIGN KEY (station_id) REFERENCES charging_stations(station_id),
+                    INDEX idx_user_booking (user_id, booking_date),
+                    INDEX idx_station_booking (station_id, booking_date),
+                    INDEX idx_razorpay_order (razorpay_order_id)
+                )";
 
                 if ($conn->query($bookingsSql) === TRUE) {
                     echo "Table bookings created successfully\n";
+                    
+                    // Create booking_logs table
+                    $bookingLogsSql = "CREATE TABLE IF NOT EXISTS booking_logs (
+                        log_id INT PRIMARY KEY AUTO_INCREMENT,
+                        booking_id INT NOT NULL,
+                        user_id INT NOT NULL,
+                        action_type ENUM('check_in', 'check_out') NOT NULL,
+                        action_time DATETIME NOT NULL,
+                        status VARCHAR(50) NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (booking_id) REFERENCES bookings(booking_id),
+                        FOREIGN KEY (user_id) REFERENCES tbl_users(user_id)
+                    )";
+                    
+                    if ($conn->query($bookingLogsSql) === TRUE) {
+                        echo "Table booking_logs created successfully\n";
+                    } else {
+                        throw new Exception("Error creating booking_logs table: " . $conn->error);
+                    }
                     
                     // Add admin user
                     $adminEmail = "tomshibu666@gmail.com";
