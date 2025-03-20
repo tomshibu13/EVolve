@@ -65,191 +65,436 @@ $currentStationId = isset($_GET['station_id']) ? $_GET['station_id'] : null;
     <script src="https://unpkg.com/html5-qrcode"></script>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <style>
+        :root {
+            --primary: #2C7873;
+            --primary-light: #3aafa9;
+            --primary-dark: #17252a;
+            --secondary: #def2f1;
+            --light: #feffff;
+            --success: #d4edda;
+            --success-border: #c3e6cb;
+            --danger: #f8d7da;
+            --danger-border: #f5c6cb;
+            --warning: #fff3cd;
+            --warning-border: #ffeeba;
+            --info: #d1ecf1;
+            --info-border: #bee5eb;
+            --gray: #f0f0f0;
+            --gray-dark: #555;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
+            background-color: #f9f9f9;
+            color: var(--primary-dark);
+            line-height: 1.6;
         }
-        #qr-reader {
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
+        
+        h1, h2, h3 {
+            color: var(--primary-dark);
+            margin-bottom: 15px;
         }
-        #result-container {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            display: none;
+        
+        h1 {
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary-light);
+            margin-bottom: 25px;
         }
-        .success {
-            background-color: #d4edda;
-            border-color: #c3e6cb;
+        
+        .container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+            margin-bottom: 30px;
         }
-        .error {
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
+        
+        /* Header with logo */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
         }
+        
+        .header h1 {
+            margin-bottom: 0;
+            border-bottom: none;
+            font-size: 2.2rem;
+        }
+        
+        .header .logo {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-right: 15px;
+        }
+        
+        /* Station ID indicator */
+        .station-indicator {
+            background-color: var(--secondary);
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .station-indicator .station-id {
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 16px;
+        }
+        
+        /* Alert styles */
+        .alerts {
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .alerts h3 {
+            margin-bottom: 8px;
+        }
+        
+        .alert-warning {
+            background-color: var(--warning);
+            border: 1px solid var(--warning-border);
+            color: #856404;
+        }
+        
+        .alert-info {
+            background-color: var(--info);
+            border: 1px solid var(--info-border);
+            color: #0c5460;
+        }
+        
+        /* Button styles */
         .button {
-            background-color: #2C7873;
+            background-color: var(--primary);
             color: white;
             border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
+            padding: 12px 20px;
+            border-radius: var(--border-radius);
             cursor: pointer;
             font-size: 16px;
-            margin-top: 10px;
-        }
-        .station-selector {
-            background-color: #f5f5f5;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-        }
-        select {
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            width: 100%;
-            max-width: 400px;
-            margin-bottom: 10px;
-        }
-        .station-card {
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 10px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .station-card:hover {
-            background-color: #f0f0f0;
-            border-color: #2C7873;
-        }
-        .station-card.selected {
-            background-color: #e0f7fa;
-            border-color: #2C7873;
-            border-width: 2px;
-        }
-        .station-name {
-            font-weight: bold;
-            font-size: 18px;
-        }
-        .station-address {
-            color: #666;
-            font-size: 14px;
-            margin-top: 4px;
-        }
-        .station-slots {
-            margin-top: 8px;
-            font-size: 14px;
-        }
-        .loader {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #2C7873;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 2s linear infinite;
-            margin: 20px auto;
-            display: none;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        #booking-details {
             margin-top: 15px;
-        }
-        .detail-row {
-            display: flex;
-            border-bottom: 1px solid #eee;
-            padding: 8px 0;
-        }
-        .detail-label {
-            font-weight: bold;
-            width: 40%;
-        }
-        .action-buttons {
-            margin-top: 15px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .upload-option {
-            margin-top: 20px;
-            text-align: center;
-        }
-        .file-upload {
-            display: none;
-        }
-        .upload-label {
-            background-color: #6c757d;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
+            transition: var(--transition);
             display: inline-block;
-            margin-top: 10px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: 500;
         }
-        /* Add info style for completed bookings */
-        .info {
-            background-color: #cce5ff;
-            border-color: #b8daff;
+        
+        .button:hover {
+            background-color: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        .debug-info {
-            background-color: #f8f9fa;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 4px;
-            font-size: 14px;
-            border: 1px solid #ddd;
+        
+        .button-secondary {
+            background-color: var(--gray);
+            color: var(--gray-dark);
+        }
+        
+        .button-secondary:hover {
+            background-color: #e0e0e0;
+        }
+        
+        /* Station selection */
+        .station-list {
+            margin-bottom: 30px;
+        }
+        
+        .station-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
         }
         
         .station-option {
             display: block;
-            padding: 10px;
-            margin: 5px 0;
-            background-color: #f0f0f0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            padding: 15px;
+            background-color: white;
+            border: 2px solid var(--gray);
+            border-radius: var(--border-radius);
             text-decoration: none;
-            color: #333;
-            font-weight: bold;
+            color: var(--primary-dark);
+            font-weight: 500;
+            transition: var(--transition);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         
         .station-option:hover {
-            background-color: #e0e0e0;
+            border-color: var(--primary-light);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         
         .station-option.active {
-            background-color: #d4edda;
-            border-color: #c3e6cb;
+            background-color: var(--secondary);
+            border-color: var(--primary);
+            position: relative;
         }
-        .alerts {
-            padding: 15px;
-            border-radius: 5px;
+        
+        .station-option.active::before {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: var(--primary);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        /* QR Scanner */
+        #qr-reader {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+        
+        #scanner-container {
+            text-align: center;
+            padding: 20px;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        #scanner-container p {
             margin-bottom: 20px;
+            color: var(--gray-dark);
         }
-        .alert-warning {
-            background-color: #fff3cd;
-            border: 1px solid #ffeeba;
-            color: #856404;
+        
+        /* Remove default scanner UI elements we don't want */
+        #qr-reader__dashboard_section_csr button {
+            background-color: var(--primary) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 4px !important;
+            padding: 8px 15px !important;
         }
-        .alert-info {
-            background-color: #d1ecf1;
-            border: 1px solid #bee5eb;
-            color: #0c5460;
+        
+        #qr-reader__status_span {
+            background-color: var(--info) !important;
+            padding: 8px !important;
+            border-radius: 4px !important;
+        }
+        
+        /* Loader */
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Results container */
+        #result-container {
+            margin-top: 25px;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            display: none;
+            background-color: white;
+            box-shadow: var(--box-shadow);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .success {
+            border-left: 5px solid var(--success-border);
+        }
+        
+        .error {
+            border-left: 5px solid var(--danger-border);
+        }
+        
+        .info {
+            border-left: 5px solid var(--info-border);
+        }
+        
+        #result-message {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        /* Booking details */
+        #booking-details {
+            margin-top: 20px;
+            background-color: var(--gray);
+            padding: 15px;
+            border-radius: var(--border-radius);
+        }
+        
+        .detail-row {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            width: 40%;
+            color: var(--gray-dark);
+        }
+        
+        /* Debug info */
+        details {
+            margin-top: 40px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        summary {
+            cursor: pointer;
+            padding: 15px;
+            background: var(--gray);
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        
+        summary:hover {
+            background-color: #e5e5e5;
+        }
+        
+        details[open] summary {
+            background-color: var(--primary-light);
+            color: white;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+        }
+        
+        details pre {
+            padding: 20px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+            overflow-x: auto;
+        }
+        
+        /* Manual station selection for testing */
+        .manual-selection {
+            margin-top: 25px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        
+        .manual-selection form {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .manual-selection input {
+            padding: 12px;
+            border-radius: var(--border-radius);
+            border: 1px solid #ccc;
+            flex: 1;
+        }
+        
+        /* Upload option */
+        .upload-option {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px dashed #ccc;
+            border-radius: var(--border-radius);
+            background-color: #f9f9f9;
+        }
+        
+        .file-upload {
+            display: none;
+        }
+        
+        .upload-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--gray);
+            color: var(--gray-dark);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .upload-label:hover {
+            background-color: #e0e0e0;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .station-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .manual-selection form {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>EVolve Charging Station</h1>
+    <div class="header">
+        <i class='bx bx-car logo'></i>
+        <h1>EVolve Charging Station</h1>
+    </div>
     
     <!-- Station ID indicator -->
-    <div style="background-color: #f8f9fa; padding: 8px; margin-bottom: 10px; border-radius: 4px; font-size: 12px;">
-        Station ID: <span id="current-station-id"><?php echo $currentStationId ?: 'Not specified'; ?></span>
+    <div class="station-indicator">
+        <span>Currently managing station:</span>
+        <span class="station-id" id="current-station-id"><?php echo $currentStationId ?: 'Not specified'; ?></span>
     </div>
     
     <!-- Login status banner -->
@@ -262,76 +507,89 @@ $currentStationId = isset($_GET['station_id']) ? $_GET['station_id'] : null;
     <?php endif; ?>
     
     <!-- Station Selection Section -->
-    <div class="station-list">
-        <h2>Select a Station</h2>
-        
-        <?php if (count($stations) > 0): ?>
-            <p>Please select the station you want to manage:</p>
-            <?php foreach ($stations as $station): ?>
-                <a href="scan-qr.php?station_id=<?php echo $station['station_id']; ?>" 
-                   class="station-option <?php echo $currentStationId == $station['station_id'] ? 'active' : ''; ?>">
-                    <?php echo htmlspecialchars($station['name']); ?> 
-                    (<?php echo htmlspecialchars($station['address']); ?>)
-                </a>
-            <?php endforeach; ?>
-        <?php elseif ($isLoggedIn): ?>
-            <div class="alerts alert-info">
-                <h3>No Stations Found</h3>
-                <p>No stations were found associated with your account.</p>
-                <p>If you believe this is an error, please contact support.</p>
-            </div>
+    <div class="container">
+        <div class="station-list">
+            <h2>Select a Station</h2>
             
-            <!-- For testing - hardcoded station options -->
-            <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 10px;">
-                <h3>Manual Station Selection</h3>
-                <p>For testing purposes, you can manually select a station by ID:</p>
-                <form action="scan-qr.php" method="get">
-                    <input type="number" name="station_id" placeholder="Enter Station ID" style="padding: 8px; width: 200px;">
-                    <button type="submit" class="button">Select Station</button>
-                </form>
-            </div>
-        <?php else: ?>
-            <div class="alerts alert-warning">
-                <h3>Station Selection Unavailable</h3>
-                <p>You need to be logged in to select stations.</p>
-                <a href="login.php" class="button">Log In</a>
-            </div>
-        <?php endif; ?>
-    </div>
-    
-    <!-- QR Scanner Section -->
-    <h2>Scan Booking QR Code</h2>
-    <p>Please scan the QR code from your booking email or the mobile app.</p>
-    
-    <div id="scanner-container">
-        <div id="qr-reader" style="width: 100%"></div>
-        <div id="loader" style="display: none; text-align: center; margin-top: 20px;">
-            <div class="spinner"></div>
-            <p>Processing...</p>
+            <?php if (count($stations) > 0): ?>
+                <p>Please select the station you want to manage:</p>
+                <div class="station-options">
+                    <?php foreach ($stations as $station): ?>
+                        <a href="scan-qr.php?station_id=<?php echo $station['station_id']; ?>" 
+                           class="station-option <?php echo $currentStationId == $station['station_id'] ? 'active' : ''; ?>">
+                            <?php echo htmlspecialchars($station['name']); ?> 
+                            <div style="font-size: 14px; color: #666;">
+                                <?php echo htmlspecialchars($station['address']); ?>
+                            </div>
+                            <div style="margin-top: 5px; font-size: 13px;">
+                                Slots: <?php echo $station['available_slots']; ?>/<?php echo $station['total_slots']; ?> available
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            <?php elseif ($isLoggedIn): ?>
+                <div class="alerts alert-info">
+                    <h3>No Stations Found</h3>
+                    <p>No stations were found associated with your account.</p>
+                    <p>If you believe this is an error, please contact support.</p>
+                </div>
+                
+                <!-- For testing - hardcoded station options -->
+                <div class="manual-selection">
+                    <h3>Manual Station Selection</h3>
+                    <p>For testing purposes, you can manually select a station by ID:</p>
+                    <form action="scan-qr.php" method="get">
+                        <input type="number" name="station_id" placeholder="Enter Station ID">
+                        <button type="submit" class="button">Select Station</button>
+                    </form>
+                </div>
+            <?php else: ?>
+                <div class="alerts alert-warning">
+                    <h3>Station Selection Unavailable</h3>
+                    <p>You need to be logged in to select stations.</p>
+                    <a href="login.php" class="button">Log In</a>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
     
-    <div id="result-container" style="display: none;">
-        <h2>Booking Verification</h2>
-        <p id="result-message"></p>
-        <div id="booking-details"></div>
+    <!-- QR Scanner Section -->
+    <div class="container">
+        <h2>Scan Booking QR Code</h2>
+        <p>Please scan the QR code from your booking email or the mobile app.</p>
         
-        <button id="checkInButton" class="button" style="display: none;">Check In</button>
-        <button id="checkOutButton" class="button" style="display: none;">Check Out</button>
-        <button id="scanAgainButton" class="button">Scan Again</button>
+        <div id="scanner-container">
+            <div id="qr-reader"></div>
+            
+            <div class="upload-option">
+                <p>Or upload a QR code image</p>
+                <input type="file" id="qr-input-file" class="file-upload" accept="image/*">
+                <label for="qr-input-file" class="upload-label">
+                    <i class='bx bx-upload' style="margin-right: 5px;"></i> Upload QR Image
+                </label>
+            </div>
+            
+            <div id="loader" class="loader" style="display: none;"></div>
+        </div>
+        
+        <div id="result-container">
+            <h2>Booking Verification</h2>
+            <p id="result-message"></p>
+            <div id="booking-details"></div>
+            
+            <div style="margin-top: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <button id="checkInButton" class="button" style="display: none;">Check In</button>
+                <button id="checkOutButton" class="button" style="display: none;">Check Out</button>
+                <button id="scanAgainButton" class="button button-secondary">Scan Another Code</button>
+            </div>
+        </div>
     </div>
     
     <!-- Technical Debug Info - Collapsible -->
-    <div style="margin-top: 40px;">
-        <details>
-            <summary style="cursor: pointer; padding: 10px; background: #f0f0f0; border-radius: 4px;">
-                Technical Debug Information
-            </summary>
-            <div style="background: #f8f9fa; padding: 15px; border: 1px solid #ddd; border-radius: 0 0 4px 4px;">
-                <pre><?php echo htmlspecialchars(json_encode($debugInfo, JSON_PRETTY_PRINT)); ?></pre>
-            </div>
-        </details>
-    </div>
+    <details>
+        <summary>Technical Debug Information</summary>
+        <pre><?php echo htmlspecialchars(json_encode($debugInfo, JSON_PRETTY_PRINT)); ?></pre>
+    </details>
 
     <script>
         let html5QrCode;
