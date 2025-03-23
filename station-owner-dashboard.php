@@ -433,11 +433,14 @@ try {
             font-weight: 600;
         }
         
-        /* Responsive Design */
+        /* Enhanced Responsive Design */
         @media (max-width: 768px) {
             .sidebar-container {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
+                width: 250px;
+                position: fixed;
+                z-index: 1010;
             }
 
             .sidebar-container.active {
@@ -446,11 +449,78 @@ try {
 
             .main-content {
                 margin-left: 0;
+                width: 100%;
             }
             
             .container-fluid {
                 padding: 15px;
             }
+            
+            .dashboard-card {
+                padding: 15px;
+            }
+            
+            .card-body h2 {
+                font-size: 2rem;
+            }
+            
+            .user-info {
+                display: none;
+            }
+            
+            /* Create an overlay when sidebar is active */
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 1005;
+            }
+            
+            .sidebar-overlay.active {
+                display: block;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .dashboard-card {
+                margin-bottom: 15px;
+            }
+            
+            .main-header {
+                padding: 10px 15px;
+            }
+            
+            .section-card {
+                padding: 15px;
+            }
+            
+            .table {
+                font-size: 0.85rem;
+            }
+            
+            .btn-group .btn {
+                padding: 0.375rem 0.5rem;
+                font-size: 0.85rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            h4 {
+                font-size: 1.2rem;
+            }
+        }
+        
+        /* Ensure table responsiveness */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
     </style>
 </head>
@@ -496,6 +566,9 @@ try {
                 </a>
             </div>
         </div>
+        
+        <!-- Add sidebar overlay for mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
         <!-- Main Content -->
         <div class="main-content">
@@ -754,14 +827,49 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.2.1/dist/html5-qrcode.min.js"></script>
     <script>
-        // Sidebar toggle functionality
+        // Enhanced sidebar toggle functionality
         document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
             const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            
+            function toggleSidebar() {
+                sidebar.classList.toggle('active');
+                if (sidebarOverlay) {
+                    sidebarOverlay.classList.toggle('active');
+                }
+            }
+            
             if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', () => {
-                    document.getElementById('sidebar').classList.toggle('active');
+                sidebarToggle.addEventListener('click', toggleSidebar);
+            }
+            
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', toggleSidebar);
+            }
+            
+            // Close sidebar when clicking a menu item on mobile
+            const sidebarLinks = document.querySelectorAll('.sidebar-link');
+            if (window.innerWidth <= 768) {
+                sidebarLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        sidebar.classList.remove('active');
+                        if (sidebarOverlay) {
+                            sidebarOverlay.classList.remove('active');
+                        }
+                    });
                 });
             }
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('active');
+                    if (sidebarOverlay) {
+                        sidebarOverlay.classList.remove('active');
+                    }
+                }
+            });
         });
 
         document.querySelectorAll('.toggle-status').forEach(button => {

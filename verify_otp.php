@@ -1,146 +1,122 @@
 <?php
 session_start();
 require_once 'config.php';
+header('Content-Type: application/json');
 
-// Check if user is trying to verify
-if (!isset($_SESSION['temp_user_id']) || !isset($_SESSION['temp_email'])) {
-    // Redirect to registration page with error message
-    $_SESSION['error'] = "Please register first to verify your email.";
-    header('Location: index.php');
-    exit;
-}
+// Set up error logging
+$logFile = __DIR__ . '/otp_verification.log';
+file_put_contents($logFile, "=== OTP Verification attempt: " . date('Y-m-d H:i:s') . " ===\n", FILE_APPEND);
+file_put_contents($logFile, "POST data: " . print_r($_POST, true) . "\n", FILE_APPEND);
+file_put_contents($logFile, "SESSION data: " . print_r($_SESSION, true) . "\n", FILE_APPEND);
 
-$error = '';
-$success = '';
-$userEmail = isset($_SESSION['temp_email']) ? htmlspecialchars($_SESSION['temp_email']) : '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
-        $otp = $_POST['otp'];
-        $userId = $_SESSION['temp_user_id'];
-        
-        // Verify OTP
-        $stmt = $pdo->prepare("SELECT otp, otp_expiration FROM tbl_users WHERE user_id = ? AND is_verified = 0");
-        $stmt->execute([$userId]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if ($user) {
-            if ($user['otp'] === $otp) {
-                if (strtotime($user['otp_expiration']) >= time()) {
-                    // OTP is valid and not expired
-                    $stmt = $pdo->prepare("
-                        UPDATE tbl_users 
-                        SET is_verified = 1, 
-                            otp = NULL, 
-                            otp_expiration = NULL,
-                            status = 'active'
-                        WHERE user_id = ?
-                    ");
-                    $stmt->execute([$userId]);
-                    
-                    // Set success message
-                    $success = "Email verified successfully!";
-                    
-                    // Clear temporary session data
-                    unset($_SESSION['temp_user_id']);
-                    unset($_SESSION['temp_email']);
-                    
-                    // Set login success message
-                    $_SESSION['login_success'] = "Registration successful! You can now log in.";
-                    
-                    // Redirect to login page after 2 seconds
-                    header("refresh:2;url=index.php");
-                } else {
-                    $error = "OTP has expired. Please request a new one.";
-                }
-            } else {
-                $error = "Invalid OTP. Please try again.";
-            }
-        } else {
-            $error = "User not found or already verified.";
-        }
-    } catch (Exception $e) {
-        $error = "An error occurred. Please try again.";
-        error_log($e->getMessage());
+try {
+    // Check if we have the necessary session data
+    if (!isset($_SESSION['pending_registration']) || !isset($_POST['otp'])) {
+        file_put_contents($logFile, "Missing required data\n", FILE_APPEND);
+        throw new Exception("Missing required verification data");
     }
-}
-?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify OTP - EVolve</title>
-    <link rel="stylesheet" href="main.css">
-    <style>
-        .otp-container {
-            max-width: 400px;
-            margin: 0 auto;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+    $submittedOtp = $_POST['otp'];
+    $storedOtp = $_SESSION['pending_registration']['verification_token'];
+    $otpExpiry = $_SESSION['pending_registration']['token_expiry'];
+    
+    file_put_contents($logFile, "Submitted OTP: $submittedOtp\n", FILE_APPEND);
+    file_put_contents($logFile, "Stored OTP: $storedOtp\n", FILE_APPEND);
+    file_put_contents($logFile, "OTP Expiry: $otpExpiry\n", FILE_APPEND);
+
+    // Check if OTP has expired
+    if (strtotime($otpExpiry) < time()) {
+        file_put_contents($logFile, "OTP has expired\n", FILE_APPEND);
+        throw new Exception("Verification code has expired. Please request a new one.");
+    }
+
+    // Verify OTP
+    if ($submittedOtp !== $storedOtp) {
+        file_put_contents($logFile, "Invalid OTP\n", FILE_APPEND);
+        throw new Exception("Invalid verification code");
+    }
+
+    // OTP is valid, proceed with user registration
+    $userData = $_SESSION['pending_registration'];
+    
+    file_put_contents($logFile, "OTP verification successful, proceeding with registration\n", FILE_APPEND);
+
+    try {
+        // Begin transaction
+        $pdo->beginTransaction();
+        
+        // First, check if a user with this email already exists
+        $checkStmt = $pdo->prepare("SELECT user_id FROM tbl_users WHERE email = ? OR username = ?");
+        $checkStmt->execute([$userData['email'], $userData['username']]);
+        $existingUser = $checkStmt->fetch();
+        
+        if ($existingUser) {
+            throw new Exception("User with this email or username already exists");
         }
         
-        .otp-input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-        }
+        // Insert the user into the database with status 'active'
+        $stmt = $pdo->prepare("INSERT INTO tbl_users (username, email, passwordhash, name, profile_picture, status, created_at) 
+                              VALUES (?, ?, ?, ?, ?, 'active', NOW())");
         
-        .verify-btn {
-            width: 100%;
-            padding: 10px;
-            background: #3498db;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
+        $stmt->execute([
+            $userData['username'],
+            $userData['email'],
+            $userData['passwordhash'],
+            $userData['name'],
+            $userData['profile_picture']
+        ]);
         
-        .verify-btn:hover {
-            background: #2980b9;
-        }
+        $userId = $pdo->lastInsertId();
         
-        .error {
-            color: #e74c3c;
-            margin: 10px 0;
-        }
+        // Log the SQL and parameters for debugging
+        file_put_contents($logFile, "SQL: INSERT INTO tbl_users (username, email, passwordhash, name, profile_picture, status, created_at) 
+                           VALUES (?, ?, ?, ?, ?, 'active', NOW())\n", FILE_APPEND);
+        file_put_contents($logFile, "Params: " . json_encode([
+            $userData['username'],
+            $userData['email'],
+            "PASSWORD_HASH_HIDDEN",
+            $userData['name'],
+            $userData['profile_picture']
+        ]) . "\n", FILE_APPEND);
         
-        .success {
-            color: #2ecc71;
-            margin: 10px 0;
-        }
-    </style>
-</head>
-<body>
-    <div class="otp-container">
-        <h2>Verify Your Email</h2>
-        <?php if ($userEmail): ?>
-            <p>Please enter the verification code sent to <?php echo $userEmail; ?></p>
-        <?php endif; ?>
+        // Debug log the user ID
+        file_put_contents($logFile, "New user ID: $userId\n", FILE_APPEND);
         
-        <?php if ($error): ?>
-            <div class="error"><?php echo $error; ?></div>
-        <?php endif; ?>
+        // Commit the transaction
+        $pdo->commit();
         
-        <?php if ($success): ?>
-            <div class="success"><?php echo $success; ?></div>
-        <?php else: ?>
-            <form method="POST" action="">
-                <input type="text" name="otp" class="otp-input" placeholder="Enter verification code" required>
-                <button type="submit" class="verify-btn">Verify</button>
-            </form>
-        <?php endif; ?>
-    </div>
-</body>
-</html> 
+        // Clear the pending registration data
+        unset($_SESSION['pending_registration']);
+        unset($_SESSION['pending_verification']);
+        unset($_SESSION['verify_email']);
+        
+        // Set the user as logged in
+        $_SESSION['user_id'] = $userId;
+        $_SESSION['username'] = $userData['username'];
+        $_SESSION['email'] = $userData['email'];
+        $_SESSION['name'] = $userData['name'];
+        
+        file_put_contents($logFile, "User registered successfully with ID: $userId\n", FILE_APPEND);
+        
+        // Return success response
+        echo json_encode([
+            'success' => true,
+            'message' => 'Verification successful! Your account has been created.',
+            'redirect' => 'index.php'
+        ]);
+        
+    } catch (PDOException $e) {
+        // Rollback the transaction if something failed
+        $pdo->rollBack();
+        file_put_contents($logFile, "Database error: " . $e->getMessage() . "\n", FILE_APPEND);
+        throw new Exception("Registration failed: " . $e->getMessage());
+    }
+    
+} catch (Exception $e) {
+    file_put_contents($logFile, "ERROR: " . $e->getMessage() . "\n", FILE_APPEND);
+    echo json_encode([
+        'success' => false,
+        'error' => $e->getMessage()
+    ]);
+}
+?> 

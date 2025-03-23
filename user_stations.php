@@ -32,10 +32,13 @@ try {
             cs.charger_types,
             cs.available_slots,
             cs.total_slots,
+            cs.image,
             u.name as operator_name,
             u.user_id,
             ST_X(cs.location) as longitude,
-            ST_Y(cs.location) as latitude
+            ST_Y(cs.location) as latitude,
+            (SELECT AVG(rating) FROM station_reviews WHERE station_id = cs.station_id) as avg_rating,
+            (SELECT COUNT(*) FROM station_reviews WHERE station_id = cs.station_id) as review_count
         FROM charging_stations cs 
         LEFT JOIN tbl_users u ON cs.operator_id = u.user_id 
         WHERE cs.status = 'active'";
@@ -152,6 +155,27 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
             border: 1px solid rgba(0,0,0,0.05);
             position: relative;
             overflow: hidden;
+        }
+        
+        .ev-station-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            background-color: #f3f4f6;
+        }
+        
+        .ev-station-image-placeholder {
+            width: 100%;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f3f4f6;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            color: #94a3b8;
         }
 
         .ev-station-card::before {
@@ -332,6 +356,24 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
             background: var(--background-color);
             transform: translateX(-2px);
         }
+        
+        /* Star Rating Styles */
+        .ev-rating {
+            display: flex;
+            align-items: center;
+            margin-top: 0.5rem;
+        }
+        
+        .ev-stars {
+            display: flex;
+            margin-right: 0.5rem;
+            color: #FFD700;
+        }
+        
+        .ev-rating-count {
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -383,6 +425,15 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
         ?>
             <div class="ev-station-card">
                 <div class="ev-status-badge <?php echo str_replace('status-', 'ev-status-', $statusClass); ?>"><?php echo $statusText; ?></div>
+                
+                <?php if (!empty($station['image'])): ?>
+                    <img src="<?php echo htmlspecialchars($station['image']); ?>" alt="<?php echo htmlspecialchars($station['station_name']); ?>" class="ev-station-image">
+                <?php else: ?>
+                    <div class="ev-station-image-placeholder">
+                        <i class="fas fa-charging-station fa-2x"></i>
+                    </div>
+                <?php endif; ?>
+                
                 <div class="ev-station-name"><?php echo htmlspecialchars($station['station_name'] ?? $station['name'] ?? 'Unnamed Station'); ?></div>
                 <div class="ev-station-info">
                     <i class="fas fa-map-marker-alt"></i>
@@ -424,6 +475,39 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
                     <i class="fas fa-dollar-sign"></i>
                     <span class="ev-price-tag">₹<?php echo isset($station['price']) ? number_format($station['price'], 2) : '0.00'; ?></span>
                 </div>
+                
+                <!-- Display Rating -->
+                <div class="ev-rating">
+                    <div class="ev-stars">
+                        <?php
+                        $avgRating = round(floatval($station['avg_rating'] ?? 0), 1);
+                        $fullStars = floor($avgRating);
+                        $halfStar = $avgRating - $fullStars >= 0.5;
+                        $emptyStars = 5 - $fullStars - ($halfStar ? 1 : 0);
+                        
+                        // Display full stars
+                        for ($i = 0; $i < $fullStars; $i++) {
+                            echo '<i class="fas fa-star"></i>';
+                        }
+                        
+                        // Display half star if applicable
+                        if ($halfStar) {
+                            echo '<i class="fas fa-star-half-alt"></i>';
+                        }
+                        
+                        // Display empty stars
+                        for ($i = 0; $i < $emptyStars; $i++) {
+                            echo '<i class="far fa-star"></i>';
+                        }
+                        ?>
+                    </div>
+                    <span class="ev-rating-count">
+                        <?php 
+                        echo $avgRating . ' (' . ($station['review_count'] ?? 0) . ' reviews)'; 
+                        ?>
+                    </span>
+                </div>
+                
                 <a href="book_station.php?id=<?php echo urlencode($station['station_id']); ?>" class="ev-book-btn">
                     <i class="fas fa-bolt" style="line-height: 1;"></i>
                     <span style="line-height: 1;">Book Now</span>
@@ -494,9 +578,38 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
                         typeof type === 'string' ? type : (type.type || type.name || 'Standard')
                     ).join(', ') : 'Standard';
 
+                    // Calculate star rating display
+                    const avgRating = Math.round((parseFloat(station.avg_rating || 0) * 10)) / 10;
+                    const fullStars = Math.floor(avgRating);
+                    const halfStar = avgRating - fullStars >= 0.5;
+                    const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+                    
+                    let starsHtml = '';
+                    
+                    // Full stars
+                    for (let i = 0; i < fullStars; i++) {
+                        starsHtml += '<i class="fas fa-star"></i>';
+                    }
+                    
+                    // Half star
+                    if (halfStar) {
+                        starsHtml += '<i class="fas fa-star-half-alt"></i>';
+                    }
+                    
+                    // Empty stars
+                    for (let i = 0; i < emptyStars; i++) {
+                        starsHtml += '<i class="far fa-star"></i>';
+                    }
+
                     return `
                         <div class="ev-station-card">
                             <div class="ev-status-badge ${statusClass}">${statusText}</div>
+                            
+                            ${station.image 
+                                ? `<img src="${station.image}" alt="${station.station_name || 'Charging Station'}" class="ev-station-image">` 
+                                : `<div class="ev-station-image-placeholder"><i class="fas fa-charging-station fa-2x"></i></div>`
+                            }
+                            
                             <div class="ev-station-name">${station.station_name || station.name || 'Unnamed Station'}</div>
                             <div class="ev-station-info">
                                 <i class="fas fa-map-marker-alt"></i>
@@ -517,6 +630,10 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
                             <div class="ev-station-info">
                                 <i class="fas fa-dollar-sign"></i>
                                 <span class="ev-price-tag">₹${parseFloat(station.price || 0).toFixed(2)}</span>
+                            </div>
+                            <div class="ev-rating">
+                                <div class="ev-stars">${starsHtml}</div>
+                                <span class="ev-rating-count">${avgRating} (${station.review_count || 0} reviews)</span>
                             </div>
                             <a href="book_station.php?id=${encodeURIComponent(station.station_id)}" class="ev-book-btn">
                                 <i class="fas fa-bolt" style="line-height: 1;"></i>

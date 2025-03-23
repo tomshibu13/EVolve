@@ -1162,3 +1162,261 @@ body {
 .form-group textarea:focus::placeholder {
     opacity: 0.7;
 }
+
+/* Improve responsive design throughout the site */
+@media (max-width: 1200px) {
+    .main-container {
+        padding: 0 2rem;
+    }
+    
+    .ev-features-content {
+        flex-direction: column;
+    }
+    
+    .ev-features-image {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 2rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .stations-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .how-steps-container {
+        gap: 30px;
+    }
+    
+    .about-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .booking-panel {
+        width: 40%;
+        right: -40%;
+    }
+    
+    .booking-panel.active {
+        right: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-container {
+        padding: 0 1rem;
+    }
+    
+    .nav-links {
+        gap: 1rem;
+    }
+    
+    .nav-links a {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .logo {
+        font-size: 1.4rem;
+    }
+    
+    .top-image-section {
+        flex-direction: column;
+    }
+    
+    .top-image {
+        width: 100%;
+        flex: none;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.2rem;
+    }
+    
+    .stations-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .ev-features-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .ev-features-header h1 {
+        font-size: 2rem;
+    }
+    
+    .how-step-card {
+        width: 45%;
+    }
+    
+    .about-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .contact-section {
+        padding: 30px 20px;
+    }
+    
+    .booking-panel {
+        width: 70%;
+        right: -70%;
+    }
+}
+
+@media (max-width: 576px) {
+    .header {
+        padding: 0.8rem;
+    }
+    
+    .nav-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .nav-links {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .nav-links a {
+        width: 100%;
+        text-align: center;
+        padding: 0.8rem;
+    }
+    
+    .nav-links a:last-child {
+        width: 100%;
+    }
+    
+    .hero-section {
+        height: auto;
+        padding: 3rem 1rem;
+    }
+    
+    .hero-title {
+        font-size: 1.8rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    
+    .main-container {
+        padding: 0 1rem;
+        margin: 1rem auto;
+    }
+    
+    .how-steps-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .how-step-card {
+        width: 100%;
+    }
+    
+    .ev-features-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .ev-feature-card {
+        padding: 1rem 0;
+    }
+    
+    .ev-features-container {
+        padding: 1.5rem;
+    }
+    
+    .support-card {
+        padding: 20px;
+    }
+    
+    .support-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .support-header p {
+        font-size: 1rem;
+    }
+    
+    .contact-buttons {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .form-group input, 
+    .form-group textarea {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+    
+    /* Fix popup styling on mobile */
+    .marker-popup {
+        min-width: 250px;
+    }
+    
+    /* Make the booking panel full width on mobile */
+    .booking-panel {
+        width: 100%;
+        right: -100%;
+    }
+    
+    /* User profile dropdown improvements */
+    .user-profile {
+        padding: 6px 12px;
+    }
+    
+    .username {
+        max-width: 100px;
+    }
+    
+    .dropdown-content {
+        right: -50%;
+        min-width: 200px;
+    }
+}
+
+/* Ensure form elements are touch-friendly */
+@media (max-width: 480px) {
+    .form-group input,
+    .form-group textarea,
+    .submit-button,
+    button {
+        min-height: 44px; /* Minimum touch target size */
+    }
+    
+    .dropdown-content a {
+        padding: 15px;
+    }
+    
+    .popup-content {
+        padding: 10px;
+    }
+    
+    .popup-info {
+        font-size: 13px;
+    }
+    
+    /* OTP verification modal improvements */
+    #otpInput {
+        font-size: 1.2rem !important;
+        letter-spacing: 0.3rem !important;
+    }
+    
+    /* User profile photo sizing */
+    .profile-photo {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+/* Add this to fix any overflow issues */
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+}

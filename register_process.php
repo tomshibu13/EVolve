@@ -6,15 +6,40 @@ require 'vendor/autoload.php'; // For PHPMailer
 // Set proper headers for JSON response
 header('Content-Type: application/json');
 
-// Temporarily enable error reporting for debugging
+// Enable error reporting for debugging
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Log inputs for debugging
-error_log("Register process started");
-error_log("POST data: " . print_r($_POST, true));
+// Create a log file specifically for registration issues
+$logFile = __DIR__ . '/registration_errors.log';
+file_put_contents($logFile, "=== Registration attempt: " . date('Y-m-d H:i:s') . " ===\n", FILE_APPEND);
+file_put_contents($logFile, "POST data: " . print_r($_POST, true) . "\n", FILE_APPEND);
+
+// Add this check to prevent duplicate OTP generation
+if (isset($_SESSION['pending_registration']) && isset($_SESSION['registration_timestamp'])) {
+    $timeSinceLastRegistration = time() - $_SESSION['registration_timestamp'];
+    // If less than 60 seconds since last registration attempt, reject this one
+    if ($timeSinceLastRegistration < 60) {
+        file_put_contents($logFile, "Preventing duplicate registration attempt (${timeSinceLastRegistration}s since last attempt)\n", FILE_APPEND);
+        echo json_encode([
+            'success' => true,
+            'message' => 'Registration already in progress, please check your email for the verification code.',
+            'redirect' => 'index.php?verify=true&keep_open=1'
+        ]);
+        exit;
+    }
+}
+
+// Set timestamp for this registration attempt
+$_SESSION['registration_timestamp'] = time();
 
 try {
+    // Verify database connection first
+    if (!$pdo) {
+        throw new Exception("Database connection failed");
+    }
+    file_put_contents($logFile, "Database connection successful\n", FILE_APPEND);
+
     // Verify required fields
     $required_fields = ['username', 'email', 'password', 'confirm_password'];
     foreach ($required_fields as $field) {
@@ -28,6 +53,8 @@ try {
     $password = $_POST['password'];
     $confirmPassword = $_POST['confirm_password'];
     $name = $username; // Use username as name if not provided
+    
+    file_put_contents($logFile, "All required fields present\n", FILE_APPEND);
     
     // Check if passwords match
     if ($password !== $confirmPassword) {
@@ -49,18 +76,27 @@ try {
         throw new Exception('Password must be at least 8 characters long');
     }
 
+    file_put_contents($logFile, "All validation passed\n", FILE_APPEND);
+
     // Check if username or email already exists
-    $stmt = $pdo->prepare("SELECT username, email FROM tbl_users WHERE username = ? OR email = ?");
-    $stmt->execute([$username, $email]);
-    $existing = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if ($existing) {
-        if ($existing['username'] === $username) {
-            throw new Exception('Username is already taken');
+    try {
+        $stmt = $pdo->prepare("SELECT username, email FROM tbl_users WHERE username = ? OR email = ?");
+        $stmt->execute([$username, $email]);
+        $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($existing) {
+            if ($existing['username'] === $username) {
+                throw new Exception('Username is already taken');
+            }
+            if ($existing['email'] === $email) {
+                throw new Exception('Email is already registered');
+            }
         }
-        if ($existing['email'] === $email) {
-            throw new Exception('Email is already registered');
-        }
+        file_put_contents($logFile, "Username and email are available\n", FILE_APPEND);
+    } 
+    catch (PDOException $e) {
+        file_put_contents($logFile, "Database error checking existing user: " . $e->getMessage() . "\n", FILE_APPEND);
+        throw new Exception('Database error: ' . $e->getMessage());
     }
 
     // Generate OTP for verification
@@ -84,21 +120,37 @@ try {
     $_SESSION['pending_verification'] = true;
     $_SESSION['verify_email'] = $email;
     
-    // Send verification email
-    if (sendOtpEmail($email, $otp)) {
-        // Return success response with absolute URL for redirect
-        echo json_encode([
-            'success' => true,
-            'message' => 'Please verify your email address with the code we sent you.',
-            'redirect' => 'index.php?verify=true'
-        ]);
-        exit;
-    } else {
-        throw new Exception('Failed to send verification email. Please try again.');
+    file_put_contents($logFile, "Registration data stored in session\n", FILE_APPEND);
+    
+    // Send verification email with reduced debug output
+    try {
+        $emailSent = sendOtpEmail($email, $otp);
+        file_put_contents($logFile, "Email sending result: " . ($emailSent ? "success" : "failed") . "\n", FILE_APPEND);
+        
+        if ($emailSent) {
+            // Close the session before redirecting to ensure data is saved
+            session_write_close();
+            
+            // Return success response
+            $response = [
+                'success' => true,
+                'message' => 'Please verify your email address with the code we sent you.',
+                'redirect' => 'index.php?verify=true&keep_open=1'
+            ];
+            file_put_contents($logFile, "Sending success response: " . json_encode($response) . "\n", FILE_APPEND);
+            echo json_encode($response);
+            exit;
+        } else {
+            throw new Exception('Failed to send verification email. Please try again.');
+        }
+    }
+    catch (Exception $e) {
+        file_put_contents($logFile, "Email sending error: " . $e->getMessage() . "\n", FILE_APPEND);
+        throw new Exception('Email error: ' . $e->getMessage());
     }
 
 } catch (Exception $e) {
-    error_log("Registration error: " . $e->getMessage());
+    file_put_contents($logFile, "ERROR: " . $e->getMessage() . "\n", FILE_APPEND);
     echo json_encode([
         'success' => false,
         'error' => $e->getMessage()
@@ -108,16 +160,17 @@ try {
 
 // Email sending function
 function sendOtpEmail($email, $otp) {
+    global $logFile;
     $mail = new PHPMailer\PHPMailer\PHPMailer(true);
     
     try {
         // Server settings
-        $mail->SMTPDebug = 2;                      // Enable verbose debug output (2 = client and server messages)
+        $mail->SMTPDebug = 0;                      // Disable debug output
         $mail->isSMTP();                           // Send using SMTP
         $mail->Host       = 'smtp.gmail.com';      // SMTP server
         $mail->SMTPAuth   = true;                  // Enable SMTP authentication
         $mail->Username   = 'evolve1829@gmail.com'; // SMTP username
-        $mail->Password   = 'qgmg ijoz obaw wvth'; // SMTP password - consider using environment variables
+        $mail->Password   = 'qgmg ijoz obaw wvth'; // SMTP password
         $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS; // Enable TLS encryption
         $mail->Port       = 587;                   // TCP port to connect to
         $mail->SMTPOptions = array(
@@ -144,11 +197,11 @@ function sendOtpEmail($email, $otp) {
             </div>";
         
         $mail->send();
-        error_log("Verification email sent successfully to $email");
+        file_put_contents($logFile, "Verification email sent successfully to $email\n", FILE_APPEND);
         return true;
     } catch (Exception $e) {
-        error_log("Email sending failed: " . $mail->ErrorInfo);
-        error_log("Full error details: " . $e->getMessage());
+        file_put_contents($logFile, "Email sending failed: " . $mail->ErrorInfo . "\n", FILE_APPEND);
+        file_put_contents($logFile, "Full error details: " . $e->getMessage() . "\n", FILE_APPEND);
         return false;
     }
 }

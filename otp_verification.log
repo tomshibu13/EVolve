@@ -1,0 +1,238 @@
+=== OTP Verification attempt: 2025-03-22 04:57:42 ===
+POST data: Array
+(
+    [otp] => 835529
+)
+
+SESSION data: Array
+(
+    [pending_registration] => Array
+        (
+            [email] => tomshibu2027@mca.ajce.in
+            [passwordhash] => $2y$10$EH8waX4R8Ifwy5Zhs2.PZObGvCMhxZ19cDYl8bOXcy07L1cpo0yWu
+            [username] => tom
+            [name] => tom
+            [profile_picture] => 
+            [verification_token] => 835529
+            [token_expiry] => 2025-03-22 05:07:25
+        )
+
+    [pending_verification] => 1
+    [verify_email] => tomshibu2027@mca.ajce.in
+)
+
+Submitted OTP: 835529
+Stored OTP: 835529
+OTP Expiry: 2025-03-22 05:07:25
+OTP verification successful, proceeding with registration
+Database error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'password' in 'field list'
+ERROR: Registration failed: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'password' in 'field list'
+=== OTP Verification attempt: 2025-03-22 04:59:25 ===
+POST data: Array
+(
+    [otp] => 807682
+)
+
+SESSION data: Array
+(
+    [pending_registration] => Array
+        (
+            [email] => tomshibu2027@mca.ajce.in
+            [passwordhash] => $2y$10$sKyBYP5f03nw/.1DVkIzzedl4G8gErUiVp0fJowMlXuXXYBnhPSpS
+            [username] => tom
+            [name] => tom
+            [profile_picture] => 
+            [verification_token] => 994847
+            [token_expiry] => 2025-03-22 05:09:05
+        )
+
+    [pending_verification] => 1
+    [verify_email] => tomshibu2027@mca.ajce.in
+)
+
+Submitted OTP: 807682
+Stored OTP: 994847
+OTP Expiry: 2025-03-22 05:09:05
+Invalid OTP
+ERROR: Invalid verification code
+=== OTP Verification attempt: 2025-03-22 04:59:38 ===
+POST data: Array
+(
+    [otp] => 994847
+)
+
+SESSION data: Array
+(
+    [pending_registration] => Array
+        (
+            [email] => tomshibu2027@mca.ajce.in
+            [passwordhash] => $2y$10$sKyBYP5f03nw/.1DVkIzzedl4G8gErUiVp0fJowMlXuXXYBnhPSpS
+            [username] => tom
+            [name] => tom
+            [profile_picture] => 
+            [verification_token] => 994847
+            [token_expiry] => 2025-03-22 05:09:05
+        )
+
+    [pending_verification] => 1
+    [verify_email] => tomshibu2027@mca.ajce.in
+)
+
+Submitted OTP: 994847
+Stored OTP: 994847
+OTP Expiry: 2025-03-22 05:09:05
+OTP verification successful, proceeding with registration
+User registered successfully with ID: 108
+=== OTP Verification attempt: 2025-03-22 05:05:42 ===
+POST data: Array
+(
+    [otp] => 482544
+)
+
+SESSION data: Array
+(
+    [pending_registration] => Array
+        (
+            [email] => tomshibu2027@mca.ajce.in
+            [passwordhash] => $2y$10$nSzT1Du/EF.bZWDBeYU93e4zDObtKS51rGIYk4uTfbUy8zn.XdHvS
+            [username] => tom
+            [name] => tom
+            [profile_picture] => 
+            [verification_token] => 482544
+            [token_expiry] => 2025-03-22 05:15:17
+        )
+
+    [pending_verification] => 1
+    [verify_email] => tomshibu2027@mca.ajce.in
+    [registration_timestamp] => 1742616317
+)
+
+Submitted OTP: 482544
+Stored OTP: 482544
+OTP Expiry: 2025-03-22 05:15:17
+OTP verification successful, proceeding with registration
+User registered successfully with ID: 109
+=== OTP Verification attempt: 2025-03-22 05:15:51 ===
+POST data: Array
+(
+    [otp] => 773264
+)
+
+SESSION data: Array
+(
+    [registration_timestamp] => 1742616933
+    [pending_registration] => Array
+        (
+            [email] => tomshibu2027@mca.ajce.in
+            [passwordhash] => $2y$10$CQlI62kyuuMqe2wf4yTsj.K.sdTmQ3m0oOk/IM1Rr9yR7tCZcLod.
+            [username] => tom
+            [name] => tom
+            [profile_picture] => 
+            [verification_token] => 773264
+            [token_expiry] => 2025-03-22 05:25:33
+        )
+
+    [pending_verification] => 1
+    [verify_email] => tomshibu2027@mca.ajce.in
+)
+
+Submitted OTP: 773264
+Stored OTP: 773264
+OTP Expiry: 2025-03-22 05:25:33
+OTP verification successful, proceeding with registration
+SQL: INSERT INTO tbl_users (username, email, passwordhash, name, profile_picture, status, created_at) 
+                           VALUES (?, ?, ?, ?, ?, 'active', NOW())
+Params: ["tom","tomshibu2027@mca.ajce.in","PASSWORD_HASH_HIDDEN","tom",null]
+New user ID: 110
+User registered successfully with ID: 110
+=== OTP Verification attempt: 2025-03-23 16:45:14 ===
+POST data: Array
+(
+    [otp] => 966596
+)
+
+SESSION data: Array
+(
+    [registration_timestamp] => 1742744646
+    [pending_registration] => Array
+        (
+            [email] => milanmathew6656@gmail.com
+            [passwordhash] => $2y$10$YYUZEME7eLgWr.wGAvElGOJEZhoseoBYNkroBl7AuTGilBTCZNj7e
+            [username] => Milan
+            [name] => Milan
+            [profile_picture] => 
+            [verification_token] => 966596
+            [token_expiry] => 2025-03-23 16:54:06
+        )
+
+    [pending_verification] => 1
+    [verify_email] => milanmathew6656@gmail.com
+)
+
+Submitted OTP: 966596
+Stored OTP: 966596
+OTP Expiry: 2025-03-23 16:54:06
+OTP verification successful, proceeding with registration
+ERROR: User with this email or username already exists
+=== OTP Verification attempt: 2025-03-23 16:50:22 ===
+POST data: Array
+(
+    [otp] => 334889
+)
+
+SESSION data: Array
+(
+    [registration_timestamp] => 1742744984
+    [pending_registration] => Array
+        (
+            [email] => milanmathew6656@gmail.com
+            [passwordhash] => $2y$10$5bvWiFkKYm2.pgkwibpGge0uhS7Uk5wJtHVLHnosmHYxVSdJmqMI2
+            [username] => milan07
+            [name] => milan07
+            [profile_picture] => 
+            [verification_token] => 572947
+            [token_expiry] => 2025-03-23 16:59:44
+        )
+
+    [pending_verification] => 1
+    [verify_email] => milanmathew6656@gmail.com
+)
+
+Submitted OTP: 334889
+Stored OTP: 572947
+OTP Expiry: 2025-03-23 16:59:44
+Invalid OTP
+ERROR: Invalid verification code
+=== OTP Verification attempt: 2025-03-23 16:50:41 ===
+POST data: Array
+(
+    [otp] => 572947
+)
+
+SESSION data: Array
+(
+    [registration_timestamp] => 1742744984
+    [pending_registration] => Array
+        (
+            [email] => milanmathew6656@gmail.com
+            [passwordhash] => $2y$10$5bvWiFkKYm2.pgkwibpGge0uhS7Uk5wJtHVLHnosmHYxVSdJmqMI2
+            [username] => milan07
+            [name] => milan07
+            [profile_picture] => 
+            [verification_token] => 572947
+            [token_expiry] => 2025-03-23 16:59:44
+        )
+
+    [pending_verification] => 1
+    [verify_email] => milanmathew6656@gmail.com
+)
+
+Submitted OTP: 572947
+Stored OTP: 572947
+OTP Expiry: 2025-03-23 16:59:44
+OTP verification successful, proceeding with registration
+SQL: INSERT INTO tbl_users (username, email, passwordhash, name, profile_picture, status, created_at) 
+                           VALUES (?, ?, ?, ?, ?, 'active', NOW())
+Params: ["milan07","milanmathew6656@gmail.com","PASSWORD_HASH_HIDDEN","milan07",null]
+New user ID: 111
+User registered successfully with ID: 111

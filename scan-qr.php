@@ -580,7 +580,7 @@ $currentStationId = isset($_GET['station_id']) ? $_GET['station_id'] : null;
             <div style="margin-top: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                 <button id="checkInButton" class="button" style="display: none;">Check In</button>
                 <button id="checkOutButton" class="button" style="display: none;">Check Out</button>
-                <button id="scanAgainButton" class="button button-secondary">Scan Another Code</button>
+                <button id="scanAgainButton" class="button button-secondary">Scan Again</button>
             </div>
         </div>
     </div>
@@ -809,7 +809,7 @@ $currentStationId = isset($_GET['station_id']) ? $_GET['station_id'] : null;
                     const resultContainer = document.getElementById('result-container');
                     resultContainer.className = 'success';
                     document.getElementById('result-message').textContent = 
-                        'Check-in successful! Station slot has been decreased by 1.';
+                        'Check-in successful!';
                     
                     console.log(`Station ${currentBooking.station_id} slots decreased by 1`);
                     
@@ -864,7 +864,7 @@ $currentStationId = isset($_GET['station_id']) ? $_GET['station_id'] : null;
                     const resultContainer = document.getElementById('result-container');
                     resultContainer.className = 'info';
                     document.getElementById('result-message').textContent = 
-                        'Check-out complete! Station slot has been increased by 1.';
+                        'Check-out complete!';
                     
                     console.log(`Station ${currentBooking.station_id} slots increased by 1`);
                     
@@ -967,16 +967,27 @@ $currentStationId = isset($_GET['station_id']) ? $_GET['station_id'] : null;
                     return;
                 }
                 
-                // Stop the camera scanning
+                const imageFile = event.target.files[0];
+                console.log("Attempting to scan uploaded file:", imageFile.name);
+                document.getElementById('loader').style.display = 'block';
+                
+                // First stop any ongoing scanning
                 html5QrCode.stop().then(() => {
-                    document.getElementById('loader').style.display = 'block';
+                    // Log file details for debugging
+                    console.log("File type:", imageFile.type);
+                    console.log("File size:", imageFile.size, "bytes");
                     
-                    const imageFile = event.target.files[0];
-                    console.log("Attempting to scan uploaded file:", imageFile.name);
+                    // Add explicit configuration for file scanning
+                    const fileScanConfig = {
+                        experimentalFeatures: {
+                            useBarCodeDetectorIfSupported: false  // Sometimes more reliable for file scanning
+                        }
+                    };
                     
-                    // Scan the uploaded file
-                    html5QrCode.scanFile(imageFile, true)
+                    // Scan the uploaded file with improved configuration
+                    html5QrCode.scanFile(imageFile, true, fileScanConfig)
                         .then(decodedText => {
+                            console.log("File scan successful:", decodedText);
                             // Use the same success handler as camera scanning
                             onScanSuccess(decodedText);
                         })
@@ -984,8 +995,58 @@ $currentStationId = isset($_GET['station_id']) ? $_GET['station_id'] : null;
                             document.getElementById('loader').style.display = 'none';
                             console.error("Error scanning file:", error);
                             
-                            displayError('Could not find a valid QR code in the uploaded image.');
+                            // Try alternative scan method for browser compatibility
+                            try {
+                                const fileReader = new FileReader();
+                                fileReader.onload = function(e) {
+                                    const img = new Image();
+                                    img.onload = function() {
+                                        // Create an off-screen canvas
+                                        const canvas = document.createElement('canvas');
+                                        const ctx = canvas.getContext('2d');
+                                        canvas.width = img.width;
+                                        canvas.height = img.height;
+                                        
+                                        // Draw image to canvas
+                                        ctx.drawImage(img, 0, 0, img.width, img.height);
+                                        
+                                        // Attempt to scan with more parameters
+                                        html5QrCode.scanFile(imageFile, true)
+                                            .then(result => {
+                                                console.log("Second attempt successful:", result);
+                                                onScanSuccess(result);
+                                            })
+                                            .catch(err => {
+                                                console.error("Second attempt failed:", err);
+                                                displayError('Could not find a valid QR code in the uploaded image. Please try another image or use the camera.');
+                                                
+                                                // Restart scanner after error
+                                                setTimeout(() => {
+                                                    document.getElementById('result-container').style.display = 'none';
+                                                    document.getElementById('scanner-container').style.display = 'block';
+                                                    html5QrCode.start({ facingMode: "environment" }, qrConfig, onScanSuccess, onScanError);
+                                                }, 2000);
+                                            });
+                                    };
+                                    img.src = e.target.result;
+                                };
+                                fileReader.readAsDataURL(imageFile);
+                            } catch (err) {
+                                console.error("Alternative method failed:", err);
+                                displayError('Could not process the uploaded image. Please try another image or use the camera.');
+                                
+                                // Restart scanner
+                                setTimeout(() => {
+                                    document.getElementById('result-container').style.display = 'none';
+                                    document.getElementById('scanner-container').style.display = 'block';
+                                    html5QrCode.start({ facingMode: "environment" }, qrConfig, onScanSuccess, onScanError);
+                                }, 2000);
+                            }
                         });
+                }).catch(err => {
+                    document.getElementById('loader').style.display = 'none';
+                    console.error("Error stopping camera before file scan:", err);
+                    displayError('Error processing uploaded file. Please try again.');
                 });
             });
             

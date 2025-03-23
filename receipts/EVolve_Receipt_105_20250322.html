@@ -1,0 +1,128 @@
+
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>EVolve - Booking Receipt</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    line-height: 1.6;
+                    margin: 0;
+                    padding: 0;
+                    color: #333;
+                }
+                .receipt {
+                    width: 100%;
+                    margin: 0 auto;
+                }
+                .receipt-header {
+                    text-align: center;
+                    margin-bottom: 20px;
+                    padding-bottom: 10px;
+                    border-bottom: 1px solid #eee;
+                }
+                .receipt-header h1 {
+                    font-size: 24px;
+                    color: #224abe;
+                    margin: 0;
+                }
+                .receipt-details {
+                    margin-bottom: 20px;
+                }
+                .receipt-details table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+                .receipt-details th, 
+                .receipt-details td {
+                    padding: 8px;
+                    text-align: left;
+                    border-bottom: 1px solid #eee;
+                }
+                .receipt-details th {
+                    font-weight: bold;
+                    width: 40%;
+                }
+                .receipt-footer {
+                    font-style: italic;
+                    color: #777;
+                    font-size: 12px;
+                }
+                .qr-section {
+                    text-align: center;
+                    margin: 20px 0;
+                }
+                .qr-container img {
+                    width: 150px;
+                    height: 150px;
+                }
+                .qr-instructions {
+                    margin-top: 10px;
+                    font-size: 12px;
+                    color: #555;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="receipt">
+                <div class="receipt-header">
+                    <h1>EVolve EV Charging - Booking Receipt</h1>
+                    <p>Payment Confirmation</p>
+                </div>
+                
+                <div class="receipt-details">
+                    <table>
+                        <tr>
+                            <th>Customer Name:</th>
+                            <td>tomshibu</td>
+                        </tr>
+                        <tr>
+                            <th>Booking ID:</th>
+                            <td>105</td>
+                        </tr>
+                        <tr>
+                            <th>Station:</th>
+                            <td>sdfg</td>
+                        </tr>
+                        <tr>
+                            <th>Amount Paid:</th>
+                            <td>Rs. 100.00</td>
+                        </tr>
+                        <tr>
+                            <th>Date:</th>
+                            <td>22 Mar 2025</td>
+                        </tr>
+                        <tr>
+                            <th>Time:</th>
+                            <td>09:00 AM</td>
+                        </tr>
+                        <tr>
+                            <th>Payment Status:</th>
+                            <td>Completed</td>
+                        </tr>
+                        <tr>
+                            <th>Transaction ID:</th>
+                            <td>pay_Q9jR0fWEbqhfon</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <!-- QR Code Section -->
+                <div class="qr-section">
+                    <h3>Station Check-in/Check-out QR Code</h3>
+                    <div class="qr-container">
+                        <img src="https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=%7B%22booking_id%22%3A%22105%22%2C%22user_id%22%3A%222%22%2C%22station_id%22%3A%2222%22%7D&chld=H|0" alt="QR Code">
+                    </div>
+                    <div class="qr-instructions">
+                        <p>Scan this QR code at the charging station for check-in and check-out.</p>
+                        <p>Please show this receipt to the station attendant if required.</p>
+                    </div>
+                </div>
+                
+                <div class="receipt-footer">
+                    <p>Thank you for choosing EVolve for your EV charging needs!</p>
+                </div>
+            </div>
+        </body>
+        </html>

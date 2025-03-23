@@ -1,0 +1,876 @@
+=== Registration attempt: 2025-03-22 03:45:29 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 03:45:45 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 03:45:58 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 03:46:13 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 03:53:34 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 03:53:45 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:01:25 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:01:36 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:04:34 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:04:39 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:08:51 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:08:55 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:09:00 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:09:04 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:12:33 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:12:48 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:22:27 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:23:28 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:23:52 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:24:05 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:24:14 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:24:23 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:40:40 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu49@gmail.com
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+ERROR: Email is already registered
+=== Registration attempt: 2025-03-22 04:40:40 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu49@gmail.com
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+ERROR: Email is already registered
+=== Registration attempt: 2025-03-22 04:41:33 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:41:37 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:45:27 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:45:31 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:48:19 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:48:23 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true"}
+=== Registration attempt: 2025-03-22 04:51:23 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-03-22 04:51:28 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-03-22 04:55:21 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-03-22 04:55:26 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-03-22 04:57:21 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-03-22 04:57:25 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-03-22 04:59:02 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-03-22 04:59:05 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-03-22 05:02:20 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@\
+)
+
+Database connection successful
+All required fields present
+ERROR: Passwords do not match
+=== Registration attempt: 2025-03-22 05:02:22 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-03-22 05:02:27 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-03-22 05:05:17 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-03-22 05:05:21 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Preventing duplicate registration attempt (4s since last attempt)
+=== Registration attempt: 2025-03-22 05:15:33 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+    [unified_handler] => true
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to tomshibu2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-03-22 05:15:38 ===
+POST data: Array
+(
+    [username] => tom
+    [email] => tomshibu2027@mca.ajce.in
+    [password] => Appu2020@
+    [confirm_password] => Appu2020@
+)
+
+Preventing duplicate registration attempt (5s since last attempt)
+=== Registration attempt: 2025-03-23 16:41:02 ===
+POST data: Array
+(
+    [username] => Milan
+    [email] => milanmathew6656@gmail.com
+    [password] => Milan@07
+    [confirm_password] => Mlan@07
+    [unified_handler] => true
+)
+
+Database connection successful
+All required fields present
+ERROR: Passwords do not match
+=== Registration attempt: 2025-03-23 16:41:02 ===
+POST data: Array
+(
+    [username] => Milan
+    [email] => milanmathew6656@gmail.com
+    [password] => Milan@07
+    [confirm_password] => Mlan@07
+)
+
+Database connection successful
+All required fields present
+ERROR: Passwords do not match
+=== Registration attempt: 2025-03-23 16:41:10 ===
+POST data: Array
+(
+    [username] => Milan
+    [email] => milanmathew6656@gmail.com
+    [password] => Milan@07
+    [confirm_password] => Milan@07
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to milanmathew6656@gmail.com
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-03-23 16:41:16 ===
+POST data: Array
+(
+    [username] => Milan
+    [email] => milanmathew6656@gmail.com
+    [password] => Milan@07
+    [confirm_password] => Milan@07
+    [unified_handler] => true
+)
+
+Preventing duplicate registration attempt (6s since last attempt)
+=== Registration attempt: 2025-03-23 16:44:06 ===
+POST data: Array
+(
+    [username] => Milan
+    [email] => milanmathew6656@gmail.com
+    [password] => Milan@07
+    [confirm_password] => Milan@07
+    [unified_handler] => true
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to milanmathew6656@gmail.com
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-03-23 16:44:11 ===
+POST data: Array
+(
+    [username] => Milan
+    [email] => milanmathew6656@gmail.com
+    [password] => Milan@07
+    [confirm_password] => Milan@07
+)
+
+Preventing duplicate registration attempt (5s since last attempt)
+=== Registration attempt: 2025-03-23 16:46:05 ===
+POST data: Array
+(
+    [username] => Michael
+    [email] => milianmichael6656@gmail.com
+    [password] => Milan@07
+    [confirm_password] => Milan@07
+    [unified_handler] => true
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to milianmichael6656@gmail.com
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-03-23 16:46:10 ===
+POST data: Array
+(
+    [username] => Michael
+    [email] => milianmichael6656@gmail.com
+    [password] => Milan@07
+    [confirm_password] => Milan@07
+)
+
+Preventing duplicate registration attempt (5s since last attempt)
+=== Registration attempt: 2025-03-23 16:49:44 ===
+POST data: Array
+(
+    [username] => milan07
+    [email] => milanmathew6656@gmail.com
+    [password] => Milan@07
+    [confirm_password] => Milan@07
+    [unified_handler] => true
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to milanmathew6656@gmail.com
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-03-23 16:49:49 ===
+POST data: Array
+(
+    [username] => milan07
+    [email] => milanmathew6656@gmail.com
+    [password] => Milan@07
+    [confirm_password] => Milan@07
+)
+
+Preventing duplicate registration attempt (5s since last attempt)

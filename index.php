@@ -5,6 +5,26 @@ session_start();
 // Add this code after session_start() and before the HTML
 require_once 'config.php'; // Make sure this points to your database configuration file
 
+// Database connection credentials
+$servername = "localhost";
+$username = "root"; 
+$password = "";    
+$dbname = "evolve1";  // Use your actual database name from create_database.php
+
+// If you need to create a connection, use this:
+if (!isset($conn)) {
+    $conn = new mysqli($servername, $username, $password, $dbname);
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+}
+
+// Add this near the top of your PHP section after session_start()
+$showVerificationModal = false;
+if (isset($_GET['verify']) && $_GET['verify'] === 'true' && isset($_SESSION['pending_verification']) && $_SESSION['pending_verification'] === true) {
+    $showVerificationModal = true;
+}
+
 try {
     // Create database connection
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
@@ -1194,6 +1214,428 @@ function isApprovedStationOwner($userId) {
         .input-group {
             margin-bottom: 1rem;
         }
+
+        /* Responsive Header Styles */
+        .nav-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            position: relative;
+            width: 100%;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            z-index: 1001; /* Ensure logo stays above mobile menu */
+        }
+
+        .mobile-menu-toggle {
+            display: none; /* Hidden by default on desktop */
+            cursor: pointer;
+            font-size: 24px;
+            color: #333;
+            z-index: 1001; /* Ensure it stays above mobile menu */
+        }
+
+        .mobile-menu-close {
+            display: none; /* Hidden by default */
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            z-index: 1002;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Media Queries for Responsive Design */
+        @media (max-width: 992px) {
+            .mobile-menu-toggle {
+                display: block; /* Show only on mobile */
+            }
+            
+            .nav-links {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 280px;
+                height: 100vh;
+                background-color: white;
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 80px 20px 20px;
+                transition: right 0.3s ease;
+                z-index: 1000;
+                box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            }
+            
+            .nav-links.active {
+                right: 0;
+            }
+            
+            .mobile-menu-close {
+                display: none; /* Initially hidden */
+            }
+            
+            .nav-links.active .mobile-menu-close {
+                display: block; /* Show only when menu is active */
+            }
+            
+            .nav-link {
+                padding: 15px 0;
+                width: 100%;
+                text-align: left;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            }
+            
+            .user-profile {
+                margin: 15px 0 0 0;
+                width: 100%;
+                padding: 15px 0;
+            }
+        }
+
+        .ev-features-container {
+            padding: 60px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .ev-features-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .ev-features-header h1 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .ev-features-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .ev-features-content {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .ev-features-image {
+            flex: 1;
+        }
+
+        .ev-features-image img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            object-fit: cover;
+        }
+
+        .ev-features-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .ev-feature-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+
+        .ev-feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .ev-feature-icon-box {
+            width: 60px;
+            height: 60px;
+            background: #f0f4ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+        }
+
+        .ev-feature-icon {
+            width: 30px;
+            height: 30px;
+            fill: #3b82f6;
+        }
+
+        .ev-feature-label {
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
+
+        /* Responsive styles for EV features section */
+        @media (max-width: 992px) {
+            .ev-features-content {
+                flex-direction: column;
+            }
+            
+            .ev-features-image, 
+            .ev-features-grid {
+                flex: none;
+                width: 100%;
+            }
+            
+            .ev-features-image {
+                margin-bottom: 30px;
+            }
+            
+            .ev-features-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .ev-features-header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .ev-features-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            
+            .ev-features-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .ev-feature-card {
+                padding: 15px;
+            }
+            
+            .ev-feature-icon-box {
+                width: 50px;
+                height: 50px;
+                margin-bottom: 10px;
+            }
+            
+            .ev-feature-icon {
+                width: 25px;
+                height: 25px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .ev-features-container {
+                padding: 40px 15px;
+            }
+            
+            .ev-features-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .ev-features-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .ev-features-header p {
+                font-size: 0.95rem;
+            }
+            
+            .ev-feature-card {
+                display: flex;
+                align-items: center;
+                text-align: left;
+                padding: 12px;
+            }
+            
+            .ev-feature-icon-box {
+                margin: 0 15px 0 0;
+                width: 40px;
+                height: 40px;
+            }
+            
+            .ev-feature-icon {
+                width: 20px;
+                height: 20px;
+            }
+        }
+
+        /* How to Charge - Responsive Styles */
+        @media (max-width: 992px) {
+            .how-steps-container {
+                flex-direction: column;
+                gap: 25px;
+            }
+            
+            .how-step-card {
+                width: 100%;
+                max-width: 450px;
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .how-title {
+                font-size: 1.8rem;
+            }
+            
+            .how-step-card {
+                padding: 15px;
+            }
+            
+            .how-step-number {
+                width: 35px;
+                height: 35px;
+                top: -15px;
+            }
+            
+            .how-step-number span {
+                font-size: 1.2rem;
+            }
+            
+            .how-step-icon {
+                font-size: 1.8rem;
+            }
+            
+            .how-step-title {
+                font-size: 1.2rem;
+            }
+            
+            .how-icon-name {
+                font-size: 0.8rem;
+            }
+        }
+
+        /* About Us - Responsive Styles */
+        @media (max-width: 768px) {
+            .about-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .about-card {
+                padding: 20px;
+            }
+            
+            .about-header h2 {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .about-container {
+                padding: 40px 15px;
+            }
+            
+            .about-header h2 {
+                font-size: 1.5rem;
+            }
+            
+            .about-badge {
+                font-size: 0.8rem;
+                padding: 5px 10px;
+            }
+            
+            .card-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.3rem;
+            }
+            
+            .about-card h3 {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Support Section - Responsive Styles */
+        @media (max-width: 992px) {
+            .support-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .support-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .support-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .support-card {
+                padding: 20px;
+            }
+            
+            .contact-section {
+                padding: 25px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .support-container {
+                padding: 40px 15px;
+            }
+            
+            .support-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .support-card i {
+                font-size: 2rem;
+            }
+            
+            .support-card h3 {
+                font-size: 1.2rem;
+            }
+            
+            .contact-section h2 {
+                font-size: 1.5rem;
+            }
+            
+            .contact-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .nav-link {
+            position: relative;
+            text-decoration: none;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #ff5252;
+            color: white;
+            border-radius: 50%;
+            min-width: 18px;
+            height: 18px;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px;
+        }
     </style>
 </head>
 <body>
@@ -1203,7 +1645,13 @@ function isApprovedStationOwner($userId) {
                 <i class="fas fa-charging-station"></i>
                 <span class="logo-text">E<span class="highlight">V</span>olve</span>
             </div>
-            <div class="nav-links">
+            <div class="mobile-menu-toggle" id="mobileMenuToggle">
+                <i class="fas fa-bars"></i>
+            </div>
+            <div class="nav-links" id="navLinks">
+                <div class="mobile-menu-close" id="mobileMenuClose">
+                    <i class="fas fa-times"></i>
+                </div>
                 <a href="#searchInput" class="nav-link active">
                     <i class="fas fa-search"></i>
                     Find Stations
@@ -1220,67 +1668,82 @@ function isApprovedStationOwner($userId) {
                     <i class="fas fa-info-circle"></i>
                     About Us
                 </a>
+                <a href="notifications.php" class="nav-link">
+                    <i class="fas fa-bell"></i>
+                    <?php 
+                    if (isset($_SESSION['user_id'])) {
+                        // Count unread notifications
+                        $notifStmt = $pdo->prepare("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0");
+                        $notifStmt->execute([$_SESSION['user_id']]);
+                        $unreadCount = $notifStmt->fetchColumn();
+                        
+                        // Display badge if there are unread notifications
+                        if ($unreadCount > 0) {
+                            echo '<span class="notification-badge">' . $unreadCount . '</span>';
+                        }
+                    }
+                    ?>
+                </a>
                 <?php if (isset($_SESSION['user_id'])): ?>
-    <!-- Debug information -->
-    <?php
-    echo "<!-- Debug: \n";
-    echo "Session user_id: " . $_SESSION['user_id'] . "\n";
-    echo "Session profile_picture: " . (isset($_SESSION['profile_picture']) ? $_SESSION['profile_picture'] : 'not set') . "\n";
-    echo "-->";
-    ?>
-    <?php
-    // Add this code block to fetch user data if name is not set
-    if (!isset($_SESSION['name']) || empty($_SESSION['name'])) {
-        try {
-            $stmt = $pdo->prepare("SELECT name FROM tbl_users WHERE user_id = ?");
-            $stmt->execute([$_SESSION['user_id']]);
-            $userData = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($userData) {
-                $_SESSION['name'] = $userData['name'];
-            }
-        } catch(PDOException $e) {
-            error_log("Error fetching user data: " . $e->getMessage());
-        }
-    }
-    ?>
-    <div class="user-profile">
-        <span class="username">
-            <?php 
-            if (isset($_SESSION['name']) && !empty($_SESSION['name'])) {
-                echo htmlspecialchars($_SESSION['name']);
-            } else {
-                echo 'User';
-            }
-            ?>
-        </span>
-        <i class="fas fa-chevron-down"></i>
-        <div class="dropdown-content">
-            <a href="example.php">
-                <i class="fas fa-user"></i>
-                My Profile
-            </a>
-            <a href="my-bookings.php">
-                <i class="fas fa-calendar-check"></i>
-                My Bookings
-            </a>
-            <a href="settings.php">
-                <i class="fas fa-cog"></i>
-                Settings
-            </a>
-            <div class="dropdown-divider"></div>
-            <a href="logout.php" class="logout-link">
-                <i class="fas fa-sign-out-alt"></i>
-                Logout
-            </a>
-        </div>
-    </div>
-<?php else: ?>
-    <a href="#" class="nav-link" id="loginSignupBtn">
-        <i class="fas fa-user"></i>
-        Login/Signup
-    </a>
-<?php endif; ?>
-
+                <!-- Debug information -->
+                <?php
+                echo "<!-- Debug: \n";
+                echo "Session user_id: " . $_SESSION['user_id'] . "\n";
+                echo "Session profile_picture: " . (isset($_SESSION['profile_picture']) ? $_SESSION['profile_picture'] : 'not set') . "\n";
+                echo "-->";
+                ?>
+                <?php
+                // Add this code block to fetch user data if name is not set
+                if (!isset($_SESSION['name']) || empty($_SESSION['name'])) {
+                    try {
+                        $stmt = $pdo->prepare("SELECT name FROM tbl_users WHERE user_id = ?");
+                        $stmt->execute([$_SESSION['user_id']]);
+                        $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+                        if ($userData) {
+                            $_SESSION['name'] = $userData['name'];
+                        }
+                    } catch(PDOException $e) {
+                        error_log("Error fetching user data: " . $e->getMessage());
+                    }
+                }
+                ?>
+                <div class="user-profile">
+                    <span class="username">
+                        <?php 
+                        if (isset($_SESSION['name']) && !empty($_SESSION['name'])) {
+                            echo htmlspecialchars($_SESSION['name']);
+                        } else {
+                            echo 'User';
+                        }
+                        ?>
+                    </span>
+                    <i class="fas fa-chevron-down"></i>
+                    <div class="dropdown-content">
+                        <a href="example.php">
+                            <i class="fas fa-user"></i>
+                            My Profile
+                        </a>
+                        <a href="my-bookings.php">
+                            <i class="fas fa-calendar-check"></i>
+                            My Bookings
+                        </a>
+                        <a href="settings.php">
+                            <i class="fas fa-cog"></i>
+                            Settings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="logout.php" class="logout-link">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+                <?php else: ?>
+                <a href="#" class="nav-link" id="loginSignupBtn">
+                    <i class="fas fa-user"></i>
+                    Login/Signup
+                </a>
+                <?php endif; ?>
             </div>
         </nav>
     </header>
@@ -1510,12 +1973,14 @@ function isApprovedStationOwner($userId) {
 
 
             <div class="ev-feature-card">
-                <div class="ev-feature-icon-box">
-                    <svg class="ev-feature-icon" viewBox="0 0 24 24">
-                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
-                    </svg>
-                </div>
-                <div class="ev-feature-label">Secure Access</div>
+                <a href="reviews.php" style="text-decoration: none; color: inherit; display: block;">
+                    <div class="ev-feature-icon-box">
+                        <svg class="ev-feature-icon" viewBox="0 0 24 24">
+                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                        </svg>
+                    </div>
+                    <div class="ev-feature-label">Review</div>
+                </a>
             </div>
         </div>
     </div>
@@ -2159,6 +2624,96 @@ function isApprovedStationOwner($userId) {
                 });
             }
         }
+
+        // Add this function to your JavaScript code
+        function displayError(message) {
+            const errorContainer = document.getElementById('error-message') || 
+                                  document.querySelector('.error-message');
+            
+            if (errorContainer) {
+                errorContainer.textContent = message;
+                errorContainer.style.display = 'block';
+            } else {
+                // Fallback if no error container exists
+                alert(message);
+            }
+        }
+
+        // Update your form submission handler to use this function
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Clear previous errors
+            const errorContainer = document.querySelector('.error-message');
+            if (errorContainer) {
+                errorContainer.style.display = 'none';
+            }
+            
+            // Get form data
+            const formData = new FormData(this);
+            
+            // Show loading state
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = 'Processing...';
+            
+            fetch('register_process.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                } else {
+                    // If not JSON, get text and log it
+                    return response.text().then(text => {
+                        console.error('Non-JSON response:', text);
+                        throw new Error('Server returned invalid format');
+                    });
+                }
+            })
+            .then(data => {
+                console.log('Server response:', data);
+                if (data.success) {
+                    window.location.href = data.redirect;
+                } else {
+                    displayError(data.error || 'An unexpected error occurred');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayError('An unexpected error occurred. Please try again.');
+            })
+            .finally(() => {
+                // Reset button state
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
+            });
+        });
+
+        function displayError(message) {
+            const errorContainer = document.querySelector('.error-message');
+            if (!errorContainer) {
+                // Create error container if it doesn't exist
+                const form = document.getElementById('registerForm');
+                const newErrorContainer = document.createElement('div');
+                newErrorContainer.className = 'error-message';
+                newErrorContainer.style.display = 'block';
+                newErrorContainer.style.color = '#dc3545';
+                newErrorContainer.style.backgroundColor = '#f8d7da';
+                newErrorContainer.style.padding = '10px';
+                newErrorContainer.style.borderRadius = '5px';
+                newErrorContainer.style.marginBottom = '15px';
+                form.insertBefore(newErrorContainer, form.firstChild);
+                newErrorContainer.textContent = message;
+            } else {
+                errorContainer.style.display = 'block';
+                errorContainer.textContent = message;
+            }
+        }
     </script>
 
     <style>
@@ -2665,8 +3220,39 @@ function isApprovedStationOwner($userId) {
                                     <div class="recent-badge">Recent</div>
                                 <?php endif; ?>
                                 <div class="booking-station">
-                                    <h3><?php echo htmlspecialchars($booking['station_name']); ?></h3>
-                                    <p><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($booking['station_address']); ?></p>
+                                    <?php
+                                    // Add this database query before line 2684 to get the booking with station details
+                                    $booking_id = $booking['booking_id'] ?? 0;
+
+                                    // Query to get booking with station details
+                                    $stmtDetails = $conn->prepare("
+                                        SELECT b.*, cs.name AS station_name, cs.address AS station_address 
+                                        FROM bookings b
+                                        JOIN charging_stations cs ON b.station_id = cs.station_id
+                                        WHERE b.booking_id = ?
+                                    ");
+
+                                    if ($stmtDetails) {
+                                        $stmtDetails->bind_param("i", $booking_id);
+                                        $stmtDetails->execute();
+                                        $result = $stmtDetails->get_result();
+                                        $booking_with_details = $result->fetch_assoc();
+                                        
+                                        // Properly close the statement here
+                                        $stmtDetails->close();
+                                        
+                                        // Update $booking with the joined data
+                                        if ($booking_with_details) {
+                                            $booking = array_merge($booking, $booking_with_details);
+                                        }
+                                    }
+                                    ?>
+
+                                    <h3 class="station-name"><?php echo htmlspecialchars($booking['station_name'] ?? 'Unknown Station'); ?></h3>
+                                    <div class="station-address">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span><?php echo htmlspecialchars($booking['station_address'] ?? 'No Address'); ?></span>
+                                    </div>
                                 </div>
                                 <div class="booking-details">
                                     <p><i class="fas fa-calendar"></i> <?php echo date('M d, Y', strtotime($booking['booking_date'])); ?></p>
@@ -4181,5 +4767,1132 @@ function isApprovedStationOwner($userId) {
         }
     }
     ?>
+
+    <!-- Add this right after your existing JavaScript code -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM fully loaded');
+        
+        // Check if OTP modal exists
+        const otpModal = document.getElementById('otpVerificationModal');
+        console.log('OTP Modal exists in DOM:', !!otpModal);
+        
+        // Add the OTP modal to the page if it doesn't exist
+        if (!otpModal) {
+            console.log('Creating OTP modal dynamically');
+            const modalHTML = `
+                <div id="otpVerificationModal" class="login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); z-index: 1000; align-items: center; justify-content: center;">
+                    <div class="login-container" style="background-color: white; border-radius: 8px; padding: 30px; max-width: 400px; width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative;">
+                        <span class="close-modal" onclick="hideOtpModal()" style="position: absolute; right: 15px; top: 15px; font-size: 24px; cursor: pointer;">&times;</span>
+                        <h2 style="text-align: center; margin-bottom: 20px;"><i class="fas fa-envelope"></i> Email Verification</h2>
+                        <form id="otpVerificationForm">
+                            <p class="verification-instructions" style="text-align: center; color: #666; margin-bottom: 20px; font-size: 0.95rem; line-height: 1.5;">
+                                We've sent a verification code to your email. Please enter it below to complete your registration.
+                            </p>
+                            
+                            <div class="input-group" style="margin-bottom: 20px;">
+                                <div class="otp-input-container" style="display: flex; justify-content: center; margin-bottom: 10px;">
+                                    <input type="text" name="otp" id="otpInput" maxlength="6" required placeholder="Enter 6-digit code" 
+                                           style="font-size: 1.5rem; letter-spacing: 0.5rem; text-align: center; width: 100%; max-width: 250px; padding: 10px; border: 2px solid #ddd; border-radius: 8px;">
+                                </div>
+                                <div class="validation-message" id="otpError" style="color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;"></div>
+                            </div>
+                            
+                            <div class="error-message" style="display: none; color: #dc3545; background-color: #f8d7da; padding: 10px; border-radius: 5px; margin-bottom: 15px;"></div>
+                            
+                            <button type="submit" class="login-button" style="width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px;">
+                                <i class="fas fa-check-circle"></i> Verify & Complete Registration
+                            </button>
+                            
+                            <div class="resend-code" style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #666;">
+                                <p>Didn't receive the code? <a href="#" id="resendOtpLink" style="color: #3498db; text-decoration: none; font-weight: 500;">Resend</a></p>
+                                <div id="resendTimer" style="display: none; color: #666; font-size: 0.85rem; margin-top: 5px;">Resend in <span id="timerCount">60</span> seconds</div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            // Append the modal to the body
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Now try to get the modal again
+            const newOtpModal = document.getElementById('otpVerificationModal');
+            console.log('OTP Modal created and exists:', !!newOtpModal);
+            
+            // Attach event listeners to the new form
+            const otpForm = document.getElementById('otpVerificationForm');
+            if (otpForm) {
+                otpForm.addEventListener('submit', handleOtpFormSubmit);
+                console.log('Attached submit event to OTP form');
+            }
+            
+            const resendLink = document.getElementById('resendOtpLink');
+            if (resendLink) {
+                resendLink.addEventListener('click', handleResendOtp);
+                console.log('Attached click event to resend link');
+            }
+        }
+    });
+
+    // Updated showOtpModal function
+    function showOtpModal() {
+        console.log('Showing OTP modal');
+        const modal = document.getElementById('otpVerificationModal');
+        if (!modal) {
+            console.error('OTP Modal not found in DOM!');
+            return;
+        }
+        
+        modal.style.display = 'flex';
+        document.getElementById('otpInput').focus();
+        startResendTimer();
+        console.log('OTP modal should now be visible');
+    }
+
+    // Add these standalone handlers for the OTP form
+    function handleOtpFormSubmit(e) {
+        e.preventDefault();
+        console.log('OTP form submitted');
+        
+        // Clear previous errors
+        const errorContainer = this.querySelector('.error-message');
+        if (errorContainer) {
+            errorContainer.style.display = 'none';
+        }
+        
+        const formData = new FormData(this);
+        const submitButton = this.querySelector('button[type="submit"]');
+        const originalButtonText = submitButton.innerHTML;
+        
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+        
+        // Change verification_process.php to verify_otp.php
+        fetch('verify_otp.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json();
+            } else {
+                // If not JSON, get text and log it
+                return response.text().then(text => {
+                    console.error('Non-JSON response:', text);
+                    throw new Error('Server returned invalid format');
+                });
+            }
+        })
+        .then(data => {
+            console.log('Verification response:', data);
+            if (data.success) {
+                // Show success message
+                const successMessage = document.createElement('div');
+                successMessage.className = 'success-message';
+                successMessage.innerHTML = '<i class="fas fa-check-circle"></i> ' + data.message;
+                successMessage.style.color = '#28a745';
+                successMessage.style.backgroundColor = '#d4edda';
+                successMessage.style.padding = '10px';
+                successMessage.style.borderRadius = '5px';
+                successMessage.style.marginBottom = '15px';
+                
+                this.insertBefore(successMessage, this.firstChild);
+                
+                // Redirect after a short delay
+                setTimeout(() => {
+                    window.location.href = data.redirect;
+                }, 2000);
+            } else {
+                // Show error message
+                if (errorContainer) {
+                    errorContainer.textContent = data.error;
+                    errorContainer.style.display = 'block';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            if (errorContainer) {
+                errorContainer.textContent = 'An unexpected error occurred. Please try again.';
+                errorContainer.style.display = 'block';
+            }
+        })
+        .finally(() => {
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
+        });
+    }
+
+    function handleResendOtp(e) {
+        e.preventDefault();
+        console.log('Resend OTP link clicked');
+        
+        const resendButton = this;
+        resendButton.textContent = 'Sending...';
+        
+        fetch('resend_otp.php', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Resend response:', data);
+            if (data.success) {
+                alert('A new verification code has been sent to your email.');
+                startResendTimer();
+            } else {
+                alert(data.error || 'Failed to resend verification code. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An unexpected error occurred. Please try again.');
+        })
+        .finally(() => {
+            resendButton.textContent = 'Resend';
+        });
+    }
+
+    // Modify the registration form handler to explicitly call the showOtpModal function
+    document.addEventListener('DOMContentLoaded', function() {
+        const registerForm = document.getElementById('registerForm');
+        
+        if (registerForm) {
+            console.log('Register form found, attaching submit handler');
+            registerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('Register form submitted');
+                
+                // Clear previous errors
+                const errorContainer = this.querySelector('.error-message');
+                if (errorContainer) {
+                    errorContainer.style.display = 'none';
+                }
+                
+                const formData = new FormData(this);
+                
+                // Show loading state
+                const submitButton = this.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.innerHTML;
+                submitButton.disabled = true;
+                submitButton.innerHTML = 'Processing...';
+                
+                fetch('register_process.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    // Check if response is JSON
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json();
+                    } else {
+                        // If not JSON, get text and log it
+                        return response.text().then(text => {
+                            console.error('Non-JSON response:', text);
+                            throw new Error('Server returned invalid format');
+                        });
+                    }
+                })
+                .then(data => {
+                    console.log('Register response:', data);
+                    if (data.success) {
+                        console.log('Registration successful, showing OTP modal');
+                        
+                        // Hide registration modal if it exists
+                        const loginModal = document.getElementById('loginModal');
+                        if (loginModal) {
+                            loginModal.style.display = 'none';
+                            console.log('Hidden login modal');
+                        }
+                        
+                        // Explicitly call the function to show OTP modal
+                        showOtpModal();
+                        
+                        // Double check if modal is visible
+                        setTimeout(() => {
+                            const otpModal = document.getElementById('otpVerificationModal');
+                            console.log('OTP modal display style:', otpModal.style.display);
+                            if (otpModal.style.display !== 'flex') {
+                                console.log('Forcing OTP modal display');
+                                otpModal.style.display = 'flex';
+                            }
+                        }, 500);
+                    } else {
+                        displayError(data.error || 'Registration failed. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    displayError('An unexpected error occurred. Please try again.');
+                })
+                .finally(() => {
+                    // Reset button state
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
+                });
+            });
+        } else {
+            console.log('Register form not found');
+        }
+    });
+    </script>
+
+    <!-- Update your registration form handler to redirect to the verify_otp.php page -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const registerForm = document.getElementById('registerForm');
+        
+        if (registerForm) {
+            console.log('Register form found, attaching submit handler');
+            registerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('Register form submitted');
+                
+                // Clear previous errors
+                const errorContainer = this.querySelector('.error-message');
+                if (errorContainer) {
+                    errorContainer.style.display = 'none';
+                }
+                
+                const formData = new FormData(this);
+                
+                // Show loading state
+                const submitButton = this.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.innerHTML;
+                submitButton.disabled = true;
+                submitButton.innerHTML = 'Processing...';
+                
+                fetch('register_process.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    // Check if response is JSON
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json();
+                    } else {
+                        // If not JSON, get text and log it
+                        return response.text().then(text => {
+                            console.error('Non-JSON response:', text);
+                            throw new Error('Server returned invalid format');
+                        });
+                    }
+                })
+                .then(data => {
+                    console.log('Register response:', data);
+                    if (data.success) {
+                        console.log('Registration successful, redirecting to OTP verification page');
+                        
+                        // Hide registration modal if it exists
+                        const loginModal = document.getElementById('loginModal');
+                        if (loginModal) {
+                            loginModal.style.display = 'none';
+                        }
+                        
+                        // Redirect to the OTP verification page
+                        window.location.href = 'verify_otp.php';
+                    } else {
+                        displayError(data.error || 'Registration failed. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    displayError('An unexpected error occurred. Please try again.');
+                })
+                .finally(() => {
+                    // Reset button state
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
+                });
+            });
+        } else {
+            console.log('Register form not found');
+        }
+    });
+    </script>
+
+    <!-- Update the signup form submission handler - reducing duplicate OTP sending
+    document.addEventListener('DOMContentLoaded', function() {
+        // Remove any existing event listeners if the form was previously initialized
+        const signupForm = document.getElementById('signupForm');
+        if (signupForm) {
+            const clonedForm = signupForm.cloneNode(true);
+            signupForm.parentNode.replaceChild(clonedForm, signupForm);
+            
+            // Add event listener to the fresh form element
+            clonedForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('Signup form submitted - single handler');
+                
+                // Clear any existing error messages
+                const existingErrors = this.querySelectorAll('.error-message');
+                existingErrors.forEach(error => error.remove());
+                
+                // Validate form inputs
+                const username = document.getElementById('signup-username').value;
+                const email = document.getElementById('signup-email').value;
+                const password = document.getElementById('signup-password').value;
+                const confirmPassword = document.getElementById('signup-confirm-password').value;
+                
+                const usernameError = validateUsername(username);
+                const emailError = validateEmail(email);
+                const passwordError = validatePassword(password);
+                const confirmError = password !== confirmPassword ? "Passwords do not match" : "";
+
+                // Show validation errors if any
+                document.getElementById('signup-username-validation').textContent = usernameError;
+                document.getElementById('signup-email-validation').textContent = emailError;
+                document.getElementById('signup-password-validation').textContent = passwordError;
+                document.getElementById('signup-confirm-password-validation').textContent = confirmError;
+
+                if (usernameError || emailError || passwordError || confirmError) {
+                    return;
+                }
+
+                // Create FormData object
+                const formData = new FormData(this);
+                
+                // Show loading state
+                const submitButton = this.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.innerHTML;
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+                // Send AJAX request
+                fetch('register_process.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    // Check if response is JSON
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json();
+                    } else {
+                        // If not JSON, get text and log it
+                        return response.text().then(text => {
+                            console.error('Non-JSON response:', text);
+                            throw new Error('Server returned invalid format');
+                        });
+                    }
+                })
+                .then(data => {
+                    console.log('Register response:', data);
+                    if (data.success) {
+                        // Hide login modal
+                        const loginModal = document.getElementById('loginModal');
+                        if (loginModal) {
+                            loginModal.style.display = 'none';
+                        }
+                        
+                        // Show OTP verification modal instead of redirecting
+                        showOtpModal();
+                    } else {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'error-message';
+                        errorDiv.textContent = data.error || 'Registration failed. Please try again.';
+                        this.insertBefore(errorDiv, this.firstChild);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message';
+                    errorDiv.textContent = 'An unexpected error occurred. Please try again.';
+                    this.insertBefore(errorDiv, this.firstChild);
+                })
+                .finally(() => {
+                    // Reset button state
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
+                });
+            });
+        }
+    });
+
+    // Function to start the resend timer (add this if not already present)
+    function startResendTimer() {
+        const resendLink = document.getElementById('resendOtpLink');
+        const timerDiv = document.getElementById('resendTimer');
+        const timerCount = document.getElementById('timerCount');
+        
+        if (!resendLink || !timerDiv || !timerCount) return;
+        
+        resendLink.style.display = 'none';
+        timerDiv.style.display = 'block';
+        
+        let seconds = 60;
+        timerCount.textContent = seconds;
+        
+        const countdownInterval = setInterval(() => {
+            seconds--;
+            timerCount.textContent = seconds;
+            
+            if (seconds <= 0) {
+                clearInterval(countdownInterval);
+                resendLink.style.display = 'inline';
+                timerDiv.style.display = 'none';
+            }
+        }, 1000);
+    }
+
+    // Function to hide OTP modal
+    function hideOtpModal() {
+        const modal = document.getElementById('otpVerificationModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+    </script>
+
+    <!-- Create OTP modal dynamically if needed -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Remove any existing event listeners if the form was previously initialized
+        const signupForm = document.getElementById('signupForm');
+        if (signupForm) {
+            const clonedForm = signupForm.cloneNode(true);
+            signupForm.parentNode.replaceChild(clonedForm, signupForm);
+            
+            // Add event listener to the fresh form element
+            clonedForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('Signup form submitted - single handler');
+                
+                // Clear any existing error messages
+                const existingErrors = this.querySelectorAll('.error-message');
+                existingErrors.forEach(error => error.remove());
+                
+                // Validate form inputs
+                const username = document.getElementById('signup-username').value;
+                const email = document.getElementById('signup-email').value;
+                const password = document.getElementById('signup-password').value;
+                const confirmPassword = document.getElementById('signup-confirm-password').value;
+                
+                const usernameError = validateUsername(username);
+                const emailError = validateEmail(email);
+                const passwordError = validatePassword(password);
+                const confirmError = password !== confirmPassword ? "Passwords do not match" : "";
+
+                // Show validation errors if any
+                document.getElementById('signup-username-validation').textContent = usernameError;
+                document.getElementById('signup-email-validation').textContent = emailError;
+                document.getElementById('signup-password-validation').textContent = passwordError;
+                document.getElementById('signup-confirm-password-validation').textContent = confirmError;
+
+                if (usernameError || emailError || passwordError || confirmError) {
+                    return;
+                }
+
+                // Create FormData object
+                const formData = new FormData(this);
+                
+                // Show loading state
+                const submitButton = this.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.innerHTML;
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+                // Send AJAX request
+                fetch('register_process.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    // Check if response is JSON
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json();
+                    } else {
+                        // If not JSON, get text and log it
+                        return response.text().then(text => {
+                            console.error('Non-JSON response:', text);
+                            throw new Error('Server returned invalid format');
+                        });
+                    }
+                })
+                .then(data => {
+                    console.log('Register response:', data);
+                    if (data.success) {
+                        // Hide login modal
+                        const loginModal = document.getElementById('loginModal');
+                        if (loginModal) {
+                            loginModal.style.display = 'none';
+                        }
+                        
+                        // Ensure OTP modal exists
+                        createOtpModalIfNeeded();
+                        
+                        // Show OTP verification modal
+                        showOtpModal();
+                    } else {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'error-message';
+                        errorDiv.textContent = data.error || 'Registration failed. Please try again.';
+                        this.insertBefore(errorDiv, this.firstChild);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message';
+                    errorDiv.textContent = 'An unexpected error occurred. Please try again.';
+                    this.insertBefore(errorDiv, this.firstChild);
+                })
+                .finally(() => {
+                    // Reset button state
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
+                });
+            });
+        }
+    });
+
+    // Create OTP modal dynamically if needed
+    function createOtpModalIfNeeded() {
+        let otpModal = document.getElementById('otpVerificationModal');
+        
+        if (!otpModal) {
+            console.log('Creating OTP modal');
+            const modalHTML = `
+                <div id="otpVerificationModal" class="login-modal" style="display: none;">
+                    <div class="login-container">
+                        <span class="close-modal" onclick="hideOtpModal()"><i class="fas fa-times"></i></span>
+                        <h2 style="text-align: center; margin-bottom: 20px;"><i class="fas fa-envelope"></i> Email Verification</h2>
+                        <p class="verification-instructions" style="text-align: center; color: #666; margin-bottom: 20px;">
+                            We've sent a verification code to your email. Please enter it below to complete your registration.
+                        </p>
+                        
+                        <div class="input-group">
+                            <div class="otp-input-container" style="display: flex; justify-content: center; margin-bottom: 15px;">
+                                <input type="text" name="otp" id="otpInput" maxlength="6" required placeholder="Enter 6-digit code" 
+                                       style="font-size: 1.5rem; letter-spacing: 0.5rem; text-align: center; width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px;">
+                            </div>
+                            <div id="otpError" style="color: #dc3545; text-align: center; margin-top: 5px;"></div>
+                        </div>
+                        
+                        <button type="button" onclick="verifyOtp()" class="submit-button" style="width: 100%; margin-top: 10px;">
+                            <span class="button-text">Verify & Complete Registration</span>
+                        </button>
+                        
+                        <div class="resend-code" style="text-align: center; margin-top: 20px;">
+                            <p style="color: #666; font-size: 0.9rem;">Didn't receive the code? 
+                               <a href="#" id="resendOtpLink" onclick="resendOtp(); return false;" style="color: #2196F3; text-decoration: none;">Resend</a>
+                            </p>
+                            <div id="resendTimer" style="display: none; color: #666; font-size: 0.85rem;">
+                                Resend in <span id="timerCount">30</span> seconds
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            otpModal = document.getElementById('otpVerificationModal');
+        }
+        
+        return otpModal;
+    }
+
+    // Function to show OTP modal
+    function showOtpModal() {
+        const otpModal = createOtpModalIfNeeded();
+        if (otpModal) {
+            otpModal.style.display = 'flex';
+            const otpInput = document.getElementById('otpInput');
+            if (otpInput) {
+                otpInput.value = '';
+                otpInput.focus();
+            }
+            startResendTimer();
+        } else {
+            console.error('OTP modal could not be created or found');
+        }
+    }
+
+    // Verify OTP function - Updated to ensure redirection only after successful verification
+    function verifyOtp() {
+        const otpInput = document.getElementById('otpInput');
+        const otp = otpInput.value.trim();
+        const errorDiv = document.getElementById('otpError');
+        
+        // Clear previous error messages
+        errorDiv.textContent = '';
+        
+        if (!otp) {
+            errorDiv.textContent = 'Please enter the verification code';
+            return;
+        }
+        
+        if (otp.length !== 6 || !/^\d+$/.test(otp)) {
+            errorDiv.textContent = 'Please enter a valid 6-digit code';
+            return;
+        }
+        
+        // Show loading state
+        const verifyButton = document.querySelector('#otpVerificationModal .submit-button');
+        const originalButtonText = verifyButton.innerHTML;
+        verifyButton.disabled = true;
+        verifyButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+        
+        // Create FormData object
+        const formData = new FormData();
+        formData.append('otp', otp);
+        
+        // Add debugging information
+        console.log('Sending OTP:', otp);
+        
+        // Send AJAX request to the correct file
+        fetch('verify_otp.php', {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin' // Important: send cookies/session data
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            // First try to parse as JSON
+            return response.text().then(text => {
+                console.log('Raw response:', text);
+                try {
+                    // Try to parse the response as JSON
+                    return JSON.parse(text);
+                } catch (e) {
+                    // If parsing fails, throw an error with the raw text
+                    console.error('Failed to parse JSON:', e);
+                    throw new Error('Server returned invalid response: ' + text);
+                }
+            });
+        })
+        .then(data => {
+            console.log('Parsed response:', data);
+            
+            if (data.success) {
+                // Show success message
+                errorDiv.style.color = '#28a745';
+                errorDiv.textContent = 'Verification successful! Redirecting...';
+                
+                // Redirect after a delay
+                setTimeout(() => {
+                    window.location.href = data.redirect || 'index.php';
+                }, 2000);
+            } else {
+                // Show error message
+                errorDiv.style.color = '#dc3545';
+                errorDiv.textContent = data.error || 'Verification failed. Please try again.';
+                
+                // Re-enable button
+                verifyButton.disabled = false;
+                verifyButton.innerHTML = originalButtonText;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            
+            // Show error message
+            errorDiv.style.color = '#dc3545';
+            errorDiv.textContent = 'An unexpected error occurred. Please try again.';
+            
+            // Re-enable button
+            verifyButton.disabled = false;
+            verifyButton.innerHTML = originalButtonText;
+        });
+    }
+
+    // Function to resend OTP
+    function resendOtp() {
+        const resendLink = document.getElementById('resendOtpLink');
+        const errorDiv = document.getElementById('otpError');
+        
+        // Show loading state
+        const originalLinkText = resendLink.textContent;
+        resendLink.textContent = 'Sending...';
+        resendLink.style.pointerEvents = 'none';
+        
+        // Clear error message
+        if (errorDiv) {
+            errorDiv.textContent = '';
+        }
+        
+        // Add any stored temp user info
+        const formData = new FormData();
+        const tempUserId = sessionStorage.getItem('temp_user_id');
+        const tempEmail = sessionStorage.getItem('temp_email');
+        if (tempUserId) {
+            formData.append('user_id', tempUserId);
+        }
+        if (tempEmail) {
+            formData.append('email', tempEmail);
+        }
+        
+        fetch('resend_otp.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reset and start timer
+                startResendTimer();
+                
+                // Show success message
+                alert('Verification code resent to your email');
+            } else {
+                if (errorDiv) {
+                    errorDiv.textContent = data.error || 'Failed to resend verification code';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            if (errorDiv) {
+                errorDiv.textContent = 'An error occurred. Please try again.';
+            }
+        })
+        .finally(() => {
+            // Reset link state (will be hidden by timer but reset anyway)
+            resendLink.textContent = originalLinkText;
+            resendLink.style.pointerEvents = '';
+        });
+    }
+
+    // Function to start the resend timer - REDUCED to 30 seconds
+    function startResendTimer() {
+        const resendLink = document.getElementById('resendOtpLink');
+        const timerDiv = document.getElementById('resendTimer');
+        const timerCount = document.getElementById('timerCount');
+        
+        if (!resendLink || !timerDiv || !timerCount) return;
+        
+        resendLink.style.display = 'none';
+        timerDiv.style.display = 'block';
+        
+        // Reduced from 60 to 30 seconds
+        let seconds = 30;
+        timerCount.textContent = seconds;
+        
+        const countdownInterval = setInterval(() => {
+            seconds--;
+            timerCount.textContent = seconds;
+            
+            if (seconds <= 0) {
+                clearInterval(countdownInterval);
+                resendLink.style.display = 'inline';
+                timerDiv.style.display = 'none';
+            }
+        }, 1000);
+    }
+
+    // Function to hide OTP modal
+    function hideOtpModal() {
+        const modal = document.getElementById('otpVerificationModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+    </script>
+
+    <!-- Add this code before the closing </body> tag -->
+    <script>
+    // Function to prevent OTP modal from auto-closing
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if verification modal should be shown
+        <?php if (isset($_GET['verify']) && $_GET['verify'] === 'true'): ?>
+            console.log('Verification page loaded, showing OTP modal');
+            
+            // Make sure OTP modal exists
+            createOtpModalIfNeeded();
+            
+            // Add event listeners to prevent accidental closing
+            const otpModal = document.getElementById('otpVerificationModal');
+            if (otpModal) {
+                // Show the modal
+                setTimeout(function() {
+                    otpModal.style.display = 'flex';
+                    
+                    // Focus on the input field
+                    const otpInput = document.getElementById('otpInput');
+                    if (otpInput) {
+                        otpInput.focus();
+                    }
+                    
+                    // Start the resend timer
+                    startResendTimer();
+                    
+                    console.log('OTP modal should now be visible');
+                }, 500); // Small delay to ensure DOM is ready
+                
+                // Prevent the modal from closing when clicking outside
+                otpModal.addEventListener('click', function(e) {
+                    if (e.target === otpModal) {
+                        e.stopPropagation(); // Prevent default closing behavior
+                        return false;
+                    }
+                });
+                
+                // Only allow closing with the X button
+                const closeBtn = otpModal.querySelector('.close-modal');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function(e) {
+                        if (confirm('Are you sure you want to close? You will need to verify your email to complete registration.')) {
+                            hideOtpModal();
+                        }
+                    });
+                }
+            } else {
+                console.error('Could not find or create OTP modal');
+            }
+        <?php else: ?>
+            // If we're not on a verification page, clear the flag
+            sessionStorage.removeItem('otp_modal_shown');
+        <?php endif; ?>
+        
+        // Update the successful verification handler to clear the flag
+        const originalVerifyOtp = window.verifyOtp;
+        window.verifyOtp = function() {
+            const otpInput = document.getElementById('otpInput');
+            const otp = otpInput.value.trim();
+            const errorDiv = document.getElementById('otpError');
+            
+            // Clear previous error messages
+            errorDiv.textContent = '';
+            
+            if (!otp) {
+                errorDiv.textContent = 'Please enter the verification code';
+                return;
+            }
+            
+            if (otp.length !== 6 || !/^\d+$/.test(otp)) {
+                errorDiv.textContent = 'Please enter a valid 6-digit code';
+                return;
+            }
+            
+            // Show loading state
+            const verifyButton = document.querySelector('#otpVerificationModal .submit-button');
+            const originalButtonText = verifyButton.innerHTML;
+            verifyButton.disabled = true;
+            verifyButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+            
+            // Create FormData object
+            const formData = new FormData();
+            formData.append('otp', otp);
+            
+            // Send AJAX request to the correct file
+            fetch('verify_otp.php', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.text().then(text => {
+                    console.log('Raw response:', text);
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        console.error('Failed to parse JSON:', e);
+                        throw new Error('Server returned invalid response: ' + text);
+                    }
+                });
+            })
+            .then(data => {
+                console.log('Parsed response:', data);
+                
+                if (data.success) {
+                    // Clear the modal shown flag on successful verification
+                    sessionStorage.removeItem('otp_modal_shown');
+                    
+                    // Show success message
+                    errorDiv.style.color = '#28a745';
+                    errorDiv.textContent = 'Verification successful! Redirecting...';
+                    
+                    // Redirect after a delay
+                    setTimeout(() => {
+                        window.location.href = data.redirect || 'index.php';
+                    }, 2000);
+                } else {
+                    // Show error message
+                    errorDiv.style.color = '#dc3545';
+                    errorDiv.textContent = data.error || 'Verification failed. Please try again.';
+                    
+                    // Re-enable button
+                    verifyButton.disabled = false;
+                    verifyButton.innerHTML = originalButtonText;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                
+                // Show error message
+                errorDiv.style.color = '#dc3545';
+                errorDiv.textContent = 'An unexpected error occurred. Please try again.';
+                
+                // Re-enable button
+                verifyButton.disabled = false;
+                verifyButton.innerHTML = originalButtonText;
+            });
+        };
+    });
+
+    // Update hideOtpModal function to also clear the flag
+    function hideOtpModal() {
+        const modal = document.getElementById('otpVerificationModal');
+        if (modal) {
+            modal.style.display = 'none';
+            // Clear the flag
+            sessionStorage.removeItem('otp_modal_shown');
+        }
+    }
+    </script>
+
+    <!-- Replace all existing signup/registration form handlers with this single unified version -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Initializing form handlers...');
+        
+        // Clear any existing event listeners by cloning and replacing forms
+        const formIds = ['registerForm', 'signupForm'];
+        
+        formIds.forEach(formId => {
+            const form = document.getElementById(formId);
+            if (form) {
+                console.log(`Found ${formId}, attaching clean event handler`);
+                const clonedForm = form.cloneNode(true);
+                form.parentNode.replaceChild(clonedForm, form);
+                
+                // Add fresh event listener
+                clonedForm.addEventListener('submit', handleRegistrationSubmit);
+            }
+        });
+        
+        // Single unified registration form handler
+        function handleRegistrationSubmit(e) {
+            e.preventDefault();
+            console.log('Registration form submitted');
+            
+            // Clear previous errors
+            const errorContainer = this.querySelector('.error-message');
+            if (errorContainer) {
+                errorContainer.style.display = 'none';
+            }
+            
+            // Get form data
+            const formData = new FormData(this);
+            
+            // Show loading state
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            
+            // Add a flag to indicate this is coming from the unified handler
+            formData.append('unified_handler', 'true');
+            
+            // Log the actual data being sent
+            console.log('Form ID:', this.id);
+            
+            // Send AJAX request
+            fetch('register_process.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                } else {
+                    // If not JSON, get text and log it
+                    return response.text().then(text => {
+                        console.error('Non-JSON response:', text);
+                        throw new Error('Server returned invalid format');
+                    });
+                }
+            })
+            .then(data => {
+                console.log('Register response:', data);
+                if (data.success) {
+                    console.log('Registration successful, preparing for verification');
+                    
+                    // Hide login/registration modal if it exists
+                    const loginModal = document.getElementById('loginModal');
+                    if (loginModal) {
+                        loginModal.style.display = 'none';
+                    }
+                    
+                    // We'll let the redirect in the response handle showing the OTP modal
+                    // This avoids duplicate modal creation issues
+                    window.location.href = data.redirect;
+                } else {
+                    // Show error message
+                    if (errorContainer) {
+                        errorContainer.textContent = data.error || 'Registration failed. Please try again.';
+                        errorContainer.style.display = 'block';
+                    } else {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'error-message';
+                        errorDiv.textContent = data.error || 'Registration failed. Please try again.';
+                        this.insertBefore(errorDiv, this.firstChild);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const errorMessage = 'An unexpected error occurred. Please try again.';
+                
+                if (errorContainer) {
+                    errorContainer.textContent = errorMessage;
+                    errorContainer.style.display = 'block';
+                } else {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-message';
+                    errorDiv.textContent = errorMessage;
+                    this.insertBefore(errorDiv, this.firstChild);
+                }
+            })
+            .finally(() => {
+                // Reset button state
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
+            });
+        }
+    });
+    </script>
+
+    <!-- Mobile menu functionality -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileMenuClose = document.getElementById('mobileMenuClose');
+        const navLinks = document.getElementById('navLinks');
+        
+        if (mobileMenuToggle && mobileMenuClose && navLinks) {
+            mobileMenuToggle.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent event bubbling
+                navLinks.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+            
+            mobileMenuClose.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent event bubbling
+                navLinks.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+            
+            // Close menu when clicking outside
+            document.addEventListener('click', function(e) {
+                if (navLinks.classList.contains('active') && 
+                    !navLinks.contains(e.target) && 
+                    !mobileMenuToggle.contains(e.target)) {
+                    navLinks.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+    });
+    </script>
 </body>
 </html>

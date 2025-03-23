@@ -32,7 +32,8 @@ try {
             price,
             total_slots,
             available_slots,
-            charger_types
+            charger_types,
+            image
             FROM charging_stations 
             WHERE station_id = ?";
             
@@ -98,8 +99,14 @@ try {
                 <?php echo htmlspecialchars($error_message); ?>
             </div>
         <?php else: ?>
-            <div class="station-details">
-                <h1><?php echo htmlspecialchars($station['name']); ?></h1>
+            <h1><?php echo htmlspecialchars($station['name']); ?></h1>
+            
+            <div class="station-layout">
+                <?php if (!empty($station['image'])): ?>
+                    <img src="<?php echo htmlspecialchars($station['image']); ?>" alt="<?php echo htmlspecialchars($station['name']); ?>" class="station-image">
+                <?php else: ?>
+                    <img src="images/default_station.jpg" alt="Default station image" class="station-image">
+                <?php endif; ?>
                 
                 <div class="station-info">
                     <p><strong>Status:</strong> <?php echo htmlspecialchars($station['status']); ?></p>
@@ -127,20 +134,20 @@ try {
                         </div>
                     <?php endif; ?>
                 </div>
-
-                <?php if (isset($_SESSION['user_id'])): ?>
-                    <div class="booking-section">
-                        <h2>Book a Charging Slot</h2>
-                        <a href="book_station.php?station_id=<?php echo $station['station_id']; ?>" class="book-button">
-                            Book Now
-                        </a>
-                    </div>
-                <?php else: ?>
-                    <div class="login-prompt">
-                        <p>Please <a href="index.php#loginForm" onclick="showLoginModal(); return false;">login</a> to book a charging slot.</p>
-                    </div>
-                <?php endif; ?>
             </div>
+
+            <?php if (isset($_SESSION['user_id'])): ?>
+                <div class="booking-section">
+                    <h2>Book a Charging Slot</h2>
+                    <a href="book_station.php?station_id=<?php echo $station['station_id']; ?>" class="book-button">
+                        Book Now
+                    </a>
+                </div>
+            <?php else: ?>
+                <div class="login-prompt">
+                    <p>Please <a href="index.php#loginForm" onclick="showLoginModal(); return false;">login</a> to book a charging slot.</p>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
 
@@ -148,24 +155,34 @@ try {
         .container {
             max-width: 800px;
             margin: 40px auto;
-            padding: 20px;
-        }
-
-        .station-details {
+            padding: 30px;
             background: white;
             border-radius: 12px;
-            padding: 30px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
-        .station-details h1 {
-            color: #2196F3;
-            margin-bottom: 20px;
-            font-size: 2em;
+        .station-layout {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .station-image {
+            width: 40%;
+            height: auto;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .station-info {
-            margin-bottom: 30px;
+            flex: 1;
+        }
+
+        h1 {
+            color: #2196F3;
+            margin-bottom: 20px;
+            font-size: 2em;
         }
 
         .station-info p {
@@ -298,14 +315,14 @@ try {
             box-shadow: 0 4px 15px rgba(26, 115, 232, 0.2);
         }
 
-        @media (max-width: 768px) {
-            .navigation-buttons {
+        @media (max-width: 650px) {
+            .station-layout {
                 flex-direction: column;
             }
-
-            .nav-button {
-                text-align: center;
-                justify-content: center;
+            
+            .station-image {
+                width: 100%;
+                margin-bottom: 20px;
             }
         }
     </style>

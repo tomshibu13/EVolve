@@ -288,7 +288,11 @@ try {
                 <div class="booking-grid">
                     <?php foreach ($bookings as $booking): ?>
                         <div class="booking-card">
-                           
+                            <?php if (!empty($booking['station_image'])): ?>
+                                <img src="<?php echo htmlspecialchars($booking['station_image']); ?>" alt="<?php echo htmlspecialchars($booking['station_name']); ?>" class="booking-image">
+                            <?php else: ?>
+                                <img src="images/default-station.jpg" alt="Default station image" class="booking-image">
+                            <?php endif; ?>
                             
                             <div class="booking-content">
                                 <h2 class="station-name"><?php echo htmlspecialchars($booking['station_name']); ?></h2>

@@ -67,20 +67,51 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $total_slots = intval($_POST['total_slots']);
         $price = floatval($_POST['price']);
         $owner_name = $conn->real_escape_string($_POST['owner_name']);
+        
+        // Handle image upload
+        $image_path = null;
+        if(isset($_FILES['station_image']) && $_FILES['station_image']['error'] == 0) {
+            $allowed_types = ['image/jpeg', 'image/png', 'image/jpg'];
+            $max_size = 5 * 1024 * 1024; // 5MB
+            
+            if(!in_array($_FILES['station_image']['type'], $allowed_types)) {
+                throw new Exception("Only JPG, JPEG and PNG files are allowed.");
+            }
+            
+            if($_FILES['station_image']['size'] > $max_size) {
+                throw new Exception("File size must be less than 5MB.");
+            }
+            
+            $upload_dir = 'uploads/station_images/';
+            
+            // Create directory if it doesn't exist
+            if(!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0755, true);
+            }
+            
+            $filename = time() . '_' . basename($_FILES['station_image']['name']);
+            $target_file = $upload_dir . $filename;
+            
+            if(move_uploaded_file($_FILES['station_image']['tmp_name'], $target_file)) {
+                $image_path = $target_file;
+            } else {
+                throw new Exception("Failed to upload image.");
+            }
+        }
 
         $point = "POINT($longitude $latitude)";
 
         $stmt = $conn->prepare("
             INSERT INTO charging_stations 
-            (name, location, address, charger_types, total_slots, available_slots, owner_name, price) 
-            VALUES (?, ST_GeomFromText(?), ?, ?, ?, ?, ?, ?)
+            (name, location, address, charger_types, total_slots, available_slots, owner_name, price, image) 
+            VALUES (?, ST_GeomFromText(?), ?, ?, ?, ?, ?, ?, ?)
         ");
 
         if (!$stmt) {
             throw new Exception("Prepare failed: " . $conn->error);
         }
         
-        $stmt->bind_param("ssssiisd", 
+        $stmt->bind_param("ssssiisds", 
             $name, 
             $point, 
             $address, 
@@ -88,7 +119,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $total_slots, 
             $total_slots,
             $owner_name,
-            $price
+            $price,
+            $image_path
         );
 
         if (!$stmt->execute()) {
@@ -100,7 +132,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } catch (Exception $e) {
         $error_message = "Error: " . $e->getMessage();
     } finally {
-        if (isset($stmt)) $stmt->close();
+        if (isset($stmt) && $stmt !== false) $stmt->close();
         if (isset($conn)) $conn->close();
     }
 }
@@ -446,7 +478,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <?php endif; ?>
 
                 <div class="form-container">
-                    <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
+                    <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" enctype="multipart/form-data">
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
@@ -459,6 +491,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     <label for="owner_name" class="form-label">Owner Name</label>
                                     <input type="text" class="form-control" id="owner_name" name="owner_name" value="<?php echo htmlspecialchars($owner_name); ?>" readonly>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="station_image" class="form-label">Station Image</label>
+                            <input type="file" class="form-control" id="station_image" name="station_image" accept="image/jpeg,image/png,image/jpg">
+                            <div class="form-text">Upload an image of your charging station (JPG, JPEG, PNG, max 5MB)</div>
+                            <div id="image-preview" class="mt-2" style="display: none;">
+                                <img src="" id="preview-img" class="img-thumbnail" style="max-height: 200px;">
                             </div>
                         </div>
 
@@ -736,6 +777,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Toggle sidebar on mobile
         document.getElementById('sidebarToggle').addEventListener('click', function() {
             document.getElementById('sidebar').classList.toggle('active');
+        });
+        
+        // Image preview functionality
+        document.getElementById('station_image').addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('preview-img').src = e.target.result;
+                    document.getElementById('image-preview').style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById('image-preview').style.display = 'none';
+            }
         });
     </script>
 </body>
