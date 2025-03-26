@@ -487,6 +487,14 @@ try {
                     <i class='bx bx-money'></i>
                     <span>Payment Analytics</span>
                 </a>
+                <a href="view-enquiries.php" class="sidebar-link">
+                    <i class='bx bx-message-detail'></i>
+                    <span>Enquiries</span>
+                </a>
+                <a href="view-reviews.php" class="sidebar-link">
+                    <i class='bx bx-star'></i>
+                    <span>Reviews</span>
+                </a>
                 <a href="station_owner/so_profile.php" class="sidebar-link">
                     <i class='bx bx-user'></i>
                     <span>Profile</span>

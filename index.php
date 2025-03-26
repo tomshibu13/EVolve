@@ -644,127 +644,164 @@ function isApprovedStationOwner($userId) {
 
         /* Contact Section Styles */
         .contact-section {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 40px;
-            background: #f8f9fa;
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(to right, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+            padding: 35px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            margin-top: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contact-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 100%;
+            background: #3498db;
+            border-radius: 4px;
         }
 
         .contact-section h2 {
-            text-align: center;
             color: #2c3e50;
-            margin-bottom: 30px;
-            font-size: 2rem;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 12px;
         }
 
-        .contact-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-
-        .contact-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 25px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .email-button {
+        .contact-section h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 3px;
             background: #3498db;
-            color: white;
         }
 
-        .email-button:hover {
-            background: #2980b9;
-            transform: translateY(-2px);
-        }
-
-        /* Support Form Styles */
-        .support-form {
-            display: grid;
-            gap: 20px;
-        }
-
-        .form-group {
+        .contact-form .form-group {
+            margin-bottom: 20px;
             position: relative;
         }
 
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1rem;
+        .contact-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 0.95rem;
             transition: all 0.3s ease;
-            background: white;
         }
 
-        .form-group input:focus,
-        .form-group textarea:focus {
+        .contact-form input,
+        .contact-form textarea,
+        .contact-form select {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fff;
+            font-size: 1rem;
+            color: #333;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+        }
+
+        .contact-form input:focus,
+        .contact-form textarea:focus,
+        .contact-form select:focus {
             border-color: #3498db;
-            outline: none;
             box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+            outline: none;
         }
 
-        .form-group textarea {
+        .contact-form textarea {
             resize: vertical;
             min-height: 120px;
         }
 
+        .form-actions {
+            margin-top: 30px;
+        }
+
         .submit-button {
-            position: relative;
-            padding: 10px 20px;
-            background-color: #4CAF50;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 28px;
+            background: #3498db;
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.25);
         }
 
-        .submit-button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
+        .submit-button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.3);
         }
 
-        .spinner {
+        .submit-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+        }
+
+        .submit-button i {
+            font-size: 1.1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .submit-button:hover i {
+            transform: translateX(4px);
+        }
+
+        .success-message {
             display: none;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #ffffff;
-            border-top: 3px solid transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
+            background-color: #e8f7ed;
+            color: #1d6f42;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-weight: 500;
+            border-left: 4px solid #4CAF50;
+            animation: slideIn 0.5s ease-out;
         }
 
-        @keyframes spin {
-            0% { transform: translateY(-50%) rotate(0deg); }
-            100% { transform: translateY(-50%) rotate(360deg); }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .button-text {
-            transition: all 0.3s ease;
+        /* Input placeholder styling */
+        .contact-form input::placeholder,
+        .contact-form textarea::placeholder {
+            color: #a0aec0;
+            font-size: 0.95rem;
         }
 
-        .loading .button-text {
-            padding-right: 30px;
-        }
-
-        .loading .spinner {
-            display: block;
+        /* Show icon in select field */
+        .contact-form select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233498db' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 40px;
         }
 
         /* Responsive Design */
@@ -1675,11 +1712,19 @@ function isApprovedStationOwner($userId) {
                         // Count unread notifications
                         $notifStmt = $pdo->prepare("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0");
                         $notifStmt->execute([$_SESSION['user_id']]);
-                        $unreadCount = $notifStmt->fetchColumn();
+                        $unreadNotifications = $notifStmt->fetchColumn();
                         
-                        // Display badge if there are unread notifications
-                        if ($unreadCount > 0) {
-                            echo '<span class="notification-badge">' . $unreadCount . '</span>';
+                        // Count unread enquiry responses
+                        $responseStmt = $pdo->prepare("SELECT COUNT(*) FROM enquiries WHERE user_id = ? AND status = 'responded' AND response IS NOT NULL");
+                        $responseStmt->execute([$_SESSION['user_id']]);
+                        $unreadResponses = $responseStmt->fetchColumn();
+                        
+                        // Calculate total unread count
+                        $totalUnread = $unreadNotifications + $unreadResponses;
+                        
+                        // Display badge if there are unread items
+                        if ($totalUnread > 0) {
+                            echo '<span class="notification-badge">' . $totalUnread . '</span>';
                         }
                     }
                     ?>
@@ -2089,14 +2134,50 @@ function isApprovedStationOwner($userId) {
 
         <div class="contact-section">
             <h2>Get in Touch</h2>
-            <div class="contact-buttons">
-                <a href="mailto:evolve1829@gmail.com" class="contact-button email-button">
-                    <i class="fas fa-envelope"></i>
-                    Email Support
-                </a>
-            </div>
-
-            
+            <form id="enquiryForm" class="contact-form">
+                <?php if (!isset($_SESSION['user_id'])): ?>
+                <div class="form-group">
+                    <label for="enquiryName">Your Name</label>
+                    <input type="text" id="enquiryName" name="name" required placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label for="enquiryEmail">Email Address</label>
+                    <input type="email" id="enquiryEmail" name="email" required placeholder="Enter your email">
+                </div>
+                <?php endif; ?>
+                <div class="form-group">
+                    <label for="stationSelect">Select Station</label>
+                    <select id="stationSelect" name="station_id" required>
+                        <option value="">-- Select a station --</option>
+                        <?php
+                        // Fetch all active stations
+                        $stationQuery = $pdo->prepare("SELECT station_id, name FROM charging_stations WHERE status = 'active'");
+                        $stationQuery->execute();
+                        $stationList = $stationQuery->fetchAll(PDO::FETCH_ASSOC);
+                        
+                        foreach ($stationList as $station) {
+                            echo '<option value="' . $station['station_id'] . '">' . htmlspecialchars($station['name']) . '</option>';
+                        }
+                        ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="enquirySubject">Subject</label>
+                    <input type="text" id="enquirySubject" name="subject" required placeholder="Enter subject">
+                </div>
+                <div class="form-group">
+                    <label for="enquiryMessage">Message</label>
+                    <textarea id="enquiryMessage" name="message" rows="4" required placeholder="Type your message here..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="submit-button">
+                        <i class="fas fa-paper-plane"></i> Send Enquiry
+                    </button>
+                </div>
+                <div class="success-message" id="enquirySuccess">
+                    Your enquiry has been sent successfully! We'll get back to you soon.
+                </div>
+            </form>
         </div>
     </div>
 
@@ -5892,6 +5973,53 @@ function isApprovedStationOwner($userId) {
                 }
             });
         }
+    });
+    </script>
+
+    <!-- Handle enquiry form submission -->
+    <script>
+    document.getElementById('enquiryForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Get form data
+        const formData = new FormData(this);
+        
+        // Show loading state
+        const submitButton = this.querySelector('button[type="submit"]');
+        const originalButtonText = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        
+        // Send to backend
+        fetch('send_enquiry.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                document.getElementById('enquirySuccess').style.display = 'block';
+                // Reset form
+                this.reset();
+                
+                // Hide success message after 5 seconds
+                setTimeout(function() {
+                    document.getElementById('enquirySuccess').style.display = 'none';
+                }, 5000);
+            } else {
+                alert(data.error || 'Failed to send enquiry. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        })
+        .finally(() => {
+            // Reset button state
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
+        });
     });
     </script>
 </body>

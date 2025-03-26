@@ -874,3 +874,31 @@ POST data: Array
 )
 
 Preventing duplicate registration attempt (5s since last attempt)
+=== Registration attempt: 2025-03-25 05:54:04 ===
+POST data: Array
+(
+    [username] => Sulthana
+    [email] => sulu13198@gmail.com
+    [password] => Sulthana@123
+    [confirm_password] => Sulthana@123
+    [unified_handler] => true
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to sulu13198@gmail.com
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-03-25 05:54:12 ===
+POST data: Array
+(
+    [username] => Sulthana
+    [email] => sulu13198@gmail.com
+    [password] => Sulthana@123
+    [confirm_password] => Sulthana@123
+)
+
+Preventing duplicate registration attempt (8s since last attempt)

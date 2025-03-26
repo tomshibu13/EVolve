@@ -236,3 +236,53 @@ SQL: INSERT INTO tbl_users (username, email, passwordhash, name, profile_picture
 Params: ["milan07","milanmathew6656@gmail.com","PASSWORD_HASH_HIDDEN","milan07",null]
 New user ID: 111
 User registered successfully with ID: 111
+=== OTP Verification attempt: 2025-03-25 05:55:13 ===
+POST data: Array
+(
+    [otp] => 334912
+)
+
+SESSION data: Array
+(
+    [registration_timestamp] => 1742878444
+    [pending_registration] => Array
+        (
+            [email] => sulu13198@gmail.com
+            [passwordhash] => $2y$10$iueTfXNL5ju6CJDig9kISunn7PnmsL63D8YUHT9YVCmEvi3xZuuJq
+            [username] => Sulthana
+            [name] => Sulthana
+            [profile_picture] => 
+            [verification_token] => 334912
+            [token_expiry] => 2025-03-25 06:04:04
+        )
+
+    [pending_verification] => 1
+    [verify_email] => sulu13198@gmail.com
+)
+
+Submitted OTP: 334912
+Stored OTP: 334912
+OTP Expiry: 2025-03-25 06:04:04
+OTP verification successful, proceeding with registration
+SQL: INSERT INTO tbl_users (username, email, passwordhash, name, profile_picture, status, created_at) 
+                           VALUES (?, ?, ?, ?, ?, 'active', NOW())
+Params: ["Sulthana","sulu13198@gmail.com","PASSWORD_HASH_HIDDEN","Sulthana",null]
+New user ID: 113
+User registered successfully with ID: 113
+=== OTP Verification attempt: 2025-03-25 05:55:13 ===
+POST data: Array
+(
+    [otp] => 334912
+)
+
+SESSION data: Array
+(
+    [registration_timestamp] => 1742878444
+    [user_id] => 113
+    [username] => Sulthana
+    [email] => sulu13198@gmail.com
+    [name] => Sulthana
+)
+
+Missing required data
+ERROR: Missing required verification data

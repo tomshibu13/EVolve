@@ -81,6 +81,9 @@ try {
         // Format for display
         $placeholders = implode(',', array_fill(0, count($stationIds), '?'));
         
+        // Initialize empty arrays for popular time slots in case the query returns no results
+        $popularTimeSlots = [];
+        
         // Fetch revenue data
         $stmt = $pdo->prepare("
             SELECT 
@@ -205,7 +208,7 @@ try {
         // Get most popular time slots
         $stmt = $pdo->prepare("
             SELECT 
-                DATE_FORMAT(b.booking_date, '%H:00') as hour_slot,
+                IFNULL(DATE_FORMAT(b.booking_date, '%H:00'), 'No Data') as hour_slot,
                 COUNT(b.booking_id) as booking_count
             FROM bookings b
             JOIN charging_stations s ON b.station_id = s.station_id
@@ -218,6 +221,49 @@ try {
         
         $stmt->execute([$_SESSION['owner_name'], $startDate, $endDate]);
         $popularTimeSlots = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // If no popular time slots were found, provide default data to prevent JavaScript errors
+        if (empty($popularTimeSlots)) {
+            $popularTimeSlots = [
+                ['hour_slot' => 'No Data', 'booking_count' => 0]
+            ];
+        }
+
+        // Initialize station totals
+        $stationTotals = [];
+
+        // Calculate totals from booking data
+        foreach ($stations as $station) {
+            $stationId = $station['station_id'];
+            $stationTotals[$stationId] = [
+                'name' => $station['name'],
+                'bookings' => 0,
+                'revenue' => 0
+            ];
+        }
+
+        // Calculate totals from booking data
+        foreach ($bookingsData as $date => $stationBookings) {
+            foreach ($stationBookings as $stationId => $count) {
+                if (isset($stationTotals[$stationId])) {
+                    $stationTotals[$stationId]['bookings'] += $count;
+                }
+            }
+        }
+
+        // Calculate totals from revenue data
+        foreach ($revenueData as $date => $stationRevenues) {
+            foreach ($stationRevenues as $stationId => $revenue) {
+                if (isset($stationTotals[$stationId])) {
+                    $stationTotals[$stationId]['revenue'] += $revenue;
+                }
+            }
+        }
+
+        // Sort by revenue (highest first)
+        usort($stationTotals, function($a, $b) {
+            return $b['revenue'] <=> $a['revenue'];
+        });
     }
 } catch (PDOException $e) {
     error_log("Database error: " . $e->getMessage());
@@ -227,7 +273,6 @@ try {
     $error = "An error occurred while loading the reports. Please try again later.";
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -239,15 +284,21 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary-color: #4e73df;
-            --secondary-color: #1cc88a;
+            --primary-color: #4361ee;
+            --secondary-color: #3bc14a;
             --info-color: #36b9cc;
             --warning-color: #f6c23e;
+            --danger-color: #e74a3b;
             --dark-color: #5a5c69;
+            --light-color: #f8f9fc;
+            --card-border-radius: 12px;
+            --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+            --transition-speed: 0.3s;
         }
         
         body {
             background-color: #f8f9fc;
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         }
         
         /* Page Container */
@@ -259,10 +310,12 @@ try {
         /* Sidebar Styles */
         .sidebar-container {
             width: 250px;
-            background: linear-gradient(180deg, #4e73df 0%, #224abe 100%);
+            background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
             position: fixed;
             height: 100vh;
             z-index: 1000;
+            transition: transform var(--transition-speed) ease;
+            box-shadow: var(--box-shadow);
         }
 
         .sidebar-header {
@@ -296,40 +349,33 @@ try {
             display: flex;
             align-items: center;
             gap: 10px;
-            transition: all 0.3s ease;
+            transition: all var(--transition-speed) ease;
             text-decoration: none;
             position: relative;
+            border-left: 4px solid transparent;
         }
 
         .sidebar-link:hover, .sidebar-link.active {
             color: white;
             background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid white;
             text-decoration: none;
-        }
-
-        .sidebar-link.active::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 4px;
-            background: white;
         }
         
         /* Main Content */
         .main-content {
             flex: 1;
             margin-left: 250px;
-            background: #f8f9fc;
+            background: var(--light-color);
             min-height: 100vh;
+            transition: margin-left var(--transition-speed) ease;
         }
         
         /* Header */
         .main-header {
             background: white;
             padding: 1rem 2rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -368,37 +414,48 @@ try {
 
         #sidebarToggle {
             padding: 8px;
-            border-radius: 8px;
-            color: #4e73df;
-            transition: all 0.3s ease;
+            border-radius: 50%;
+            color: var(--primary-color);
+            transition: all var(--transition-speed) ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #sidebarToggle:hover {
-            background-color: #f8f9fa;
+            background-color: #f0f4ff;
         }
         
         /* Report Cards */
         .report-card {
             background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--box-shadow);
             margin-bottom: 24px;
             border: none;
+            transition: transform var(--transition-speed) ease;
+            overflow: hidden;
+        }
+        
+        .report-card:hover {
+            transform: translateY(-5px);
         }
         
         .report-card .card-header {
-            background-color: #f8f9fc;
+            background-color: white;
             border-bottom: 1px solid #e3e6f0;
-            padding: 1rem 1.25rem;
+            padding: 1.25rem 1.5rem;
             font-weight: 600;
-            color: #4e73df;
+            color: var(--primary-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
         .report-card .card-body {
-            padding: 1.25rem;
+            padding: 1.5rem;
         }
         
         .chart-container {
@@ -409,58 +466,96 @@ try {
         
         .filter-container {
             background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
-            padding: 15px;
+            border-radius: var(--card-border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 20px;
             margin-bottom: 24px;
         }
         
         .period-btn {
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
+            padding: 0.5rem 1.2rem;
+            border-radius: 30px;
+            font-weight: 500;
+            transition: all var(--transition-speed) ease;
         }
         
         .period-btn.active {
-            background-color: #4e73df;
+            background-color: var(--primary-color);
             color: white;
+            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
         }
         
         .stat-card {
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+            border-radius: var(--card-border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
             height: 100%;
             border-left: 4px solid;
+            position: relative;
+            overflow: hidden;
+            transition: transform var(--transition-speed) ease;
         }
         
-        .stat-primary { border-left-color: #4e73df; }
-        .stat-success { border-left-color: #1cc88a; }
-        .stat-info { border-left-color: #36b9cc; }
-        .stat-warning { border-left-color: #f6c23e; }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-primary { border-left-color: var(--primary-color); }
+        .stat-success { border-left-color: var(--secondary-color); }
+        .stat-info { border-left-color: var(--info-color); }
+        .stat-warning { border-left-color: var(--warning-color); }
         
         .stat-card h3 {
             font-size: 1.75rem;
             font-weight: 700;
             margin-bottom: 5px;
+            color: #333;
         }
         
         .stat-card p {
             font-size: 0.85rem;
             color: #6c757d;
             margin-bottom: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
         }
         
         .stat-icon {
-            font-size: 2rem;
-            opacity: 0.3;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 3rem;
+            opacity: 0.1;
+            color: #000;
         }
         
         /* Table Styles */
+        .table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+        }
+        
         .table thead th {
             background-color: #f8f9fc;
-            color: #6e707e;
+            color: #4e73df;
             font-weight: 600;
-            border-bottom: 2px solid #e3e6f0;
+            border: none;
+            padding: 1rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .table tbody td {
+            padding: 1rem;
+            border-top: 1px solid #f1f1f1;
+            vertical-align: middle;
+        }
+        
+        .table-hover tbody tr {
+            transition: background-color var(--transition-speed) ease;
         }
         
         .table-hover tbody tr:hover {
@@ -468,10 +563,10 @@ try {
         }
         
         /* Enhanced Responsive Design */
-        @media (max-width: 768px) {
+        @media (max-width: 992px) {
             .sidebar-container {
                 transform: translateX(-100%);
-                transition: transform 0.3s ease;
+                transition: transform var(--transition-speed) ease;
                 width: 250px;
                 position: fixed;
                 z-index: 1010;
@@ -505,9 +600,27 @@ try {
             .sidebar-overlay.active {
                 display: block;
             }
-            
+        }
+        
+        @media (max-width: 768px) {
             .chart-container {
                 height: 300px;
+            }
+            
+            .report-card .card-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
+            
+            .btn-group {
+                display: flex;
+                width: 100%;
+            }
+            
+            .period-btn {
+                flex: 1;
+                text-align: center;
             }
         }
         
@@ -524,10 +637,88 @@ try {
             .stat-card h3 {
                 font-size: 1.5rem;
             }
+            
+            .main-header {
+                padding: 0.75rem 1rem;
+            }
+        }
+        
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(67, 97, 238, 0.2);
+            border-radius: 50%;
+            border-top: 5px solid var(--primary-color);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Export Button */
+        #exportReportBtn {
+            background: var(--primary-color);
+            border: none;
+            border-radius: 30px;
+            padding: 0.75rem 1.5rem;
+            color: white;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all var(--transition-speed) ease;
+            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
+        }
+        
+        #exportReportBtn:hover {
+            background: #2e43b8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(67, 97, 238, 0.4);
+        }
+        
+        /* Empty State Style */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #e3e6f0;
+        }
+        
+        .empty-state h5 {
+            font-weight: 600;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <p class="mt-3">Loading reports...</p>
+    </div>
+
     <div class="page-container">
         <!-- Sidebar Container -->
         <div class="sidebar-container" id="sidebar">
@@ -555,6 +746,14 @@ try {
                     <i class='bx bx-money'></i>
                     <span>Payment Analytics</span>
                 </a>
+                <a href="view-enquiries.php" class="sidebar-link">
+                    <i class='bx bx-message-detail'></i>
+                    <span>Enquiries</span>
+                </a>
+                <a href="view-reviews.php" class="sidebar-link">
+                    <i class='bx bx-star'></i>
+                    <span>Reviews</span>
+                </a>
                 <a href="station_owner/so_profile.php" class="sidebar-link">
                     <i class='bx bx-user'></i>
                     <span>Profile</span>
@@ -578,8 +777,8 @@ try {
             <!-- Header -->
             <header class="main-header">
                 <div class="header-left">
-                    <button class="btn btn-link" id="sidebarToggle">
-                        <i class='bx bx-menu'></i>
+                    <button class="btn" id="sidebarToggle">
+                        <i class='bx bx-menu fs-4'></i>
                     </button>
                     <div class="user-menu">
                         <div class="user-info">
@@ -590,7 +789,7 @@ try {
                 </div>
                 
                 <div class="dropdown">
-                    <button class="btn btn-link" type="button" id="userMenuButton" data-bs-toggle="dropdown">
+                    <button class="btn" type="button" id="userMenuButton" data-bs-toggle="dropdown">
                         <i class='bx bx-user-circle fs-4'></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
@@ -606,7 +805,7 @@ try {
             <div class="container-fluid py-4">
                 <div class="d-sm-flex align-items-center justify-content-between mb-4">
                     <h1 class="h3 mb-0 text-gray-800"><i class='bx bx-line-chart'></i> Reports & Analytics</h1>
-                    <button class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" id="exportReportBtn">
+                    <button class="d-none d-sm-inline-block btn" id="exportReportBtn">
                         <i class='bx bx-download'></i> Export Report
                     </button>
                 </div>
@@ -637,7 +836,7 @@ try {
 
                 <!-- Stats Overview -->
                 <div class="row mb-4">
-                    <div class="col-md-3">
+                    <div class="col-md-3 mb-4">
                         <div class="stat-card stat-primary bg-white">
                             <div class="d-flex justify-content-between">
                                 <div>
@@ -658,7 +857,7 @@ try {
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 mb-4">
                         <div class="stat-card stat-success bg-white">
                             <div class="d-flex justify-content-between">
                                 <div>
@@ -679,7 +878,7 @@ try {
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 mb-4">
                         <div class="stat-card stat-info bg-white">
                             <div class="d-flex justify-content-between">
                                 <div>
@@ -700,7 +899,7 @@ try {
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3 mb-4">
                         <div class="stat-card stat-warning bg-white">
                             <div class="d-flex justify-content-between">
                                 <div>
@@ -716,78 +915,117 @@ try {
                         </div>
                     </div>
                 </div>
-
+                
                 <!-- Revenue Chart -->
                 <div class="row">
-                    <div class="col-lg-8">
+                    <div class="col-lg-8 mb-4">
                         <div class="report-card">
                             <div class="card-header">
                                 <h5 class="m-0">Revenue Over Time</h5>
                                 <div class="btn-group">
                                     <button class="btn btn-sm btn-outline-secondary" id="viewAllRevenue">All</button>
                                     <?php 
-                                    foreach ($stations as $index => $station): 
-                                        $colorClass = ($index % 4 == 0) ? 'primary' : 
-                                                    (($index % 4 == 1) ? 'success' : 
-                                                    (($index % 4 == 2) ? 'info' : 'warning'));
+                                    if (!empty($stations)) {
+                                        foreach ($stations as $index => $station): 
+                                            if (isset($station['station_id']) && isset($station['name'])) {
+                                                $colorClass = ($index % 4 == 0) ? 'primary' : 
+                                                            (($index % 4 == 1) ? 'success' : 
+                                                            (($index % 4 == 2) ? 'info' : 'warning'));
+                                                $displayName = !empty($station['name']) ? substr($station['name'], 0, 10) : 'Station';
                                     ?>
                                         <button class="btn btn-sm btn-outline-<?php echo $colorClass; ?>" 
                                                 data-station-id="<?php echo $station['station_id']; ?>">
-                                            <?php echo htmlspecialchars(substr($station['name'], 0, 10)); ?>
+                                            <?php echo htmlspecialchars($displayName); ?>
                                         </button>
-                                    <?php endforeach; ?>
+                                    <?php 
+                                            }
+                                        endforeach; 
+                                    }
+                                    ?>
                                 </div>
                             </div>
                             <div class="card-body">
+                                <?php if (empty($revenueData)): ?>
+                                <div class="empty-state">
+                                    <i class='bx bx-bar-chart-alt-2'></i>
+                                    <h5>No Revenue Data Available</h5>
+                                    <p>There is no revenue data for the selected time period.</p>
+                                </div>
+                                <?php else: ?>
                                 <div class="chart-container">
                                     <canvas id="revenueChart"></canvas>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4">
+                    <div class="col-lg-4 mb-4">
                         <div class="report-card">
                             <div class="card-header">
                                 <h5 class="m-0">Popular Time Slots</h5>
                             </div>
                             <div class="card-body">
+                                <?php if (count($popularTimeSlots) <= 1 && $popularTimeSlots[0]['hour_slot'] == 'No Data'): ?>
+                                <div class="empty-state">
+                                    <i class='bx bx-time'></i>
+                                    <h5>No Time Slot Data</h5>
+                                    <p>There is no booking time data for the selected period.</p>
+                                </div>
+                                <?php else: ?>
                                 <div class="chart-container">
                                     <canvas id="timeSlotChart"></canvas>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="row mt-4">
-                    <div class="col-lg-6">
+                <div class="row">
+                    <div class="col-lg-6 mb-4">
                         <div class="report-card">
                             <div class="card-header">
                                 <h5 class="m-0">Bookings by Station</h5>
                             </div>
                             <div class="card-body">
+                                <?php if (empty($bookingsData)): ?>
+                                <div class="empty-state">
+                                    <i class='bx bx-calendar'></i>
+                                    <h5>No Booking Data Available</h5>
+                                    <p>There are no bookings for the selected time period.</p>
+                                </div>
+                                <?php else: ?>
                                 <div class="chart-container">
                                     <canvas id="bookingsChart"></canvas>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-6">
+                    <div class="col-lg-6 mb-4">
                         <div class="report-card">
                             <div class="card-header">
                                 <h5 class="m-0">Usage Hours by Station</h5>
                             </div>
                             <div class="card-body">
+                                <?php if (empty($usageData)): ?>
+                                <div class="empty-state">
+                                    <i class='bx bx-time-five'></i>
+                                    <h5>No Usage Data Available</h5>
+                                    <p>There is no usage data for the selected time period.</p>
+                                </div>
+                                <?php else: ?>
                                 <div class="chart-container">
                                     <canvas id="usageChart"></canvas>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="row mt-4">
-                    <div class="col-lg-6">
+                <div class="row">
+                    <div class="col-lg-6 mb-4">
                         <div class="report-card">
                             <div class="card-header">
                                 <h5 class="m-0">Top 5 Users</h5>
@@ -824,7 +1062,7 @@ try {
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-6">
+                    <div class="col-lg-6 mb-4">
                         <div class="report-card">
                             <div class="card-header">
                                 <h5 class="m-0">Station Performance</h5>
@@ -842,41 +1080,6 @@ try {
                                         </thead>
                                         <tbody>
                                             <?php 
-                                            $stationTotals = [];
-                                            
-                                            // Initialize station totals
-                                            foreach ($stations as $station) {
-                                                $stationId = $station['station_id'];
-                                                $stationTotals[$stationId] = [
-                                                    'name' => $station['name'],
-                                                    'bookings' => 0,
-                                                    'revenue' => 0
-                                                ];
-                                            }
-                                            
-                                            // Calculate totals from booking data
-                                            foreach ($bookingsData as $date => $stationBookings) {
-                                                foreach ($stationBookings as $stationId => $count) {
-                                                    if (isset($stationTotals[$stationId])) {
-                                                        $stationTotals[$stationId]['bookings'] += $count;
-                                                    }
-                                                }
-                                            }
-                                            
-                                            // Calculate totals from revenue data
-                                            foreach ($revenueData as $date => $stationRevenues) {
-                                                foreach ($stationRevenues as $stationId => $revenue) {
-                                                    if (isset($stationTotals[$stationId])) {
-                                                        $stationTotals[$stationId]['revenue'] += $revenue;
-                                                    }
-                                                }
-                                            }
-                                            
-                                            // Sort by revenue (highest first)
-                                            usort($stationTotals, function($a, $b) {
-                                                return $b['revenue'] <=> $a['revenue'];
-                                            });
-                                            
                                             foreach ($stationTotals as $stationId => $data):
                                                 $avgRevenue = $data['bookings'] > 0 ? $data['revenue'] / $data['bookings'] : 0;
                                             ?>
@@ -906,6 +1109,11 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Hide loading overlay
+            setTimeout(function() {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }, 500);
+            
             // Sidebar toggle
             const sidebar = document.getElementById('sidebar');
             const sidebarToggle = document.getElementById('sidebarToggle');
@@ -927,225 +1135,432 @@ try {
             }
 
             // Chart setup for Revenue
-            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-            const revenueData = <?php echo json_encode($revenueData); ?>;
-            const stationNames = <?php echo json_encode($stationNames); ?>;
-            const stationIds = Object.keys(stationNames);
-            
-            // Generate colors for each station
-            const colors = [
-                'rgba(78, 115, 223, 0.8)',
-                'rgba(28, 200, 138, 0.8)',
-                'rgba(54, 185, 204, 0.8)',
-                'rgba(246, 194, 62, 0.8)',
-                'rgba(231, 74, 59, 0.8)',
-                'rgba(133, 135, 150, 0.8)'
-            ];
-            
-            // Format dates based on the selected period
-            const period = '<?php echo $period; ?>';
-            const formatDate = (dateStr) => {
-                const date = new Date(dateStr);
-                switch(period) {
-                    case 'day':
-                        return dateStr; // Already in hour format "HH:00"
-                    case 'week':
-                    case 'month':
-                        return new Date(dateStr).toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
-                    case 'year':
-                        return new Date(dateStr + '-01').toLocaleDateString('en-US', {year: 'numeric', month: 'short'});
-                    default:
-                        return dateStr;
-                }
-            };
-            
-            // Prepare datasets for revenue chart
-            const revenueDatasets = stationIds.map((stationId, index) => {
-                const colorIndex = index % colors.length;
-                return {
-                    label: stationNames[stationId],
-                    data: Object.keys(revenueData).map(date => {
-                        return revenueData[date] && revenueData[date][stationId] ? revenueData[date][stationId] : 0;
-                    }),
-                    backgroundColor: colors[colorIndex],
-                    borderColor: colors[colorIndex].replace('0.8', '1'),
-                    borderWidth: 2,
-                    pointBackgroundColor: colors[colorIndex].replace('0.8', '1'),
-                    pointRadius: 3,
-                    tension: 0.1
+            const revenueCtx = document.getElementById('revenueChart');
+            if (revenueCtx) {
+                const revenueData = <?php echo json_encode($revenueData); ?>;
+                const stationNames = <?php echo json_encode($stationNames); ?>;
+                const stationIds = Object.keys(stationNames);
+                
+                // Generate colors for each station
+                const colors = [
+                    'rgba(67, 97, 238, 0.8)',    // Primary
+                    'rgba(59, 193, 74, 0.8)',    // Success
+                    'rgba(54, 185, 204, 0.8)',   // Info
+                    'rgba(246, 194, 62, 0.8)',   // Warning
+                    'rgba(231, 74, 59, 0.8)',    // Danger
+                    'rgba(90, 92, 105, 0.8)'     // Dark
+                ];
+                
+                // Format dates based on the selected period
+                const period = '<?php echo $period; ?>';
+                const formatDate = (dateStr) => {
+                    const date = new Date(dateStr);
+                    switch(period) {
+                        case 'day':
+                            return dateStr; // Already in hour format "HH:00"
+                        case 'week':
+                        case 'month':
+                            return new Date(dateStr).toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
+                        case 'year':
+                            return dateStr; // Already in "YYYY-MM" format
+                        default:
+                            return dateStr;
+                    }
                 };
-            });
-            
-            // Create revenue chart
-            const revenueChart = new Chart(revenueCtx, {
-                type: 'line',
-                data: {
-                    labels: Object.keys(revenueData).map(date => formatDate(date)),
-                    datasets: revenueDatasets
-                },
-                options: {
-                    maintainAspectRatio: false,
-                    layout: {
-                        padding: {
-                            left: 10,
-                            right: 25,
-                            top: 25,
-                            bottom: 0
-                        }
+                
+                // Prepare datasets for revenue chart
+                const labels = Object.keys(revenueData).sort();
+                const formattedLabels = labels.map(formatDate);
+                
+                const datasets = stationIds.map((stationId, index) => {
+                    return {
+                        label: stationNames[stationId],
+                        data: labels.map(date => revenueData[date] && revenueData[date][stationId] ? revenueData[date][stationId] : 0),
+                        backgroundColor: colors[index % colors.length],
+                        borderColor: colors[index % colors.length].replace('0.8', '1'),
+                        borderWidth: 1,
+                        hidden: false
+                    };
+                });
+                
+                const revenueChart = new Chart(revenueCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: formattedLabels,
+                        datasets: datasets
                     },
-                    scales: {
-                        x: {
-                            grid: {
-                                display: false,
-                                drawBorder: false
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        label += '₹' + context.parsed.y.toFixed(2);
+                                        return label;
+                                    }
+                                }
                             }
                         },
-                        y: {
-                            ticks: {
-                                callback: function(value) {
-                                    return '₹' + value;
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '₹' + value;
+                                    }
                                 }
                             }
                         }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ₹' + context.raw;
-                                }
-                            }
-                        }
                     }
-                }
-            });
-            
-            // Time Slot Chart
-            const timeSlotCtx = document.getElementById('timeSlotChart').getContext('2d');
-            const timeSlotData = <?php echo json_encode($popularTimeSlots); ?>;
-            
-            new Chart(timeSlotCtx, {
-                type: 'bar',
-                data: {
-                    labels: timeSlotData.map(slot => slot.hour_slot),
-                    datasets: [{
-                        label: 'Bookings',
-                        data: timeSlotData.map(slot => slot.booking_count),
-                        backgroundColor: 'rgba(78, 115, 223, 0.8)',
-                        borderColor: 'rgba(78, 115, 223, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-            
-            // Bookings Chart
-            const bookingsCtx = document.getElementById('bookingsChart').getContext('2d');
-            const bookingsData = <?php echo json_encode($bookingsData); ?>;
-            
-            // Calculate total bookings per station
-            const stationBookings = {};
-            Object.keys(bookingsData).forEach(date => {
-                Object.keys(bookingsData[date]).forEach(stationId => {
-                    if (!stationBookings[stationId]) {
-                        stationBookings[stationId] = 0;
-                    }
-                    stationBookings[stationId] += bookingsData[date][stationId];
                 });
-            });
-            
-            new Chart(bookingsCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(stationBookings).map(id => stationNames[id]),
-                    datasets: [{
-                        data: Object.values(stationBookings),
-                        backgroundColor: colors,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right'
+                
+                // Add event listeners for station filtering
+                document.querySelectorAll('[data-station-id]').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const stationId = this.getAttribute('data-station-id');
+                        
+                        // Hide all datasets first
+                        revenueChart.data.datasets.forEach(dataset => {
+                            dataset.hidden = true;
+                        });
+                        
+                        // Show only the clicked station
+                        const datasetIndex = stationIds.indexOf(stationId);
+                        if (datasetIndex !== -1) {
+                            revenueChart.data.datasets[datasetIndex].hidden = false;
                         }
-                    }
-                }
-            });
-            
-            // Usage Chart
-            const usageCtx = document.getElementById('usageChart').getContext('2d');
-            const usageData = <?php echo json_encode($usageData); ?>;
-            
-            // Calculate total usage hours per station
-            const stationUsage = {};
-            Object.keys(usageData).forEach(date => {
-                Object.keys(usageData[date]).forEach(stationId => {
-                    if (!stationUsage[stationId]) {
-                        stationUsage[stationId] = 0;
-                    }
-                    stationUsage[stationId] += usageData[date][stationId];
+                        
+                        revenueChart.update();
+                    });
                 });
-            });
-            
-            new Chart(usageCtx, {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(stationUsage).map(id => stationNames[id]),
-                    datasets: [{
-                        data: Object.values(stationUsage),
-                        backgroundColor: colors,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right'
-                        }
-                    }
-                }
-            });
-            
-            // Station filter buttons for revenue chart
-            document.querySelectorAll('[data-station-id]').forEach(button => {
-                button.addEventListener('click', function() {
-                    const stationId = this.getAttribute('data-station-id');
+                
+                // View all button
+                document.getElementById('viewAllRevenue').addEventListener('click', function() {
                     revenueChart.data.datasets.forEach(dataset => {
-                        dataset.hidden = dataset.label !== stationNames[stationId];
+                        dataset.hidden = false;
                     });
                     revenueChart.update();
                 });
-            });
+            }
             
-            // View all stations button
-            document.getElementById('viewAllRevenue').addEventListener('click', function() {
-                revenueChart.data.datasets.forEach(dataset => {
-                    dataset.hidden = false;
+            // Bookings Chart
+            const bookingsCtx = document.getElementById('bookingsChart');
+            if (bookingsCtx) {
+                const bookingsData = <?php echo json_encode($bookingsData); ?>;
+                const stationNames = <?php echo json_encode($stationNames); ?>;
+                
+                // Prepare datasets for bookings chart
+                const stationIds = Object.keys(stationNames);
+                const labels = Object.keys(bookingsData).sort();
+                const formattedLabels = labels.map(date => {
+                    const period = '<?php echo $period; ?>';
+                    if (period === 'day') return date;
+                    if (period === 'year') return date;
+                    return new Date(date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'});
                 });
-                revenueChart.update();
-            });
+                
+                const totalsByStation = {};
+                stationIds.forEach(stationId => {
+                    totalsByStation[stationId] = labels.reduce((sum, date) => {
+                        return sum + (bookingsData[date] && bookingsData[date][stationId] ? bookingsData[date][stationId] : 0);
+                    }, 0);
+                });
+                
+                const sortedStationIds = Object.keys(totalsByStation).sort((a, b) => totalsByStation[b] - totalsByStation[a]);
+                
+                const bookingsChart = new Chart(bookingsCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: sortedStationIds.map(id => stationNames[id]),
+                        datasets: [{
+                            data: sortedStationIds.map(id => totalsByStation[id]),
+                            backgroundColor: [
+                                'rgba(67, 97, 238, 0.8)',
+                                'rgba(59, 193, 74, 0.8)',
+                                'rgba(54, 185, 204, 0.8)',
+                                'rgba(246, 194, 62, 0.8)',
+                                'rgba(231, 74, 59, 0.8)',
+                                'rgba(90, 92, 105, 0.8)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        const value = context.raw;
+                                        const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                        const percentage = Math.round((value / total) * 100);
+                                        label += value + ' bookings (' + percentage + '%)';
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
             
-            // Export report functionality
+            // Usage Chart
+            const usageCtx = document.getElementById('usageChart');
+            if (usageCtx) {
+                const usageData = <?php echo json_encode($usageData); ?>;
+                const stationNames = <?php echo json_encode($stationNames); ?>;
+                
+                // Calculate total usage hours by station
+                const stationIds = Object.keys(stationNames);
+                const totalUsageByStation = {};
+                
+                stationIds.forEach(stationId => {
+                    totalUsageByStation[stationId] = 0;
+                    Object.keys(usageData).forEach(date => {
+                        if (usageData[date] && usageData[date][stationId]) {
+                            totalUsageByStation[stationId] += usageData[date][stationId];
+                        }
+                    });
+                });
+                
+                // Sort stations by total usage
+                const sortedStationIds = Object.keys(totalUsageByStation)
+                    .sort((a, b) => totalUsageByStation[b] - totalUsageByStation[a]);
+                
+                const usageChart = new Chart(usageCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: sortedStationIds.map(id => stationNames[id]),
+                        datasets: [{
+                            label: 'Usage Hours',
+                            data: sortedStationIds.map(id => totalUsageByStation[id]),
+                            backgroundColor: 'rgba(54, 185, 204, 0.8)',
+                            borderColor: 'rgba(54, 185, 204, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Hours'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Time Slot Chart
+            const timeSlotCtx = document.getElementById('timeSlotChart');
+            if (timeSlotCtx) {
+                const timeSlotData = <?php echo json_encode($popularTimeSlots); ?>;
+                
+                // Don't create chart if there's only "No Data" entry
+                if (!(timeSlotData.length === 1 && timeSlotData[0].hour_slot === 'No Data')) {
+                    const timeSlotChart = new Chart(timeSlotCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: timeSlotData.map(slot => slot.hour_slot),
+                            datasets: [{
+                                data: timeSlotData.map(slot => slot.booking_count),
+                                backgroundColor: [
+                                    'rgba(67, 97, 238, 0.8)',
+                                    'rgba(59, 193, 74, 0.8)',
+                                    'rgba(54, 185, 204, 0.8)',
+                                    'rgba(246, 194, 62, 0.8)',
+                                    'rgba(231, 74, 59, 0.8)'
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'right',
+                                    labels: {
+                                        boxWidth: 12
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // Export Report Button
             document.getElementById('exportReportBtn').addEventListener('click', function() {
-                // Create a simple PDF or CSV export functionality
-                alert('Report export functionality will be implemented here.');
-                // In a real implementation, this would generate a PDF/CSV with the report data
+                // Create a print-friendly version
+                const period = '<?php echo $period; ?>';
+                const printWindow = window.open('', '_blank');
+                
+                printWindow.document.write(`
+                    <html>
+                    <head>
+                        <title>Station Reports - ${period.charAt(0).toUpperCase() + period.slice(1)}</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; padding: 20px; }
+                            h1, h2 { color: #4361ee; }
+                            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                            th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+                            th { background-color: #f8f9fc; }
+                            .report-section { margin-bottom: 30px; }
+                            .page-break { page-break-after: always; }
+                            @media print {
+                                .no-print { display: none; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="no-print" style="text-align: right; margin-bottom: 20px;">
+                            <button onclick="window.print()">Print Report</button>
+                        </div>
+                        
+                        <h1>Station Reports & Analytics</h1>
+                        <p>Period: ${period.charAt(0).toUpperCase() + period.slice(1)}</p>
+                        <p>Generated on: ${new Date().toLocaleString()}</p>
+                        
+                        <div class="report-section">
+                            <h2>Summary</h2>
+                            <table>
+                                <tr>
+                                    <th>Total Revenue</th>
+                                    <td>₹<?php echo number_format($totalRevenue, 2); ?></td>
+                                </tr>
+                                <tr>
+                                    <th>Total Bookings</th>
+                                    <td><?php echo number_format($totalBookings); ?></td>
+                                </tr>
+                                <tr>
+                                    <th>Usage Hours</th>
+                                    <td><?php echo number_format($totalHours, 1); ?> hours</td>
+                                </tr>
+                                <tr>
+                                    <th>Average Revenue per Booking</th>
+                                    <td>₹<?php echo $totalBookings > 0 ? number_format($totalRevenue / $totalBookings, 2) : '0.00'; ?></td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <div class="report-section">
+                            <h2>Station Performance</h2>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Station</th>
+                                        <th>Bookings</th>
+                                        <th>Revenue</th>
+                                        <th>Avg. Revenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php 
+                                    foreach ($stationTotals as $stationId => $data):
+                                        $avgRevenue = $data['bookings'] > 0 ? $data['revenue'] / $data['bookings'] : 0;
+                                    ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($data['name']); ?></td>
+                                            <td><?php echo number_format($data['bookings']); ?></td>
+                                            <td>₹<?php echo number_format($data['revenue'], 2); ?></td>
+                                            <td>₹<?php echo number_format($avgRevenue, 2); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="page-break"></div>
+                        
+                        <div class="report-section">
+                            <h2>Top 5 Users</h2>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Email</th>
+                                        <th>Bookings</th>
+                                        <th>Total Spent</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($topUsers as $user): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($user['name']); ?></td>
+                                            <td><?php echo htmlspecialchars($user['email']); ?></td>
+                                            <td><?php echo number_format($user['total_bookings']); ?></td>
+                                            <td>₹<?php echo number_format($user['total_spent'], 2); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="report-section">
+                            <h2>Popular Time Slots</h2>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Time Slot</th>
+                                        <th>Number of Bookings</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($popularTimeSlots as $slot): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($slot['hour_slot']); ?></td>
+                                            <td><?php echo number_format($slot['booking_count']); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="report-section">
+                            <p style="text-align: center; color: #6c757d; margin-top: 40px;">
+                                Generated by EV Station Management System
+                            </p>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                
+                printWindow.document.close();
             });
         });
     </script>
 </body>
 </html>
+                            

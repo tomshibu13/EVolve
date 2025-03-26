@@ -137,37 +137,62 @@ try {
                     
                     if ($conn->query($bookingLogsSql) === TRUE) {
                         echo "Table booking_logs created successfully\n";
+                        
+                        // Create enquiries table
+                        $enquiriesSql = "CREATE TABLE IF NOT EXISTS enquiries (
+                            enquiry_id INT PRIMARY KEY AUTO_INCREMENT,
+                            user_id INT NOT NULL,
+                            station_id INT NOT NULL,
+                            message TEXT NOT NULL,
+                            enquiry_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            status ENUM('unread', 'read', 'responded') DEFAULT 'unread',
+                            response TEXT,
+                            response_date TIMESTAMP NULL,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                            FOREIGN KEY (user_id) REFERENCES tbl_users(user_id),
+                            FOREIGN KEY (station_id) REFERENCES charging_stations(station_id),
+                            INDEX idx_station_enquiry (station_id),
+                            INDEX idx_user_enquiry (user_id),
+                            INDEX idx_status (status)
+                        )";
+
+                        if ($conn->query($enquiriesSql) === TRUE) {
+                            echo "Table enquiries created successfully\n";
+                        } else {
+                            throw new Exception("Error creating enquiries table: " . $conn->error);
+                        }
+                        
+                        // Add admin user
+                        $adminEmail = "tomshibu666@gmail.com";
+                        $adminUsername = "tomshibu1829";
+                        $adminName = "Tom Shibu";
+                        $adminPassword = password_hash("Admin@123", PASSWORD_DEFAULT);
+                        $isAdmin = true;  // Set admin flag
+                        
+                        $insertAdminSql = "INSERT INTO tbl_users (email, passwordhash, name, username, is_admin) 
+                                          VALUES (?, ?, ?, ?, ?)
+                                          ON DUPLICATE KEY UPDATE 
+                                          passwordhash = VALUES(passwordhash),
+                                          is_admin = VALUES(is_admin)";
+                        
+                        $stmt = $conn->prepare($insertAdminSql);
+                        if ($stmt === false) {
+                            throw new Exception("Error preparing statement: " . $conn->error);
+                        }
+                        
+                        if (!$stmt->bind_param("ssssi", $adminEmail, $adminPassword, $adminName, $adminUsername, $isAdmin)) {
+                            throw new Exception("Error binding parameters: " . $stmt->error);
+                        }
+                        
+                        if (!$stmt->execute()) {
+                            throw new Exception("Error creating admin user: " . $stmt->error);
+                        }
+                        echo "Admin user created successfully\n";
+                        $stmt->close();
                     } else {
                         throw new Exception("Error creating booking_logs table: " . $conn->error);
                     }
-                    
-                    // Add admin user
-                    $adminEmail = "tomshibu666@gmail.com";
-                    $adminUsername = "tomshibu1829";
-                    $adminName = "Tom Shibu";
-                    $adminPassword = password_hash("Admin@123", PASSWORD_DEFAULT);
-                    $isAdmin = true;  // Set admin flag
-                    
-                    $insertAdminSql = "INSERT INTO tbl_users (email, passwordhash, name, username, is_admin) 
-                                      VALUES (?, ?, ?, ?, ?)
-                                      ON DUPLICATE KEY UPDATE 
-                                      passwordhash = VALUES(passwordhash),
-                                      is_admin = VALUES(is_admin)";
-                    
-                    $stmt = $conn->prepare($insertAdminSql);
-                    if ($stmt === false) {
-                        throw new Exception("Error preparing statement: " . $conn->error);
-                    }
-                    
-                    if (!$stmt->bind_param("ssssi", $adminEmail, $adminPassword, $adminName, $adminUsername, $isAdmin)) {
-                        throw new Exception("Error binding parameters: " . $stmt->error);
-                    }
-                    
-                    if (!$stmt->execute()) {
-                        throw new Exception("Error creating admin user: " . $stmt->error);
-                    }
-                    echo "Admin user created successfully\n";
-                    $stmt->close();
                 } else {
                     throw new Exception("Error creating bookings table: " . $conn->error);
                 }
