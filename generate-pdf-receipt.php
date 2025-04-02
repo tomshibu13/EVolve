@@ -50,11 +50,30 @@ function generatePdfReceipt($bookingId) {
             'timestamp' => time()
         ]);
         
-        // Generate QR code image using Google Charts API
-        $qrCodeUrl = 'https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=' . urlencode($qrData);
-        $qrCodeImg = '<img src="' . $qrCodeUrl . '" alt="QR Code" style="width: 150px; height: 150px;">';
+        // Generate QR code using a temporary file
+        $qrTempFile = sys_get_temp_dir() . '/qrcode_' . $bookingId . '.png';
         
-        // Create a more professional HTML receipt
+        // Create QR code using different available methods
+        $qrCodeImgTag = '';
+        if (class_exists('QRcode')) {
+            // Using PHPQRCode library
+            require_once __DIR__ . '/phpqrcode/qrlib.php';
+            \QRcode::png($qrData, $qrTempFile, QR_ECLEVEL_H, 10);
+            
+            // Convert to base64 for embedding
+            $qrImageData = base64_encode(file_get_contents($qrTempFile));
+            $qrCodeImgTag = '<img src="data:image/png;base64,' . $qrImageData . '" alt="QR Code" style="width: 150px; height: 150px;">';
+            
+            // Clean up
+            @unlink($qrTempFile);
+        } else {
+            // Fallback to online QR code generator
+            $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($qrData);
+            $qrImageData = base64_encode(file_get_contents($qrCodeUrl));
+            $qrCodeImgTag = '<img src="data:image/png;base64,' . $qrImageData . '" alt="QR Code" style="width: 150px; height: 150px;">';
+        }
+        
+        // Create a more professional HTML receipt with embedded QR code
         $htmlContent = "
             <!DOCTYPE html>
             <html>
@@ -120,7 +139,7 @@ function generatePdfReceipt($bookingId) {
                     
                     <div class='qr-section'>
                         <div class='section-title'>Check-in QR Code</div>
-                        " . $qrCodeImg . "
+                        " . $qrCodeImgTag . "
                         <div class='qr-note'>Please scan this QR code at the charging station for check-in and check-out</div>
                     </div>
                     

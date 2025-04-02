@@ -166,32 +166,33 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EV Charging Station Locator</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="../main.css">
+    <link rel="stylesheet" href="../header.css">
+    <link rel="stylesheet" href="../booking-styles.css">
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-        }
-
         .container {
             max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+            margin: 20px auto;
+            padding: 0 20px;
         }
 
         .map-container {
-            height: 600px;
+            height: 500px;
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            position: relative;
         }
 
         .controls {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
             display: flex;
-            gap: 10px;
+            gap: 15px;
             align-items: center;
         }
 
@@ -200,6 +201,7 @@ $conn->close();
             border: 1px solid #ddd;
             border-radius: 6px;
             font-size: 14px;
+            min-width: 120px;
         }
 
         .locate-btn {
@@ -225,12 +227,13 @@ $conn->close();
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
+            margin-top: 20px;
         }
 
         .station-card {
             background: white;
             border-radius: 12px;
-            padding: 15px;
+            padding: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease;
         }
@@ -243,7 +246,7 @@ $conn->close();
             display: flex;
             justify-content: space-between;
             align-items: start;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .station-name {
@@ -254,8 +257,8 @@ $conn->close();
         }
 
         .station-status {
-            padding: 4px 8px;
-            border-radius: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
             font-size: 12px;
             font-weight: 500;
         }
@@ -268,13 +271,22 @@ $conn->close();
         .station-info {
             color: #666;
             font-size: 14px;
-            margin: 5px 0;
+            margin: 8px 0;
+        }
+
+        .station-info i {
+            width: 20px;
+            color: #4CAF50;
+            margin-right: 8px;
         }
 
         .station-distance {
             color: #2196F3;
             font-weight: 500;
-            margin-top: 10px;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .loading {
@@ -287,19 +299,73 @@ $conn->close();
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             display: none;
+            z-index: 1000;
         }
 
         .error {
             background: #ffebee;
             color: #c62828;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
             display: none;
+        }
+
+        .user-location-marker {
+            color: #2196F3;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .location-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 10px 20px;
+            background: white;
+            border: none;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .location-button:hover {
+            background: #f5f5f5;
+            transform: translateY(-2px);
+        }
+
+        .location-button i {
+            color: #2196F3;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+
+            .radius-select {
+                width: 100%;
+            }
+
+            .locate-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .station-list {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
+    <?php include '../header.php' ?>
     <div class="container">
         <h1>Find Nearby Charging Stations</h1>
         

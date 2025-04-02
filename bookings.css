@@ -1,0 +1,49 @@
+/* Container Layout */
+.bookings-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+/* Page Title */
+.page-title-container {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* ... rest of the booking-specific styles from my-bookings.php ... */
+
+/* Error and Success Messages */
+.error-message {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.success-message {
+    text-align: center;
+    padding: 20px;
+    background: #2ecc71;
+    color: white;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .booking-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bookings-container {
+        margin: 20px auto;
+        padding: 0 15px;
+    }
+}

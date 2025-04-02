@@ -213,11 +213,13 @@ function isApprovedStationOwner($userId) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVolve - EV Charging Finder</title>
-    <link rel="stylesheet" href="main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://apis.google.com/js/platform.js" async defer></script>
     <meta name="google-signin-client_id" content="767546662883-n1srtf3ane5krtkm89okulrq4fr12ekq.apps.googleusercontent.com">
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="booking-styles.css">
     <style>
         .error-message {
             background-color: #ffebee;
@@ -494,51 +496,257 @@ function isApprovedStationOwner($userId) {
             color: inherit;
         }
 
+        /* Update existing booking panel styles and add responsive styles */
         .booking-panel {
             position: fixed;
-            right: -30%;
+            right: -100%; /* Change from -30% to -100% */
             top: 0;
-            width: 30%;
+            width: 90%; /* Change from 30% to be responsive */
+            max-width: 400px; /* Add max-width for larger screens */
             height: 100vh;
             background: white;
             box-shadow: -2px 0 5px rgba(0,0,0,0.1);
             transition: right 0.3s ease;
             z-index: 1000;
+            display: flex;
+            flex-direction: column;
         }
 
         .booking-panel.active {
             right: 0;
         }
 
+        .booking-header {
+            padding: 15px;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .booking-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        .booking-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        }
+
+        /* Booking card styles */
         .booking-card {
-            background: white;
+            background: #fff;
             border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             padding: 15px;
             margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .recent-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+
+        .booking-station {
+            margin-bottom: 12px;
+        }
+
+        .station-name {
+            font-size: 1.1rem;
+            margin: 0 0 8px 0;
+            color: #333;
+        }
+
+        .station-address {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .booking-details {
+            display: grid;
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .booking-details p {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            color: #555;
+            font-size: 0.9rem;
         }
 
         .booking-status {
             display: inline-block;
-            padding: 5px 10px;
+            padding: 4px 10px;
             border-radius: 15px;
-            font-size: 0.9em;
-            font-weight: 500;
+            font-size: 0.85rem;
+            margin: 8px 0;
         }
 
         .booking-status.pending {
-            background: #fff3e0;
-            color: #f57c00;
+            background: #fff3cd;
+            color: #856404;
         }
 
         .booking-status.confirmed {
-            background: #e8f5e9;
-            color: #2e7d32;
+            background: #d4edda;
+            color: #155724;
         }
 
         .booking-status.cancelled {
-            background: #ffebee;
-            color: #c62828;
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .cancel-booking-btn {
+            width: 100%;
+            padding: 8px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+
+        .cancel-booking-btn:hover {
+            background: #c82333;
+        }
+
+        .see-more-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            background: #f8f9fa;
+            color: #007bff;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-top: 15px;
+            transition: background-color 0.2s;
+        }
+
+        .see-more-link:hover {
+            background: #e9ecef;
+        }
+
+        /* Error and empty states */
+        .error-message,
+        .no-bookings,
+        .login-prompt {
+            text-align: center;
+            padding: 30px 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            color: #666;
+        }
+
+        .error-message i,
+        .no-bookings i,
+        .login-prompt i {
+            font-size: 2rem;
+            color: #999;
+            margin-bottom: 15px;
+        }
+
+        .retry-btn,
+        .login-prompt .login-btn {
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: none;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.2s;
+        }
+
+        .retry-btn:hover,
+        .login-prompt .login-btn:hover {
+            background: #0056b3;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .booking-panel {
+                width: 100%;
+                max-width: none;
+            }
+            
+            .booking-header {
+                padding: 12px;
+            }
+            
+            .booking-header h2 {
+                font-size: 1.1rem;
+            }
+            
+            .booking-content {
+                padding: 12px;
+            }
+            
+            .booking-card {
+                padding: 12px;
+            }
+            
+            .station-name {
+                font-size: 1rem;
+            }
+            
+            .booking-details p {
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Safe area insets for modern mobile browsers */
+        @supports (padding: max(0px)) {
+            .booking-panel {
+                padding-left: max(15px, env(safe-area-inset-left));
+                padding-right: max(15px, env(safe-area-inset-right));
+                padding-bottom: max(15px, env(safe-area-inset-bottom));
+            }
+        }
+
+        /* Add backdrop for mobile */
+        @media (max-width: 768px) {
+            .booking-panel::before {
+                content: '';
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.3s ease, visibility 0.3s ease;
+                z-index: -1;
+            }
+
+            .booking-panel.active::before {
+                opacity: 1;
+                visibility: visible;
+            }
         }
 
         .cancel-booking-btn {
@@ -1673,6 +1881,953 @@ function isApprovedStationOwner($userId) {
             justify-content: center;
             padding: 2px;
         }
+
+        /* Responsive Design Improvements */
+        /* These are comprehensive media queries to handle all screen sizes */
+        
+        /* Extra small devices (phones, less than 576px) */
+        @media (max-width: 575.98px) {
+            /* Header and Navigation */
+            .nav-container {
+                padding: 0 10px;
+            }
+            
+            .logo img {
+                max-width: 120px;
+            }
+            
+            .nav-links {
+                width: 80%; /* Make mobile menu wider */
+            }
+            
+            .username {
+                max-width: 100px;
+            }
+            
+            /* Content Areas */
+            .hero-content h1 {
+                font-size: 1.8rem;
+            }
+            
+            .hero-content p {
+                font-size: 1rem;
+            }
+            
+            /* Search Section */
+            .search-container {
+                padding: 15px;
+            }
+            
+            .search-form {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .search-input, .search-button {
+                width: 100%;
+            }
+            
+            /* Map & Station Cards */
+            #map {
+                height: 300px;
+            }
+            
+            .station-card {
+                padding: 15px;
+            }
+            
+            /* Modals and Popups */
+            .login-container {
+                width: 95%;
+                padding: 20px 15px;
+            }
+            
+            /* Forms */
+            .input-group {
+                margin-bottom: 15px;
+            }
+            
+            /* Support Section */
+            .support-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .contact-section {
+                padding: 20px 15px;
+            }
+            
+            /* Booking Panel */
+            .booking-panel {
+                width: 90%;
+                right: -90%;
+            }
+        }
+        
+        /* Small devices (landscape phones, 576px and up) */
+        @media (min-width: 576px) and (max-width: 767.98px) {
+            /* Header and Navigation */
+            .nav-container {
+                padding: 0 15px;
+            }
+            
+            /* Content Areas */
+            .hero-content h1 {
+                font-size: 2rem;
+            }
+            
+            /* Map & Station Cards */
+            #map {
+                height: 350px;
+            }
+            
+            /* Booking Panel */
+            .booking-panel {
+                width: 70%;
+                right: -70%;
+            }
+            
+            /* Support Section */
+            .support-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* Medium devices (tablets, 768px and up) */
+        @media (min-width: 768px) and (max-width: 991.98px) {
+            /* Navigation */
+            .nav-links {
+                gap: 15px;
+            }
+            
+            /* Booking Panel */
+            .booking-panel {
+                width: 50%;
+                right: -50%;
+            }
+            
+            /* Support Section */
+            .support-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            /* Map height */
+            #map {
+                height: 400px;
+            }
+        }
+        
+        /* Large devices (desktops, 992px and up) */
+        @media (min-width: 992px) and (max-width: 1199.98px) {
+            /* Booking Panel */
+            .booking-panel {
+                width: 40%;
+                right: -40%;
+            }
+            
+            /* Map height */
+            #map {
+                height: 450px;
+            }
+        }
+        
+        /* Extra large devices (large desktops, 1200px and up) */
+        @media (min-width: 1200px) {
+            /* Container max width */
+            .ev-features-container,
+            .support-container,
+            .results-container {
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+            
+            /* Map height */
+            #map {
+                height: 500px;
+            }
+        }
+
+        /* Global improvements for all screen sizes */
+        .responsive-img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        /* Improve spacing for readability */
+        p, h1, h2, h3, h4, h5, h6 {
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+        
+        /* Touch-friendly buttons and links */
+        button, .button, 
+        .nav-link, .dropdown-content a, 
+        .popup-details-btn, .view-details-btn,
+        .cancel-booking-btn, .submit-button,
+        .see-more-link, .owner-button {
+            min-height: 44px; /* Better touch target */
+            padding: 10px 16px;
+        }
+
+        /* Improve form elements accessibility */
+        input, select, textarea {
+            font-size: 16px; /* Prevents iOS zoom on focus */
+        }
+        
+        /* Fix map popup responsiveness */
+        .leaflet-popup-content {
+            width: auto !important;
+            min-width: 200px;
+            max-width: 90vw;
+        }
+        
+        /* Fix scrolling issues on iOS */
+        body, html {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Improved mobile table styles */
+        @media (max-width: 767.98px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            
+            thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            
+            td {
+                position: relative;
+                padding-left: 50%;
+                text-align: left;
+            }
+            
+            td:before {
+                position: absolute;
+                left: 6px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                font-weight: bold;
+                content: attr(data-label);
+            }
+        }
+
+        /* Updated Header and Navigation Styles */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            height: 70px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1001;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .highlight {
+            color: #3498db;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            cursor: pointer;
+            z-index: 1001;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f8f9fa;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+        }
+
+        .mobile-menu-toggle:hover {
+            background: #e9ecef;
+        }
+
+        .mobile-menu-close {
+            display: none;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            z-index: 1002;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f8f9fa;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-link {
+            position: relative;
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background-color: #f8f9fa;
+            color: #3498db;
+        }
+
+        .nav-link.active {
+            color: #3498db;
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+
+        .user-profile {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .user-profile:hover {
+            background-color: #f8f9fa;
+        }
+
+        .username {
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 150px;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: white;
+            min-width: 200px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            padding: 8px 0;
+            z-index: 1000;
+        }
+
+        .user-profile:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-content a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            text-decoration: none;
+            color: #333;
+            transition: background 0.3s;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f8f9fa;
+            color: #3498db;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: #e9ecef;
+            margin: 8px 0;
+        }
+
+        .logout-link {
+            color: #e74c3c !important;
+        }
+
+        .logout-link:hover {
+            background-color: #feebeb !important;
+            color: #c0392b !important;
+        }
+
+        /* Enhanced Responsive Styles */
+        @media (max-width: 992px) {
+            .mobile-menu-toggle {
+                display: flex;
+            }
+            
+            .nav-links {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 280px;
+                height: 100vh;
+                background-color: white;
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 80px 20px 20px;
+                transition: right 0.3s ease;
+                z-index: 1000;
+                box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+                overflow-y: auto;
+            }
+            
+            .nav-links.active {
+                right: 0;
+            }
+            
+            .mobile-menu-close {
+                display: flex;
+            }
+            
+            .nav-link {
+                width: 100%;
+                padding: 12px 0;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            }
+            
+            .user-profile {
+                margin-top: 15px;
+                width: 100%;
+                padding: 12px 0;
+                justify-content: space-between;
+            }
+            
+            .dropdown-content {
+                position: static;
+                box-shadow: none;
+                border-radius: 0;
+                margin-top: 10px;
+                width: 100%;
+                display: none;
+            }
+            
+            .user-profile:hover .dropdown-content {
+                display: none; /* Prevent auto-display on hover for mobile */
+            }
+            
+            /* When explicitly shown in JS */
+            .dropdown-content.show {
+                display: block;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .nav-container {
+                padding: 0 15px;
+                height: 60px;
+            }
+            
+            .logo-text {
+                font-size: 1.3rem;
+            }
+            
+            .nav-links {
+                width: 100%;
+                right: -100%;
+            }
+            
+            .username {
+                max-width: 120px;
+            }
+            
+            .nav-link, 
+            .user-profile,
+            .dropdown-content a {
+                padding: 15px 0;
+                font-size: 16px; /* Ensure readable font size on mobile */
+            }
+            
+            /* Adjust icon sizing for better touch targets */
+            .nav-link i,
+            .user-profile i,
+            .dropdown-content a i {
+                font-size: 18px;
+                width: 24px;
+                text-align: center;
+                margin-right: 10px;
+            }
+            
+            /* Ensure notification badge remains visible */
+            .notification-badge {
+                top: -5px;
+                right: -5px;
+            }
+        }
+
+        /* Fix for very small devices (iPhone SE, etc.) */
+        @media (max-width: 360px) {
+            .logo-text {
+                font-size: 1.2rem;
+            }
+            
+            .nav-container {
+                padding: 0 10px;
+            }
+            
+            .username {
+                max-width: 100px;
+            }
+        }
+
+        .top-image-section {
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .top-image {
+            flex: 0 0 400px;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .top-image-text {
+            flex: 1;
+        }
+
+        .top-image-text h2 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+        }
+
+        .top-image-text p {
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .owner-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: #007bff;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .owner-button i {
+            font-size: 1.1rem;
+        }
+
+        /* Responsive Styles for Top Image Section */
+        @media (max-width: 1200px) {
+            .top-image {
+                flex: 0 0 350px;
+            }
+            
+            .top-image-text h2 {
+                font-size: 1.6rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .top-image-section {
+                padding: 1.5rem;
+                gap: 1.5rem;
+            }
+            
+            .top-image {
+                flex: 0 0 300px;
+                height: 200px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .top-image-section {
+                flex-direction: column;
+                padding: 1.5rem;
+            }
+            
+            .top-image {
+                width: 100%;
+                flex: none;
+                height: auto;
+                max-height: 300px;
+                margin-bottom: 1rem;
+            }
+            
+            .top-image-text {
+                text-align: center;
+            }
+            
+            .top-image-text h2 {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .top-image-section {
+                padding: 1rem;
+            }
+            
+            .top-image-text h2 {
+                font-size: 1.3rem;
+            }
+            
+            .top-image-text p {
+                font-size: 0.9rem;
+                margin-bottom: 1rem;
+            }
+            
+            .owner-button {
+                width: 100%;
+                justify-content: center;
+                padding: 12px 15px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .top-image-text h2 {
+                font-size: 1.2rem;
+            }
+            
+            .owner-button {
+                font-size: 14px;
+                padding: 10px 12px;
+            }
+        }
+
+        /* Make search container responsive */
+        .search-container {
+            margin: 2rem auto;
+            max-width: 1200px;
+            padding: 0 1rem;
+        }
+
+        .search-box {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            padding: 1.5rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .search-input {
+            flex: 1 1 300px;
+            padding: 0.8rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .range-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 0 0 auto;
+        }
+
+        .radius-select {
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .search-button,
+        .geolocation-button {
+            padding: 0.8rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .search-button:hover,
+        .geolocation-button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        /* Make the map responsive */
+        .map-container {
+            margin: 2rem auto;
+            max-width: 1200px;
+            padding: 0 1rem;
+        }
+
+        #map {
+            height: 400px;
+            width: 100%; 
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Style the results container */
+        #appContent {
+            margin: 2rem auto;
+            max-width: 1200px;
+            padding: 0 1rem;
+        }
+
+        .results-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .results-container h2 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 992px) {
+            .search-box {
+                gap: 0.8rem;
+                padding: 1.2rem;
+            }
+            
+            #map {
+                height: 350px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .search-box {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .range-selector {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            
+            .search-button,
+            .geolocation-button {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            #map {
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .search-container,
+            .map-container,
+            #appContent {
+                padding: 0 0.8rem;
+            }
+            
+            .search-box {
+                padding: 1rem;
+            }
+            
+            .search-input,
+            .radius-select {
+                font-size: 0.9rem;
+                padding: 0.7rem;
+            }
+            
+            .results-container {
+                padding: 1rem;
+            }
+            
+            .results-container h2 {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .search-box {
+                padding: 0.8rem;
+            }
+            
+            .range-selector label {
+                font-size: 0.9rem;
+            }
+            
+            #map {
+                height: 250px;
+            }
+        }
+
+        .how-container {
+            padding: 80px 20px;
+            text-align: center;
+            background: transparent;
+        }
+
+        /* Enhanced Responsive Design for How and About sections */
+        @media (max-width: 992px) {
+            .how-steps-container {
+                gap: 40px;
+            }
+            
+            .about-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .how-container {
+                padding: 60px 15px;
+            }
+            
+            .how-title {
+                font-size: 2rem;
+                margin-bottom: 40px;
+            }
+            
+            .how-steps-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 50px;
+            }
+            
+            .how-step-card {
+                width: 100%;
+                max-width: 280px;
+            }
+            
+            .how-step-icon i {
+                font-size: 3rem;
+            }
+            
+            .about-container {
+                padding: 3rem 1.5rem;
+            }
+            
+            .about-header h2 {
+                font-size: 1.8rem;
+            }
+            
+            .about-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .how-container {
+                padding: 40px 10px;
+            }
+            
+            .how-title {
+                font-size: 1.8rem;
+                margin-bottom: 30px;
+            }
+            
+            .how-step-card {
+                padding: 15px 10px;
+                max-width: 250px;
+            }
+            
+            .how-step-number {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            
+            .how-step-icon i {
+                font-size: 2.5rem;
+            }
+            
+            .how-step-title {
+                font-size: 1.2rem;
+            }
+            
+            .how-step-description {
+                font-size: 0.9rem;
+            }
+            
+            .how-learn-more {
+                padding: 10px 25px;
+                font-size: 0.9rem;
+            }
+            
+            .about-badge {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            
+            .about-header h2 {
+                font-size: 1.6rem;
+            }
+            
+            .about-header p {
+                font-size: 0.9rem;
+            }
+            
+            .about-card {
+                padding: 1.5rem 1rem;
+            }
+            
+            .card-icon {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .card-icon i {
+                font-size: 1.2rem;
+            }
+            
+            .about-card h3 {
+                font-size: 1.2rem;
+            }
+            
+            .about-card p {
+                font-size: 0.85rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1753,7 +2908,7 @@ function isApprovedStationOwner($userId) {
                 }
                 ?>
                 <div class="user-profile">
-                    <span class="username">
+                        <span class="username">
                         <?php 
                         if (isset($_SESSION['name']) && !empty($_SESSION['name'])) {
                             echo htmlspecialchars($_SESSION['name']);
@@ -1767,807 +2922,806 @@ function isApprovedStationOwner($userId) {
                         <a href="example.php">
                             <i class="fas fa-user"></i>
                             My Profile
-                        </a>
-                        <a href="my-bookings.php">
-                            <i class="fas fa-calendar-check"></i>
-                            My Bookings
-                        </a>
-                        <a href="settings.php">
-                            <i class="fas fa-cog"></i>
-                            Settings
-                        </a>
+                            </a>
+                            <a href="my-bookings.php">
+                                <i class="fas fa-calendar-check"></i>
+                                My Bookings
+                            </a>
+                            <a href="settings.php">
+                                <i class="fas fa-cog"></i>
+                                Settings
+                            </a>
                         <div class="dropdown-divider"></div>
-                        <a href="logout.php" class="logout-link">
-                            <i class="fas fa-sign-out-alt"></i>
-                            Logout
-                        </a>
+                            <a href="logout.php" class="logout-link">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Logout
+                            </a>
+                        </div>
                     </div>
-                </div>
                 <?php else: ?>
                 <a href="#" class="nav-link" id="loginSignupBtn">
                     <i class="fas fa-user"></i>
                     Login/Signup
-                </a>
+                    </a>
                 <?php endif; ?>
             </div>
         </nav>
     </header>
 
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Top Image Section -->
-            <section class="top-image-section">
-                <img src="rb_918.png" alt="EV Charging Station" class="top-image">
-                <div class="top-image-text">
-                    <h2>Welcome to EVolve Charging Network</h2>
-                    <p>Find and book charging stations across the country. Our network provides reliable, fast, and convenient charging solutions for all electric vehicles.</p>
-                    <div>
-                        <?php if (isset($_SESSION['user_id'])): ?>
-                            <?php
-                            // Add debug output
-                            error_log("User ID from session: " . $_SESSION['user_id']);
-                            $isOwner = isApprovedStationOwner($_SESSION['user_id']);
-                            error_log("Is approved owner: " . ($isOwner ? "yes" : "no"));
-                            ?>
-                            
-                            <?php if ($isOwner): ?>
-                                <a href="station-owner-dashboard.php">
-                                    <button class="owner-button">
-                                        <i class="fas fa-charging-station"></i>
-                                        Station Owner Dashboard
-                                    </button>
-                                </a>
-                            <?php else: ?>
-                                <?php
-                                // Check if user has a pending request
-                                $stmt = $pdo->prepare("
-                                    SELECT status 
-                                    FROM station_owner_requests 
-                                    WHERE user_id = ? AND status = 'pending'
-                                ");
-                                $stmt->execute([$_SESSION['user_id']]);
-                                $hasPendingRequest = $stmt->rowCount() > 0;
-                                ?>
-                                
-                                <?php if ($hasPendingRequest): ?>
-                                    <button class="owner-button pending" disabled>
-                                        <i class="fas fa-clock"></i>
-                                        Request Pending Approval
-                                    </button>
-                                <?php else: ?>
-                                    <a href="stationlogin.php">
-                                        <button class="owner-button">
-                                            <i class="fas fa-plus-circle"></i>
-                                            Become a Station Owner
-                                        </button>
-                                    </a>
-                                <?php endif; ?>
-                            <?php endif; ?>
-                        <?php else: ?>
-                            <a href="stationlogin.php">
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Image Section -->
+        <section class="top-image-section">
+            <img src="rb_918.png" alt="EV Charging Station" class="top-image">
+            <div class="top-image-text">
+                <h2>Welcome to EVolve Charging Network</h2>
+                <p>Find and book charging stations across the country. Our network provides reliable, fast, and convenient charging solutions for all electric vehicles.</p>
+                <div>
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        <?php
+                        // Add debug output
+                        error_log("User ID from session: " . $_SESSION['user_id']);
+                        $isOwner = isApprovedStationOwner($_SESSION['user_id']);
+                        error_log("Is approved owner: " . ($isOwner ? "yes" : "no"));
+                        ?>
+                        
+                        <?php if ($isOwner): ?>
+                            <a href="station-owner-dashboard.php">
                                 <button class="owner-button">
-                                    <i class="fas fa-plus-circle"></i>
-                                    Become a Station Owner
+                                    <i class="fas fa-charging-station"></i>
+                                    Station Owner Dashboard
                                 </button>
                             </a>
+                        <?php else: ?>
+                            <?php
+                            // Check if user has a pending request
+                            $stmt = $pdo->prepare("
+                                SELECT status 
+                                FROM station_owner_requests 
+                                WHERE user_id = ? AND status = 'pending'
+                            ");
+                            $stmt->execute([$_SESSION['user_id']]);
+                            $hasPendingRequest = $stmt->rowCount() > 0;
+                            ?>
+                            
+                            <?php if ($hasPendingRequest): ?>
+                                <button class="owner-button pending" disabled>
+                                    <i class="fas fa-clock"></i>
+                                    Request Pending Approval
+                                </button>
+                            <?php else: ?>
+                                <a href="stationlogin.php">
+                                    <button class="owner-button">
+                                        <i class="fas fa-plus-circle"></i>
+                                        Become a Station Owner
+                                    </button>
+                                </a>
+                            <?php endif; ?>
                         <?php endif; ?>
-                    </div>
-         
+                    <?php else: ?>
+                        <a href="stationlogin.php">
+                            <button class="owner-button">
+                                <i class="fas fa-plus-circle"></i>
+                                Become a Station Owner
+                            </button>
+                        </a>
+                    <?php endif; ?>
                 </div>
-             
-            </section>
+         
+            </div>
+         
+        </section>
     
         </div>
         
     </div>
 
-    <div class="search-container" id="sc">
-        <div class="search-box">
-            <input type="text" id="searchInput" class="search-input" placeholder="Enter location or zip code">
-            <!-- Add range selector -->
-            <div class="range-selector">
-                <label for="searchRadius">Range:</label>
-                <select id="searchRadius" class="radius-select">
-                    <option value="5">5 km</option>
-                    <option value="10" selected>10 km</option>
-                    <option value="20">20 km</option>
-                    <option value="50">50 km</option>
-                    <option value="100">100 km</option>
-                </select>
-            </div>
-            <button class="search-button" onclick="handleSearch()">Find Stations</button>
-            <button class="geolocation-button" onclick="findNearbyStations()">
-                <i class="fas fa-location-arrow"></i>
-                Near Me
-            </button>
-        </div>
-    </div>
-
-    <!-- Adjust the width of the map container -->
-    <div class="map-container">
-        <div id="map" style="height: 400px; width: 90%; margin: 0 auto;"></div> <!-- Reduced width and centered -->
-    </div>
-
-    <div id="appContent" style="display: none;">
-        <div class="content-wrapper">
-            <div class="results-container">
-                <h2>Available Charging Stations</h2>
-                <div id="searchResults"></div>
-            </div>
-        </div>
-    </div>
-
-
-
-
-
-<div class="ev-features-container">
-    <div class="ev-features-header">
-        <h1>EV Charging Station</h1>
-        <p>Find and book charging stations near you</p>
-    </div>
-
-    <div class="ev-features-content">
-        <!-- Image Section on Left -->
-        <div class="ev-features-image">
-            <img src="rb_10364.png" alt="EV Image">
-        </div>
-
-        <!-- Features Grid on Right -->
-        <div class="ev-features-grid">
-            <!-- All 9 features in a 3x3 grid -->
-            <div class="ev-feature-card">
-                <a href="#" onclick="showSignupModal(); return false;" style="text-decoration: none; color: inherit; display: block;">
-                    <div class="ev-feature-icon-box">
-                        <svg class="ev-feature-icon" viewBox="0 0 24 24">
-                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                        </svg>
-                    </div>
-                    <div class="ev-feature-label">Registration</div>
-                </a>
-            </div>
-
-            
-            <div class="ev-feature-card">
-                <a href="#" onclick="showLoginModal(); return false;" style="text-decoration: none; color: inherit; display: block;">
-                    <div class="ev-feature-icon-box">
-                        <svg class="ev-feature-icon" viewBox="0 0 24 24">
-                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                        </svg>
-                    </div>
-                    <div class="ev-feature-label">Log In</div>
-                </a>
-            </div>
-
-            <div class="ev-feature-card" onclick="document.getElementById('searchInput').focus();">
-                <div class="ev-feature-icon-box">
-                    <svg class="ev-feature-icon" viewBox="0 0 24 24">
-                        <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                    </svg>
-                </div>
-                <div class="ev-feature-label">Search Option</div>
-            </div>
-
-            <div class="ev-feature-card">
-            <a href="cs/geolocation.php" style="text-decoration: none; color: inherit;">
-                <div class="ev-feature-icon-box">
-                    <svg class="ev-feature-icon" viewBox="0 0 24 24">
-                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/>
-                    </svg>
-                </div>
-                <div class="ev-feature-label">
-                   Geolocation</a>
-                </div>
-            </div>
-
-            <div class="ev-feature-card">
-                <?php if (isset($_SESSION['user_id'])): ?>
-                    <!-- Show slot booking link for logged in tbl_users -->
-                    <a href="user_stations.php" style="text-decoration: none; color: inherit; display: block;">
-                        <div class="ev-feature-icon-box">
-                            <svg class="ev-feature-icon" viewBox="0 0 24 24">
-                                <path d="M19 3H5c-1.11 0-1.99.89-1.99 2L3 19c0 1.11.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
-                            </svg>
-                        </div>
-                        <div class="ev-feature-label">Slot Booking</div>
-                    </a>
-                <?php else: ?>
-                    <!-- Show login prompt for non-logged in tbl_users -->
-                    <a href="#" onclick="showLoginModal(); return false;" style="text-decoration: none; color: inherit; display: block;">
-                        <div class="ev-feature-icon-box">
-                            <svg class="ev-feature-icon" viewBox="0 0 24 24">
-                                <path d="M19 3H5c-1.11 0-1.99.89-1.99 2L3 19c0 1.11.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
-                            </svg>
-                        </div>
-                        <div class="ev-feature-label">Book Slots</div>
-                    </a>
-                <?php endif; ?>
-            </div>
-
-            <div class="ev-feature-card">
-                <div class="ev-feature-icon-box">
-                    <svg class="ev-feature-icon" viewBox="0 0 24 24">
-                        <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM7 10h5v5H7z"/>
-                    </svg>
-                </div>
-                <div class="ev-feature-label">Payment Options</div>
-            </div>
-
-            <div class="ev-feature-card">
-                <a href="notifications.php" style="text-decoration: none; color: inherit;">
-                    <div class="ev-feature-icon-box">
-                        <svg class="ev-feature-icon" viewBox="0 0 24 24">
-                            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
-                        </svg>
-                    </div>
-                    <div class="ev-feature-label">Notifications</div>
-                </a>
-            </div>
-
-            <div class="ev-feature-card">
-                <a href="#support" onclick="scrollToSupport(event)" style="text-decoration: none; color: inherit; display: block;">
-                    <div class="ev-feature-icon-box">
-                        <svg class="ev-feature-icon" viewBox="0 0 24 24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                        </svg>
-                    </div>
-                    <div class="ev-feature-label">24/7 Support</div>
-                </a>
-            </div>
-
-
-            <div class="ev-feature-card">
-                <a href="reviews.php" style="text-decoration: none; color: inherit; display: block;">
-                    <div class="ev-feature-icon-box">
-                        <svg class="ev-feature-icon" viewBox="0 0 24 24">
-                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                        </svg>
-                    </div>
-                    <div class="ev-feature-label">Review</div>
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<div class="how-container">
-    <h1 class="how-title">How to Charge</h1>
-    
-    <div class="how-steps-container">
-        <div class="how-step-card" data-aos="fade-up">
-            <div class="how-step-number"><span>1</span></div>
-            <div class="how-step-icon">
-                <i class="fas fa-plug"></i>
-                <span class="how-icon-name">Plug In</span>
-            </div>
-            <h2 class="how-step-title">Plug in</h2>
-            <p class="how-step-description">Connect to your charging port.</p>
-        </div>
-
-        <div class="how-step-card" data-aos="fade-up" data-aos-delay="100">
-            <div class="how-step-number"><span>2</span></div>
-            <div class="how-step-icon">
-                <i class="fas fa-credit-card"></i>
-                <span class="how-icon-name">Tap Card</span>
-            </div>
-            <h2 class="how-step-title">Tap to Start Your Charge</h2>
-            <p class="how-step-description">By EVgo app, RFID, or credit card.</p>
-        </div>
-
-        <div class="how-step-card" data-aos="fade-up" data-aos-delay="200">
-            <div class="how-step-number"><span>3</span></div>
-            <div class="how-step-icon">
-                <i class="fas fa-charging-station"></i>
-                <span class="how-icon-name">Charge</span>
-            </div>
-            <h2 class="how-step-title">Charge Up & Go</h2>
-            <p class="how-step-description">Your next destination awaits.</p>
-        </div>
-    </div>
-
-    <a href="#" class="how-learn-more">Learn More</a>
-</div>
-
-
-<div class="about-container" id="about">
-    <div class="about-header">
-        <span class="about-badge">About Us</span>
-        <h2>Empowering Electric Mobility</h2>
-        <p>Making EV charging accessible, reliable, and convenient for everyone</p>
-    </div>
-
-    <div class="about-grid">
-        <div class="about-card mission">
-            <div class="card-icon">
-                <i class="fas fa-rocket"></i>
-            </div>
-            <h3>Our Mission</h3>
-            <p>To build the world's most reliable EV charging network while promoting sustainable transportation.</p>
-        </div>
-
-        <div class="about-card vision">
-            <div class="card-icon">
-                <i class="fas fa-eye"></i>
-            </div>
-            <h3>Our Vision</h3>
-            <p>A future where every vehicle on the road is powered by clean, renewable energy.</p>
-        </div>
-
-        <div class="about-card values">
-            <div class="card-icon">
-                <i class="fas fa-star"></i>
-            </div>
-            <h3>Our Values</h3>
-            <p>Innovation, Sustainability, Reliability, and Community-driven solutions.</p>
-        </div>
-    </div>
-</div>
-
-
-<div id="support" class="support-container">
-        <div class="support-header">
-            <h1>24/7 Customer Support</h1>
-            <p>We're here to help you with any questions or concerns you may have</p>
-        </div>
-
-        <div class="support-grid">
-            <div class="support-card">
-                <i class="fas fa-question-circle"></i>
-                <h3>FAQ</h3>
-                <p>Find answers to commonly asked questions about our services, booking process, and payment options.</p>
-            </div>
-
-            <div class="support-card">
-                <i class="fas fa-book"></i>
-                <h3>User Guide</h3>
-                <p>Detailed instructions on how to use our platform, make bookings, and manage your account.</p>
-            </div>
-
-            <div class="support-card">
-                <i class="fas fa-tools"></i>
-                <h3>Technical Support</h3>
-                <p>Get help with technical issues related to charging stations, app functionality, or account access.</p>
-            </div>
-        </div>
-
-        <div class="contact-section">
-            <h2>Get in Touch</h2>
-            <form id="enquiryForm" class="contact-form">
-                <?php if (!isset($_SESSION['user_id'])): ?>
-                <div class="form-group">
-                    <label for="enquiryName">Your Name</label>
-                    <input type="text" id="enquiryName" name="name" required placeholder="Enter your name">
-                </div>
-                <div class="form-group">
-                    <label for="enquiryEmail">Email Address</label>
-                    <input type="email" id="enquiryEmail" name="email" required placeholder="Enter your email">
-                </div>
-                <?php endif; ?>
-                <div class="form-group">
-                    <label for="stationSelect">Select Station</label>
-                    <select id="stationSelect" name="station_id" required>
-                        <option value="">-- Select a station --</option>
-                        <?php
-                        // Fetch all active stations
-                        $stationQuery = $pdo->prepare("SELECT station_id, name FROM charging_stations WHERE status = 'active'");
-                        $stationQuery->execute();
-                        $stationList = $stationQuery->fetchAll(PDO::FETCH_ASSOC);
-                        
-                        foreach ($stationList as $station) {
-                            echo '<option value="' . $station['station_id'] . '">' . htmlspecialchars($station['name']) . '</option>';
-                        }
-                        ?>
+        <div class="search-container" id="sc">
+            <div class="search-box">
+                <input type="text" id="searchInput" class="search-input" placeholder="Enter location or zip code">
+                <!-- Add range selector -->
+                <div class="range-selector">
+                    <label for="searchRadius">Range:</label>
+                    <select id="searchRadius" class="radius-select">
+                        <option value="5">5 km</option>
+                        <option value="10" selected>10 km</option>
+                        <option value="20">20 km</option>
+                        <option value="50">50 km</option>
+                        <option value="100">100 km</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="enquirySubject">Subject</label>
-                    <input type="text" id="enquirySubject" name="subject" required placeholder="Enter subject">
-                </div>
-                <div class="form-group">
-                    <label for="enquiryMessage">Message</label>
-                    <textarea id="enquiryMessage" name="message" rows="4" required placeholder="Type your message here..."></textarea>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="submit-button">
-                        <i class="fas fa-paper-plane"></i> Send Enquiry
-                    </button>
-                </div>
-                <div class="success-message" id="enquirySuccess">
-                    Your enquiry has been sent successfully! We'll get back to you soon.
-                </div>
-            </form>
+                <button class="search-button" onclick="handleSearch()">Find Stations</button>
+                <button class="geolocation-button" onclick="findNearbyStations()">
+                    <i class="fas fa-location-arrow"></i>
+                    Near Me
+                </button>
+            </div>
         </div>
-    </div>
+
+        <!-- Adjust the width of the map container -->
+        <div class="map-container">
+            <div id="map" style="height: 400px; width: 90%; margin: 0 auto;"></div> <!-- Reduced width and centered -->
+        </div>
+
+        <div id="appContent" style="display: none;">
+            <div class="content-wrapper">
+                <div class="results-container">
+                    <h2>Available Charging Stations</h2>
+                    <div id="searchResults"></div>
+                </div>
+            </div>
+        </div>
 
 
 
 
-</main>
-    
 
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script>
-        let map;
-        const stations = <?php echo $stationsJson; ?>;
+        <div class="ev-features-container">
+            <div class="ev-features-header">
+                <h1>EV Charging Station</h1>
+                <p>Find and book charging stations near you</p>
+            </div>
 
-        function initMap() {
-            console.log("Stations data:", stations); // Debug log
+            <div class="ev-features-content">
+                <!-- Image Section on Left -->
+                <div class="ev-features-image">
+                    <img src="rb_10364.png" alt="EV Image">
+                </div>
 
-            // Center the map on Kerala
-            map = L.map('map').setView([10.8505, 76.2711], 7);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-
-            // Add markers for each station
-            stations.forEach(station => {
-                console.log("Adding marker:", station); // Debug log
-                
-                if (station.lat && station.lng) {
-                    const marker = L.marker([station.lat, station.lng])
-                        .bindPopup(`
-                            <div class="marker-popup">
-                                <div class="popup-header">
-                                    <h3>${station.name}</h3>
-                                    <span class="status-badge ${station.status.toLowerCase()}">${station.status}</span>
-                                </div>
-                                <div class="popup-content">
-                                    <div class="popup-info">
-                                        <i class="fas fa-map-marker-alt"></i> ${station.address}
-                                    </div>
-                                    <div class="popup-stats">
-                                        <div class="stat">
-                                            <i class="fas fa-plug"></i>
-                                            <span>${station.availableSlots}/${station.totalSlots} Available</span>
-                                        </div>
-                                        <div class="stat">
-                                            <i class="fas fa-rupee-sign"></i>
-                                            <span>${station.price}/kWh</span>
-                                        </div>
-                                    </div>
-                                    <a href="station_details.php?id=${station.id}" class="popup-details-btn">
-                                        <span>View Details</span>
-                                        <i class="fas fa-arrow-right"></i>
-                                    </a>
-                                </div>
+                <!-- Features Grid on Right -->
+                <div class="ev-features-grid">
+                    <!-- All 9 features in a 3x3 grid -->
+                    <div class="ev-feature-card">
+                        <a href="#" onclick="showSignupModal(); return false;" style="text-decoration: none; color: inherit; display: block;">
+                            <div class="ev-feature-icon-box">
+                                <svg class="ev-feature-icon" viewBox="0 0 24 24">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
                             </div>
-                        `)
-                        .addTo(map);
-                } else {
-                    console.error("Invalid coordinates for station:", station);
-                }
-            });
-        }
+                            <div class="ev-feature-label">Registration</div>
+                        </a>
+                    </div>
 
-        // Initialize map when page loads
-        window.onload = initMap;
-
-        function handleSearch() {
-            const searchInput = document.getElementById('searchInput').value.trim();
-            const searchRadius = parseFloat(document.getElementById('searchRadius').value);
-            
-            if (!searchInput) {
-                alert('Please enter a location or zip code');
-                return;
-            }
-
-            // Show loading indicator
-            showLoadingIndicator();
-
-            // Use the Nominatim API to geocode the search input
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchInput)}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.length === 0) {
-                        throw new Error('Location not found');
-                    }
-
-                    const location = data[0];
-                    const lat = parseFloat(location.lat);
-                    const lng = parseFloat(location.lon);
-
-                    // Create form data for nearby search
-                    const formData = new FormData();
-                    formData.append('action', 'nearby');
-                    formData.append('lat', lat);
-                    formData.append('lng', lng);
-                    formData.append('radius', searchRadius);
-
-                    // Search for stations near the geocoded location
-                    return fetch('index.php', {
-                        method: 'POST',
-                        body: formData
-                    });
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Clear existing markers
-                        map.eachLayer((layer) => {
-                            if (layer instanceof L.Marker || layer instanceof L.Circle) {
-                                map.removeLayer(layer);
-                            }
-                        });
-
-                        // Add search location marker
-                        const searchIcon = L.divIcon({
-                            className: 'search-location-marker',
-                            html: '<i class="fas fa-search-location"></i>',
-                            iconSize: [30, 30],
-                            iconAnchor: [15, 15]
-                        });
-
-                        const searchLat = parseFloat(data.searchLocation?.lat || data.stations[0]?.lat);
-                        const searchLng = parseFloat(data.searchLocation?.lng || data.stations[0]?.lng);
-
-                        L.marker([searchLat, searchLng], {
-                            icon: searchIcon
-                        }).addTo(map);
-
-                        // Add radius circle
-                        L.circle([searchLat, searchLng], {
-                            radius: searchRadius * 1000, // Convert km to meters
-                            color: '#4CAF50',
-                            fillColor: '#4CAF50',
-                            fillOpacity: 0.1,
-                            weight: 1
-                        }).addTo(map);
-
-                        // Update map view and markers
-                        updateMapWithResults(data.stations);
-                        updateSearchResults(data.stations);
-
-                        // Show the results container
-                        document.getElementById('appContent').style.display = 'block';
-
-                    } else {
-                        throw new Error(data.error || 'No stations found in the area');
-                    }
-                })
-                .catch(error => {
-                    console.error('Search error:', error);
-                    showErrorMessage(error.message);
-                })
-                .finally(() => {
-                    hideLoadingIndicator();
-                });
-        }
-
-        // Add these helper styles for the search marker
-        const styles = `
-            .search-location-marker {
-                color: #2196F3;
-                font-size: 24px;
-                text-align: center;
-                line-height: 30px;
-            }
-
-            .loading-indicator {
-                position: absolute;
-                right: 10px;
-                top: 50%;
-                transform: translateY(-50%);
-                color: #666;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
-
-            .loading-indicator i {
-                font-size: 18px;
-            }
-        `;
-
-        // Add the styles to the document
-        const styleSheet = document.createElement("style");
-        styleSheet.textContent = styles;
-        document.head.appendChild(styleSheet);
-
-        // Add event listener for Enter key in search input
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                handleSearch();
-            }
-        });
-
-        function updateMapWithResults(stations) {
-            // Clear existing markers
-            map.eachLayer(layer => {
-                if (layer instanceof L.Marker) {
-                    map.removeLayer(layer);
-                }
-            });
-
-            if (!stations || stations.length === 0) {
-                showNoResultsMessage();
-                return;
-            }
-
-            // Create a bounds object
-            let bounds = L.latLngBounds([]);
-
-            stations.forEach(station => {
-                if (station.lat && station.lng) {
-                    const marker = L.marker([station.lat, station.lng])
-                        .bindPopup(`
-                            <div class="marker-popup">
-                                <div class="popup-header">
-                                    <h3>${station.name}</h3>
-                                    <span class="status-badge ${station.status.toLowerCase()}">${station.status}</span>
-                                </div>
-                                <div class="popup-content">
-                                    <div class="popup-info">
-                                        <i class="fas fa-map-marker-alt"></i> ${station.address}
-                                    </div>
-                                    <div class="popup-stats">
-                                        <div class="stat">
-                                            <i class="fas fa-plug"></i>
-                                            <span>${station.availableSlots}/${station.totalSlots} Available</span>
-                                        </div>
-                                        <div class="stat">
-                                            <i class="fas fa-rupee-sign"></i>
-                                            <span>${station.price}/kWh</span>
-                                        </div>
-                                    </div>
-                                    <a href="station_details.php?id=${station.id}" class="popup-details-btn">
-                                        <span>View Details</span>
-                                        <i class="fas fa-arrow-right"></i>
-                                    </a>
-                                </div>
+                    
+                    <div class="ev-feature-card">
+                        <a href="#" onclick="showLoginModal(); return false;" style="text-decoration: none; color: inherit; display: block;">
+                            <div class="ev-feature-icon-box">
+                                <svg class="ev-feature-icon" viewBox="0 0 24 24">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
                             </div>
-                        `)
-                        .addTo(map);
-
-                    // Extend bounds with this marker's position
-                    bounds.extend([station.lat, station.lng]);
-                }
-            });
-
-            // Only fit bounds if we have markers
-            if (bounds.isValid()) {
-                map.fitBounds(bounds, {
-                    padding: [50, 50],
-                    maxZoom: 15
-                });
-            }
-        }
-
-        function updateSearchResults(stations) {
-            const resultsContainer = document.getElementById('searchResults');
-            const appContent = document.getElementById('appContent');
-            
-            // Show the results container
-            appContent.style.display = 'block';
-            
-            if (!stations || stations.length === 0) {
-                resultsContainer.innerHTML = `
-                    <div class="no-results">
-                        <i class="fas fa-search"></i>
-                        <p>No charging stations found in this area</p>
+                            <div class="ev-feature-label">Log In</div>
+                        </a>
                     </div>
-                `;
-                return;
-            }
 
-            // Create HTML for stations
-            const stationsHTML = stations.map(station => `
-                <div class="station-card">
-                    <div class="station-header">
-                        <h3>${station.name}</h3>
-                        <span class="status-badge ${station.status.toLowerCase()}">${station.status}</span>
+                    <div class="ev-feature-card" onclick="document.getElementById('searchInput').focus();">
+                        <div class="ev-feature-icon-box">
+                            <svg class="ev-feature-icon" viewBox="0 0 24 24">
+                                <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                            </svg>
+                        </div>
+                        <div class="ev-feature-label">Search Option</div>
                     </div>
-                   
-                    <div class="station-info">
-                        <p><i class="fas fa-map-marker-alt"></i> ${station.address}</p>
-                        ${station.distance ? `
-                            <p><i class="fas fa-road"></i> ${station.distance} km away</p>
-                        ` : ''}
-                        <p><i class="fas fa-plug"></i> ${station.availableSlots}/${station.totalSlots} slots available</p>
-                        <p><i class="fas fa-rupee-sign"></i> ${station.price}/kWh</p>
+
+                    <div class="ev-feature-card">
+                    <a href="cs/geolocation.php" style="text-decoration: none; color: inherit; display: block;">
+                        <div class="ev-feature-icon-box">
+                            <svg class="ev-feature-icon" viewBox="0 0 24 24">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/>
+                            </svg>
+                        </div>
+                        <div class="ev-feature-label">Geolocation</div>
+                    </a>
                     </div>
-                    <div class="station-actions">
-                        <a href="station_details.php?id=${station.id}" class="view-details-btn">
-                            View Details <i class="fas fa-arrow-right"></i>
+
+                    <div class="ev-feature-card">
+                        <?php if (isset($_SESSION['user_id'])): ?>
+                            <!-- Show slot booking link for logged in tbl_users -->
+                            <a href="user_stations.php" style="text-decoration: none; color: inherit; display: block;">
+                                <div class="ev-feature-icon-box">
+                                    <svg class="ev-feature-icon" viewBox="0 0 24 24">
+                                        <path d="M19 3H5c-1.11 0-1.99.89-1.99 2L3 19c0 1.11.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                                    </svg>
+                                </div>
+                                <div class="ev-feature-label">Slot Booking</div>
+                            </a>
+                        <?php else: ?>
+                            <!-- Show login prompt for non-logged in tbl_users -->
+                            <a href="#" onclick="showLoginModal(); return false;" style="text-decoration: none; color: inherit; display: block;">
+                                <div class="ev-feature-icon-box">
+                                    <svg class="ev-feature-icon" viewBox="0 0 24 24">
+                                        <path d="M19 3H5c-1.11 0-1.99.89-1.99 2L3 19c0 1.11.89 2 2 2h14c1.11 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                                    </svg>
+                                </div>
+                                <div class="ev-feature-label">Book Slots</div>
+                            </a>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="ev-feature-card">
+                        <div class="ev-feature-icon-box">
+                            <svg class="ev-feature-icon" viewBox="0 0 24 24">
+                                <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM7 10h5v5H7z"/>
+                            </svg>
+                        </div>
+                        <div class="ev-feature-label">Payment Options</div>
+                    </div>
+
+                    <div class="ev-feature-card">
+                        <a href="notifications.php" style="text-decoration: none; color: inherit;">
+                            <div class="ev-feature-icon-box">
+                                <svg class="ev-feature-icon" viewBox="0 0 24 24">
+                                    <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+                                </svg>
+                            </div>
+                            <div class="ev-feature-label">Notifications</div>
+                        </a>
+                    </div>
+
+                    <div class="ev-feature-card">
+                        <a href="#support" onclick="scrollToSupport(event)" style="text-decoration: none; color: inherit; display: block;">
+                            <div class="ev-feature-icon-box">
+                                <svg class="ev-feature-icon" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                </svg>
+                            </div>
+                            <div class="ev-feature-label">24/7 Support</div>
+                        </a>
+                    </div>
+
+
+                    <div class="ev-feature-card">
+                        <a href="reviews.php" style="text-decoration: none; color: inherit; display: block;">
+                            <div class="ev-feature-icon-box">
+                                <svg class="ev-feature-icon" viewBox="0 0 24 24">
+                                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                </svg>
+                            </div>
+                            <div class="ev-feature-label">Review</div>
                         </a>
                     </div>
                 </div>
-            `).join('');
+            </div>
+        </div>
 
-            resultsContainer.innerHTML = stationsHTML;
-        }
 
-        // Add these helper functions
-        function showLoadingIndicator() {
-            const searchBox = document.querySelector('.search-box');
-            if (!document.querySelector('.loading-indicator')) {
-                const loader = document.createElement('div');
-                loader.className = 'loading-indicator';
-                loader.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
-                searchBox.appendChild(loader);
-            }
-        }
-
-        function hideLoadingIndicator() {
-            const loader = document.querySelector('.loading-indicator');
-            if (loader) {
-                loader.remove();
-            }
-        }
-
-        function showErrorMessage(message) {
-            const resultsContainer = document.getElementById('searchResults');
-            resultsContainer.innerHTML = `
-                <div class="error-message">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <p>${message}</p>
-                    <button class="error-close">&times;</button>
+        <div class="how-container">
+            <h1 class="how-title">How to Charge</h1>
+            
+            <div class="how-steps-container">
+                <div class="how-step-card" data-aos="fade-up">
+                    <div class="how-step-number"><span>1</span></div>
+                    <div class="how-step-icon">
+                        <i class="fas fa-plug"></i>
+                        <span class="how-icon-name">Plug In</span>
+                    </div>
+                    <h2 class="how-step-title">Plug in</h2>
+                    <p class="how-step-description">Connect to your charging port.</p>
                 </div>
-            `;
-            document.getElementById('appContent').style.display = 'block';
-        }
 
-        function showNoResultsMessage() {
-            const resultsContainer = document.getElementById('searchResults');
-            resultsContainer.innerHTML = `
-                <div class="no-results">
-                    <i class="fas fa-search"></i>
-                    <p>No charging stations found in this area. Try expanding your search radius.</p>
+                <div class="how-step-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="how-step-number"><span>2</span></div>
+                    <div class="how-step-icon">
+                        <i class="fas fa-credit-card"></i>
+                        <span class="how-icon-name">Tap Card</span>
+                    </div>
+                    <h2 class="how-step-title">Tap to Start Your Charge</h2>
+                    <p class="how-step-description">By EVgo app, RFID, or credit card.</p>
                 </div>
-            `;
-            document.getElementById('appContent').style.display = 'block';
-        }
 
-        function getDistrictFromCoordinates(lat, lng) {
-            // Simplified district determination based on coordinates
-            if (lat < 9.0 && lng < 77.0) return "Thiruvananthapuram";
-            if (lat < 10.0 && lng < 76.5) return "Kochi";
-            if (lat > 11.0) return "Kozhikode";
-            if (lat > 10.4 && lng > 76.0) return "Thrissur";
-            return "Alappuzha";
-        }
+                <div class="how-step-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="how-step-number"><span>3</span></div>
+                    <div class="how-step-icon">
+                        <i class="fas fa-charging-station"></i>
+                        <span class="how-icon-name">Charge</span>
+                    </div>
+                    <h2 class="how-step-title">Charge Up & Go</h2>
+                    <p class="how-step-description">Your next destination awaits.</p>
+                </div>
+            </div>
 
-        function focusStation(lat, lng) {
-            map.setView([lat, lng], 15);
-            marker.setLatLng([lat, lng]);
-        }
+            <a href="#" class="how-learn-more">Learn More</a>
+        </div>
 
-        function viewStationDetails(stationId) {
-            // You can customize this function to show station details
-            // For example, redirect to a details page:
-            window.location.href = `station_details.php?id=${stationId}`;
-            // Or open a modal with station details
-        }
 
-        // Add this function to calculate appropriate zoom level based on radius
-        function getZoomForRadius(radius) {
-            // Approximate zoom levels for different radiuses (in km)
-            if (radius <= 5) return 13;
-            if (radius <= 10) return 12;
-            if (radius <= 20) return 11;
-            if (radius <= 50) return 10;
-            return 9; // for 100km or greater
-        }
+        <div class="about-container" id="about">
+            <div class="about-header">
+                <span class="about-badge">About Us</span>
+                <h2>Empowering Electric Mobility</h2>
+                <p>Making EV charging accessible, reliable, and convenient for everyone</p>
+            </div>
 
-        function findNearbyStations() {
-            if (!navigator.geolocation) {
-                alert('Geolocation is not supported by your browser');
-                return;
+            <div class="about-grid">
+                <div class="about-card mission">
+                    <div class="card-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3>Our Mission</h3>
+                    <p>To build the world's most reliable EV charging network while promoting sustainable transportation.</p>
+                </div>
+
+                <div class="about-card vision">
+                    <div class="card-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <h3>Our Vision</h3>
+                    <p>A future where every vehicle on the road is powered by clean, renewable energy.</p>
+                </div>
+
+                <div class="about-card values">
+                    <div class="card-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h3>Our Values</h3>
+                    <p>Innovation, Sustainability, Reliability, and Community-driven solutions.</p>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="support" class="support-container">
+                <div class="support-header">
+                    <h1>24/7 Customer Support</h1>
+                    <p>We're here to help you with any questions or concerns you may have</p>
+                </div>
+
+                <div class="support-grid">
+                    <div class="support-card">
+                        <i class="fas fa-question-circle"></i>
+                        <h3>FAQ</h3>
+                        <p>Find answers to commonly asked questions about our services, booking process, and payment options.</p>
+                    </div>
+
+                    <div class="support-card">
+                        <i class="fas fa-book"></i>
+                        <h3>User Guide</h3>
+                        <p>Detailed instructions on how to use our platform, make bookings, and manage your account.</p>
+                    </div>
+
+                    <div class="support-card">
+                        <i class="fas fa-tools"></i>
+                        <h3>Technical Support</h3>
+                        <p>Get help with technical issues related to charging stations, app functionality, or account access.</p>
+                    </div>
+                </div>
+
+                <div class="contact-section">
+                    <h2>Get in Touch</h2>
+                    <form id="enquiryForm" class="contact-form">
+                        <?php if (!isset($_SESSION['user_id'])): ?>
+                        <div class="form-group">
+                            <label for="enquiryName">Your Name</label>
+                            <input type="text" id="enquiryName" name="name" required placeholder="Enter your name">
+                        </div>
+                        <div class="form-group">
+                            <label for="enquiryEmail">Email Address</label>
+                            <input type="email" id="enquiryEmail" name="email" required placeholder="Enter your email">
+                        </div>
+                        <?php endif; ?>
+                        <div class="form-group">
+                            <label for="stationSelect">Select Station</label>
+                            <select id="stationSelect" name="station_id" required>
+                                <option value="">-- Select a station --</option>
+                                <?php
+                                // Fetch all active stations
+                                $stationQuery = $pdo->prepare("SELECT station_id, name FROM charging_stations WHERE status = 'active'");
+                                $stationQuery->execute();
+                                $stationList = $stationQuery->fetchAll(PDO::FETCH_ASSOC);
+                                
+                                foreach ($stationList as $station) {
+                                    echo '<option value="' . $station['station_id'] . '">' . htmlspecialchars($station['name']) . '</option>';
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="enquirySubject">Subject</label>
+                            <input type="text" id="enquirySubject" name="subject" required placeholder="Enter subject">
+                        </div>
+                        <div class="form-group">
+                            <label for="enquiryMessage">Message</label>
+                            <textarea id="enquiryMessage" name="message" rows="4" required placeholder="Type your message here..."></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="submit-button">
+                                <i class="fas fa-paper-plane"></i> Send Enquiry
+                            </button>
+                        </div>
+                        <div class="success-message" id="enquirySuccess">
+                            Your enquiry has been sent successfully! We'll get back to you soon.
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+
+
+
+        </main>
+            
+
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+        <script>
+            let map;
+            const stations = <?php echo $stationsJson; ?>;
+
+            function initMap() {
+                console.log("Stations data:", stations); // Debug log
+
+                // Center the map on Kerala
+                map = L.map('map').setView([10.8505, 76.2711], 7);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                // Add markers for each station
+                stations.forEach(station => {
+                    console.log("Adding marker:", station); // Debug log
+                    
+                    if (station.lat && station.lng) {
+                        const marker = L.marker([station.lat, station.lng])
+                            .bindPopup(`
+                                <div class="marker-popup">
+                                    <div class="popup-header">
+                                        <h3>${station.name}</h3>
+                                        <span class="status-badge ${station.status.toLowerCase()}">${station.status}</span>
+                                    </div>
+                                    <div class="popup-content">
+                                        <div class="popup-info">
+                                            <i class="fas fa-map-marker-alt"></i> ${station.address}
+                                        </div>
+                                        <div class="popup-stats">
+                                            <div class="stat">
+                                                <i class="fas fa-plug"></i>
+                                                <span>${station.availableSlots}/${station.totalSlots} Available</span>
+                                            </div>
+                                            <div class="stat">
+                                                <i class="fas fa-rupee-sign"></i>
+                                                <span>${station.price}/kWh</span>
+                                            </div>
+                                        </div>
+                                        <a href="station_details.php?id=${station.id}" class="popup-details-btn">
+                                            <span>View Details</span>
+                                            <i class="fas fa-arrow-right"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            `)
+                            .addTo(map);
+                    } else {
+                        console.error("Invalid coordinates for station:", station);
+                    }
+                });
             }
 
-            // Show loading indicator
-            showLoadingIndicator();
+            // Initialize map when page loads
+            window.onload = initMap;
 
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const userLat = position.coords.latitude;
-                    const userLng = position.coords.longitude;
-                    const radius = parseFloat(document.getElementById('searchRadius').value);
+            function handleSearch() {
+                const searchInput = document.getElementById('searchInput').value.trim();
+                const searchRadius = parseFloat(document.getElementById('searchRadius').value);
+                
+                if (!searchInput) {
+                    alert('Please enter a location or zip code');
+                    return;
+                }
 
-                    // Create form data
+                // Show loading indicator
+                showLoadingIndicator();
+
+                // Use the Nominatim API to geocode the search input
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchInput)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length === 0) {
+                            throw new Error('Location not found');
+                        }
+
+                        const location = data[0];
+                        const lat = parseFloat(location.lat);
+                        const lng = parseFloat(location.lon);
+
+                        // Create form data for nearby search
+                        const formData = new FormData();
+                        formData.append('action', 'nearby');
+                        formData.append('lat', lat);
+                        formData.append('lng', lng);
+                        formData.append('radius', searchRadius);
+
+                        // Search for stations near the geocoded location
+                        return fetch('index.php', {
+                            method: 'POST',
+                            body: formData
+                        });
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Clear existing markers
+                            map.eachLayer((layer) => {
+                                if (layer instanceof L.Marker || layer instanceof L.Circle) {
+                                    map.removeLayer(layer);
+                                }
+                            });
+
+                            // Add search location marker
+                            const searchIcon = L.divIcon({
+                                className: 'search-location-marker',
+                                html: '<i class="fas fa-search-location"></i>',
+                                iconSize: [30, 30],
+                                iconAnchor: [15, 15]
+                            });
+
+                            const searchLat = parseFloat(data.searchLocation?.lat || data.stations[0]?.lat);
+                            const searchLng = parseFloat(data.searchLocation?.lng || data.stations[0]?.lng);
+
+                            L.marker([searchLat, searchLng], {
+                                icon: searchIcon
+                            }).addTo(map);
+
+                            // Add radius circle
+                            L.circle([searchLat, searchLng], {
+                                radius: searchRadius * 1000, // Convert km to meters
+                                color: '#4CAF50',
+                                fillColor: '#4CAF50',
+                                fillOpacity: 0.1,
+                                weight: 1
+                            }).addTo(map);
+
+                            // Update map view and markers
+                            updateMapWithResults(data.stations);
+                            updateSearchResults(data.stations);
+
+                            // Show the results container
+                            document.getElementById('appContent').style.display = 'block';
+
+                        } else {
+                            throw new Error(data.error || 'No stations found in the area');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Search error:', error);
+                        showErrorMessage(error.message);
+                    })
+                    .finally(() => {
+                        hideLoadingIndicator();
+                    });
+            }
+
+            // Add these helper styles for the search marker
+            const styles = `
+                .search-location-marker {
+                    color: #2196F3;
+                    font-size: 24px;
+                    text-align: center;
+                    line-height: 30px;
+                }
+
+                .loading-indicator {
+                    position: absolute;
+                    right: 10px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: #666;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+
+                .loading-indicator i {
+                    font-size: 18px;
+                }
+            `;
+
+            // Add the styles to the document
+            const styleSheet = document.createElement("style");
+            styleSheet.textContent = styles;
+            document.head.appendChild(styleSheet);
+
+            // Add event listener for Enter key in search input
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSearch();
+                }
+            });
+
+            function updateMapWithResults(stations) {
+                // Clear existing markers
+                map.eachLayer(layer => {
+                    if (layer instanceof L.Marker) {
+                        map.removeLayer(layer);
+                    }
+                });
+
+                if (!stations || stations.length === 0) {
+                    showNoResultsMessage();
+                    return;
+                }
+
+                // Create a bounds object
+                let bounds = L.latLngBounds([]);
+
+                stations.forEach(station => {
+                    if (station.lat && station.lng) {
+                        const marker = L.marker([station.lat, station.lng])
+                            .bindPopup(`
+                                <div class="marker-popup">
+                                    <div class="popup-header">
+                                        <h3>${station.name}</h3>
+                                        <span class="status-badge ${station.status.toLowerCase()}">${station.status}</span>
+                                    </div>
+                                    <div class="popup-content">
+                                        <div class="popup-info">
+                                            <i class="fas fa-map-marker-alt"></i> ${station.address}
+                                        </div>
+                                        <div class="popup-stats">
+                                            <div class="stat">
+                                                <i class="fas fa-plug"></i>
+                                                <span>${station.availableSlots}/${station.totalSlots} Available</span>
+                                            </div>
+                                            <div class="stat">
+                                                <i class="fas fa-rupee-sign"></i>
+                                                <span>${station.price}/kWh</span>
+                                            </div>
+                                        </div>
+                                        <a href="station_details.php?id=${station.id}" class="popup-details-btn">
+                                            <span>View Details</span>
+                                            <i class="fas fa-arrow-right"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            `)
+                            .addTo(map);
+
+                        // Extend bounds with this marker's position
+                        bounds.extend([station.lat, station.lng]);
+                    }
+                });
+
+                // Only fit bounds if we have markers
+                if (bounds.isValid()) {
+                    map.fitBounds(bounds, {
+                        padding: [50, 50],
+                        maxZoom: 15
+                    });
+                }
+            }
+
+            function updateSearchResults(stations) {
+                const resultsContainer = document.getElementById('searchResults');
+                const appContent = document.getElementById('appContent');
+                
+                // Show the results container
+                appContent.style.display = 'block';
+                
+                if (!stations || stations.length === 0) {
+                    resultsContainer.innerHTML = `
+                        <div class="no-results">
+                            <i class="fas fa-search"></i>
+                            <p>No charging stations found in this area</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Create HTML for stations
+                const stationsHTML = stations.map(station => `
+                    <div class="station-card">
+                        <div class="station-header">
+                            <h3>${station.name}</h3>
+                            <span class="status-badge ${station.status.toLowerCase()}">${station.status}</span>
+                        </div>
+                       
+                        <div class="station-info">
+                            <p><i class="fas fa-map-marker-alt"></i> ${station.address}</p>
+                            ${station.distance ? `
+                                <p><i class="fas fa-road"></i> ${station.distance} km away</p>
+                            ` : ''}
+                            <p><i class="fas fa-plug"></i> ${station.availableSlots}/${station.totalSlots} slots available</p>
+                            <p><i class="fas fa-rupee-sign"></i> ${station.price}/kWh</p>
+                        </div>
+                        <div class="station-actions">
+                            <a href="station_details.php?id=${station.id}" class="view-details-btn">
+                                View Details <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                `).join('');
+
+                resultsContainer.innerHTML = stationsHTML;
+            }
+
+            // Add these helper functions
+            function showLoadingIndicator() {
+                const searchBox = document.querySelector('.search-box');
+                if (!document.querySelector('.loading-indicator')) {
+                    const loader = document.createElement('div');
+                    loader.className = 'loading-indicator';
+                    loader.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+                    searchBox.appendChild(loader);
+                }
+            }
+
+            function hideLoadingIndicator() {
+                const loader = document.querySelector('.loading-indicator');
+                if (loader) {
+                    loader.remove();
+                }
+            }
+
+            function showErrorMessage(message) {
+                const resultsContainer = document.getElementById('searchResults');
+                resultsContainer.innerHTML = `
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>${message}</p>
+                        <button class="error-close">&times;</button>
+                    </div>
+                `;
+                document.getElementById('appContent').style.display = 'block';
+            }
+
+            function showNoResultsMessage() {
+                const resultsContainer = document.getElementById('searchResults');
+                resultsContainer.innerHTML = `
+                    <div class="no-results">
+                        <i class="fas fa-search"></i>
+                        <p>No charging stations found in this area. Try expanding your search radius.</p>
+                    </div>
+                `;
+                document.getElementById('appContent').style.display = 'block';
+            }
+
+            function getDistrictFromCoordinates(lat, lng) {
+                // Simplified district determination based on coordinates
+                if (lat < 9.0 && lng < 77.0) return "Thiruvananthapuram";
+                if (lat < 10.0 && lng < 76.5) return "Kochi";
+                if (lat > 11.0) return "Kozhikode";
+                if (lat > 10.4 && lng > 76.0) return "Thrissur";
+                return "Alappuzha";
+            }
+
+            function focusStation(lat, lng) {
+                map.setView([lat, lng], 15);
+                marker.setLatLng([lat, lng]);
+            }
+
+            function viewStationDetails(stationId) {
+                // You can customize this function to show station details
+                // For example, redirect to a details page:
+                window.location.href = `station_details.php?id=${stationId}`;
+                // Or open a modal with station details
+            }
+
+            // Add this function to calculate appropriate zoom level based on radius
+            function getZoomForRadius(radius) {
+                // Approximate zoom levels for different radiuses (in km)
+                if (radius <= 5) return 13;
+                if (radius <= 10) return 12;
+                if (radius <= 20) return 11;
+                if (radius <= 50) return 10;
+                return 9; // for 100km or greater
+            }
+
+            function findNearbyStations() {
+                if (!navigator.geolocation) {
+                    alert('Geolocation is not supported by your browser');
+                    return;
+                }
+
+                // Show loading indicator
+                showLoadingIndicator();
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userLat = position.coords.latitude;
+                        const userLng = position.coords.longitude;
+                        const radius = parseFloat(document.getElementById('searchRadius').value);
+
+                        // Create form data
                     const formData = new FormData();
                     formData.append('action', 'nearby');
                     formData.append('lat', userLat);
@@ -3445,14 +4599,17 @@ function isApprovedStationOwner($userId) {
         
         .booking-panel {
             position: fixed;
-            right: -30%;
+            right: -100%; /* Change from -30% to -100% */
             top: 0;
-            width: 30%;
+            width: 90%; /* Change from 30% to be responsive */
+            max-width: 400px; /* Add max-width for larger screens */
             height: 100vh;
             background: white;
             box-shadow: -2px 0 5px rgba(0,0,0,0.1);
             transition: right 0.3s ease;
             z-index: 1000;
+            display: flex;
+            flex-direction: column;
         }
 
         .booking-panel.active {
@@ -3460,7 +4617,7 @@ function isApprovedStationOwner($userId) {
         }
 
         .booking-header {
-            padding: 20px;
+            padding: 15px;
             background: #f5f5f5;
             display: flex;
             justify-content: space-between;
@@ -3471,43 +4628,225 @@ function isApprovedStationOwner($userId) {
         .booking-header h2 {
             margin: 0;
             font-size: 1.2rem;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 1.2rem;
-            cursor: pointer;
-            color: #666;
-        }
-
-        .close-btn:hover {
             color: #333;
         }
 
         .booking-content {
-            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
         }
 
-        .new-booking-btn {
+        /* Booking card styles */
+        .booking-card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .recent-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+
+        .booking-station {
+            margin-bottom: 12px;
+        }
+
+        .station-name {
+            font-size: 1.1rem;
+            margin: 0 0 8px 0;
+            color: #333;
+        }
+
+        .station-address {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .booking-details {
+            display: grid;
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .booking-details p {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .booking-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            margin: 8px 0;
+        }
+
+        .booking-status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .booking-status.confirmed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .booking-status.cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .cancel-booking-btn {
             width: 100%;
-            padding: 1rem;
-            background: #3498db;
+            padding: 8px;
+            background: #dc3545;
             color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 1rem;
+            border-radius: 5px;
             cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+
+        .cancel-booking-btn:hover {
+            background: #c82333;
+        }
+
+        .see-more-link {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-            transition: background-color 0.3s ease;
+            gap: 8px;
+            padding: 12px;
+            background: #f8f9fa;
+            color: #007bff;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-top: 15px;
+            transition: background-color 0.2s;
         }
 
-        .new-booking-btn:hover {
-            background: #2980b9;
+        .see-more-link:hover {
+            background: #e9ecef;
+        }
+
+        /* Error and empty states */
+        .error-message,
+        .no-bookings,
+        .login-prompt {
+            text-align: center;
+            padding: 30px 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            color: #666;
+        }
+
+        .error-message i,
+        .no-bookings i,
+        .login-prompt i {
+            font-size: 2rem;
+            color: #999;
+            margin-bottom: 15px;
+        }
+
+        .retry-btn,
+        .login-prompt .login-btn {
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: none;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.2s;
+        }
+
+        .retry-btn:hover,
+        .login-prompt .login-btn:hover {
+            background: #0056b3;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .booking-panel {
+                width: 100%;
+                max-width: none;
+            }
+            
+            .booking-header {
+                padding: 12px;
+            }
+            
+            .booking-header h2 {
+                font-size: 1.1rem;
+            }
+            
+            .booking-content {
+                padding: 12px;
+            }
+            
+            .booking-card {
+                padding: 12px;
+            }
+            
+            .station-name {
+                font-size: 1rem;
+            }
+            
+            .booking-details p {
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Safe area insets for modern mobile browsers */
+        @supports (padding: max(0px)) {
+            .booking-panel {
+                padding-left: max(15px, env(safe-area-inset-left));
+                padding-right: max(15px, env(safe-area-inset-right));
+                padding-bottom: max(15px, env(safe-area-inset-bottom));
+            }
+        }
+
+        /* Add backdrop for mobile */
+        @media (max-width: 768px) {
+            .booking-panel::before {
+                content: '';
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.3s ease, visibility 0.3s ease;
+                z-index: -1;
+            }
+
+            .booking-panel.active::before {
+                opacity: 1;
+                visibility: visible;
+            }
         }
 
         .no-bookings {
@@ -5950,26 +7289,54 @@ function isApprovedStationOwner($userId) {
         const mobileMenuClose = document.getElementById('mobileMenuClose');
         const navLinks = document.getElementById('navLinks');
         
-        if (mobileMenuToggle && mobileMenuClose && navLinks) {
-            mobileMenuToggle.addEventListener('click', function(e) {
-                e.stopPropagation(); // Prevent event bubbling
+        // Toggle mobile menu
+        if (mobileMenuToggle) {
+            mobileMenuToggle.addEventListener('click', function() {
                 navLinks.classList.add('active');
-                document.body.style.overflow = 'hidden';
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
             });
-            
-            mobileMenuClose.addEventListener('click', function(e) {
-                e.stopPropagation(); // Prevent event bubbling
+        }
+        
+        // Close mobile menu
+        if (mobileMenuClose) {
+            mobileMenuClose.addEventListener('click', function() {
+                navLinks.classList.remove('active');
+                document.body.style.overflow = ''; // Restore scrolling
+            });
+        }
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            if (navLinks.classList.contains('active') && 
+                !navLinks.contains(event.target) && 
+                event.target !== mobileMenuToggle &&
+                !mobileMenuToggle.contains(event.target)) {
                 navLinks.classList.remove('active');
                 document.body.style.overflow = '';
-            });
-            
-            // Close menu when clicking outside
-            document.addEventListener('click', function(e) {
-                if (navLinks.classList.contains('active') && 
-                    !navLinks.contains(e.target) && 
-                    !mobileMenuToggle.contains(e.target)) {
+            }
+        });
+        
+        // Close mobile menu when clicking on a menu item
+        const mobileNavLinks = navLinks.querySelectorAll('a.nav-link');
+        mobileNavLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                // Only close if we're in mobile view (menu toggle is visible)
+                if (window.getComputedStyle(mobileMenuToggle).display !== 'none') {
                     navLinks.classList.remove('active');
                     document.body.style.overflow = '';
+                }
+            });
+        });
+        
+        // Handle dropdown in mobile view
+        const userProfile = document.querySelector('.user-profile');
+        if (userProfile) {
+            userProfile.addEventListener('click', function(e) {
+                // Toggle dropdown visibility in mobile view
+                if (window.getComputedStyle(mobileMenuToggle).display !== 'none') {
+                    const dropdown = this.querySelector('.dropdown-content');
+                    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+                    e.stopPropagation(); // Prevent closing the mobile menu
                 }
             });
         }
@@ -6023,4 +7390,64 @@ function isApprovedStationOwner($userId) {
     });
     </script>
 </body>
+<script>
+    // Mobile menu functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileMenuClose = document.getElementById('mobileMenuClose');
+        const navLinks = document.getElementById('navLinks');
+        
+        // Toggle mobile menu
+        if (mobileMenuToggle) {
+            mobileMenuToggle.addEventListener('click', function() {
+                navLinks.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            });
+        }
+        
+        // Close mobile menu
+        if (mobileMenuClose) {
+            mobileMenuClose.addEventListener('click', function() {
+                navLinks.classList.remove('active');
+                document.body.style.overflow = ''; // Restore scrolling
+            });
+        }
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            if (navLinks.classList.contains('active') && 
+                !navLinks.contains(event.target) && 
+                event.target !== mobileMenuToggle &&
+                !mobileMenuToggle.contains(event.target)) {
+                navLinks.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+        
+        // Close mobile menu when clicking on a menu item
+        const mobileNavLinks = navLinks.querySelectorAll('a.nav-link');
+        mobileNavLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                // Only close if we're in mobile view (menu toggle is visible)
+                if (window.getComputedStyle(mobileMenuToggle).display !== 'none') {
+                    navLinks.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            });
+        });
+        
+        // Handle dropdown in mobile view
+        const userProfile = document.querySelector('.user-profile');
+        if (userProfile) {
+            userProfile.addEventListener('click', function(e) {
+                // Toggle dropdown visibility in mobile view
+                if (window.getComputedStyle(mobileMenuToggle).display !== 'none') {
+                    const dropdown = this.querySelector('.dropdown-content');
+                    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+                    e.stopPropagation(); // Prevent closing the mobile menu
+                }
+            });
+        }
+    });
+</script>
 </html>

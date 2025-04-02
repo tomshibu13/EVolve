@@ -189,6 +189,11 @@ try {
             position: fixed;
             height: 100vh;
             transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .sidebar.collapsed {
+            transform: translateX(-250px);
         }
 
         .logo {
@@ -238,6 +243,11 @@ try {
             flex: 1;
             margin-left: 250px;
             padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .main-content.expanded {
+            margin-left: 0;
         }
 
         .header {
@@ -245,6 +255,17 @@ try {
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 24px;
+            cursor: pointer;
         }
 
         .search-bar {
@@ -254,6 +275,8 @@ try {
             padding: 10px;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
+            flex-grow: 1;
+            max-width: 300px;
         }
 
         .search-bar input {
@@ -261,6 +284,7 @@ try {
             outline: none;
             padding: 5px 10px;
             font-size: 16px;
+            width: 100%;
         }
 
         .user-profile {
@@ -332,6 +356,7 @@ try {
             box-shadow: var(--shadow);
             padding: 20px;
             margin-bottom: 30px;
+            overflow-x: auto;
         }
 
         .table-header {
@@ -339,11 +364,14 @@ try {
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 600px;
         }
 
         th, td {
@@ -448,12 +476,86 @@ try {
         .home-btn:hover {
             background-color: #3d8b40;
         }
+        
+        /* Responsive styles */
+        @media (max-width: 991px) {
+            .menu-toggle {
+                display: block;
+            }
+            
+            .sidebar {
+                transform: translateX(-250px);
+            }
+            
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .header {
+                justify-content: flex-start;
+            }
+            
+            .header > div {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .search-bar {
+                max-width: none;
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .header > div {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .user-profile {
+                align-self: flex-end;
+            }
+            
+            .table-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .card {
+                padding: 15px;
+            }
+            
+            .card-value {
+                font-size: 20px;
+            }
+            
+            .profile-dropdown span {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="logo">
                 <i class="fas fa-charging-station"></i>
                 <span class="logo-text">EVolve Admin</span>
@@ -483,12 +585,6 @@ try {
                         <span>Station Owner Details</span>
                     </a>
                 </li>
-                <!-- <li class="nav-item">
-                    <a href="bookings.php" class="nav-link">
-                        <i class="fas fa-bookmark"></i>
-                        <span>Bookings</span>
-                    </a>
-                </li> -->
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="fas fa-chart-bar"></i>
@@ -505,9 +601,12 @@ try {
         </aside>
 
         <!-- Main Content -->
-        <main class="main-content">
+        <main class="main-content" id="mainContent">
             <div class="header">
-                <div style="display: flex; gap: 20px; align-items: center;">
+                <div style="display: flex; gap: 20px; align-items: center; width: 100%;">
+                    <button id="menuToggle" class="menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
                     <a href="index.php" class="home-btn">
                         <i class="fas fa-home"></i>
                         Home
@@ -638,6 +737,28 @@ try {
         }
     }
 
+    // Toggle sidebar on mobile
+    document.getElementById('menuToggle').addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('active');
+    });
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', function(event) {
+        const sidebar = document.getElementById('sidebar');
+        const menuToggle = document.getElementById('menuToggle');
+        
+        if (!sidebar.contains(event.target) && event.target !== menuToggle && !menuToggle.contains(event.target)) {
+            sidebar.classList.remove('active');
+        }
+    });
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 991) {
+            document.getElementById('sidebar').classList.remove('active');
+        }
+    });
+    
     function toggleStatus(stationId, currentStatus) {
         const newStatus = currentStatus.toLowerCase() === 'active' ? 'Inactive' : 'Active';
         if (confirm(`Are you sure you want to change the status to ${newStatus}?`)) {

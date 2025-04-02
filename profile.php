@@ -80,7 +80,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['change_password'])) {
 $conn->close();
 ?>
 
-<?php include 'header.php'; ?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -89,7 +88,9 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-   
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="booking-styles.css">
     <style>
         :root {
             --primary-color: #4a90e2;
@@ -323,7 +324,7 @@ $conn->close();
 </head>
 <body>
 
-
+<?php include 'header.php'; ?>
 
 
 <div class="profile-container">

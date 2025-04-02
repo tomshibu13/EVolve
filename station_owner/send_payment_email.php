@@ -13,79 +13,504 @@ require_once __DIR__ . '/../PHPMailer-master/src/Exception.php';
 require_once __DIR__ . '/../PHPMailer-master/src/PHPMailer.php';
 require_once __DIR__ . '/../PHPMailer-master/src/SMTP.php';
 
+// Include the QR code library - try different locations
+if (file_exists(__DIR__ . '/../phpqrcode/qrlib.php')) {
+    require_once __DIR__ . '/../phpqrcode/qrlib.php';
+} elseif (file_exists(__DIR__ . '/../lib/phpqrcode/qrlib.php')) {
+    require_once __DIR__ . '/../lib/phpqrcode/qrlib.php';
+} else {
+    // Define fallback QR code generation function
+    function QRcode_png($data, $file, $eclevel = 'H', $size = 10) {
+        // Use QR Code API for fallback
+        $url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($data);
+        
+        // Use cURL for better error handling
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        $qrImage = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($qrImage !== false && $httpCode == 200) {
+            // Ensure the directory exists
+            $dir = dirname($file);
+            if (!file_exists($dir)) {
+                mkdir($dir, 0777, true);
+            }
+            
+            file_put_contents($file, $qrImage);
+            return true;
+        }
+        
+        return false;
+    }
+}
+
 // Include the PDF receipt generation function
 // Check if file exists before requiring it
 if (file_exists(__DIR__ . '/../generate-pdf-receipt.php')) {
     require_once __DIR__ . '/../generate-pdf-receipt.php';
 } else {
     // Define a basic version of the function if the file doesn't exist
-    function generatePdfReceipt($bookingId) {
-        global $pdo;
-        
-        try {
-            // Get booking details
-            $stmt = $pdo->prepare("
-                SELECT b.*, cs.name as station_name, u.name as user_name, u.email
-                FROM bookings b
-                JOIN charging_stations cs ON b.station_id = cs.station_id
-                JOIN users u ON b.user_id = u.user_id
-                WHERE b.booking_id = ?
-            ");
-            $stmt->execute([$bookingId]);
-            $booking = $stmt->fetch(PDO::FETCH_ASSOC);
+    // We'll enhance this with QR code functionality
+}
+
+// Generate QR code image from data
+function generateQRCodeImage($data, $filename = null) {
+    if ($filename === null) {
+        $filename = __DIR__ . '/../qrcodes/' . md5($data . time()) . '.png';
+    }
+    
+    // Ensure directory exists
+    $dir = dirname($filename);
+    if (!file_exists($dir)) {
+        mkdir($dir, 0777, true);
+    }
+    
+    // Generate QR code based on available methods
+    if (function_exists('QRcode::png')) {
+        QRcode::png($data, $filename, QR_ECLEVEL_H, 10);
+    } else {
+        QRcode_png($data, $filename, 'H', 10);
+    }
+    
+    return $filename;
+}
+
+// Enhance PDF generation to include QR code
+function generatePaymentPDFWithQR($paymentData, $pdfPath = null) {
+    global $pdo;
+    
+    // Default file name if not provided
+    if ($pdfPath === null) {
+        $pdfPath = __DIR__ . '/../receipts/payment_' . $paymentData['payment_id'] . '.pdf';
+    }
+    
+    // Generate QR code with payment/booking data
+    $qrData = json_encode([
+        'payment_id' => $paymentData['payment_id'],
+        'booking_id' => $paymentData['booking_id'],
+        'user_id' => $paymentData['user_id'],
+        'station_id' => $paymentData['station_id']
+    ]);
+    
+    $qrImageFile = generateQRCodeImage($qrData, __DIR__ . '/../qrcodes/payment_' . $paymentData['payment_id'] . '.png');
+    
+    try {
+        // Check for PDF libraries
+        if (class_exists('FPDF')) {
+            // Use FPDF
+            $pdf = new FPDF();
+            $pdf->AddPage();
             
-            if (!$booking) {
-                error_log("Booking not found for receipt generation: " . $bookingId);
-                return false;
+            // Add header
+            $pdf->SetFont('Arial', 'B', 16);
+            $pdf->Cell(0, 10, 'EVolve Booking Receipt', 0, 1, 'C');
+            
+            // Add booking details
+            $pdf->SetFont('Arial', 'B', 12);
+            $pdf->Cell(0, 10, 'Payment Details:', 0, 1);
+            
+            $pdf->SetFont('Arial', '', 11);
+            $pdf->Cell(60, 8, 'Booking ID:', 0);
+            $pdf->Cell(0, 8, $paymentData['booking_id'], 0, 1);
+            
+            $pdf->Cell(60, 8, 'User:', 0);
+            $pdf->Cell(0, 8, $paymentData['username'], 0, 1);
+            
+            $pdf->Cell(60, 8, 'Station:', 0);
+            $pdf->Cell(0, 8, $paymentData['station_name'], 0, 1);
+            
+            $pdf->Cell(60, 8, 'Amount:', 0);
+            $pdf->Cell(0, 8, 'Rs.' . number_format($paymentData['amount'], 2), 0, 1);
+            
+            $pdf->Cell(60, 8, 'Date:', 0);
+            $pdf->Cell(0, 8, date('Y-m-d', strtotime($paymentData['payment_date'])), 0, 1);
+            
+            $pdf->Cell(60, 8, 'Time:', 0);
+            $pdf->Cell(0, 8, date('H:i:s', strtotime($paymentData['payment_time'])), 0, 1);
+            
+            // Add QR Code section
+            $pdf->Ln(10);
+            $pdf->SetFont('Arial', 'B', 12);
+            $pdf->Cell(0, 10, 'QR CODE ACCESS INFORMATION:', 0, 1);
+            
+            $pdf->SetFont('Arial', '', 10);
+            $pdf->Cell(0, 8, 'Scan this QR code for check-in/check-out at the station:', 0, 1, 'C');
+            
+            // Add QR code image
+            if (file_exists($qrImageFile)) {
+                try {
+                    $pdf->Ln(5);
+                    // Center the image
+                    $imageWidth = 60;
+                    $x = ($pdf->GetPageWidth() - $imageWidth) / 2;
+                    $pdf->Image($qrImageFile, $x, $pdf->GetY(), $imageWidth);
+                    $pdf->Ln($imageWidth + 10);
+                } catch (Exception $e) {
+                    // If image insertion fails
+                    $pdf->Ln(5);
+                    $pdf->Cell(0, 10, 'QR Code not available', 0, 1, 'C');
+                }
             }
             
-            // Create a basic HTML receipt
-            $htmlContent = "
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>EVolve Booking Receipt</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; }
-                        .receipt { max-width: 800px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; }
-                        .header { text-align: center; margin-bottom: 20px; }
-                        .details { margin-bottom: 20px; }
-                        .total { font-weight: bold; margin-top: 20px; }
-                    </style>
-                </head>
-                <body>
-                    <div class='receipt'>
-                        <div class='header'>
-                            <h1>EVolve Booking Receipt</h1>
-                            <p>Receipt ID: " . $bookingId . "</p>
-                            <p>Date: " . date('Y-m-d') . "</p>
-                        </div>
-                        <div class='details'>
-                            <h2>Booking Details</h2>
-                            <p><strong>User:</strong> " . htmlspecialchars($booking['user_name']) . "</p>
-                            <p><strong>Email:</strong> " . htmlspecialchars($booking['email']) . "</p>
-                            <p><strong>Station:</strong> " . htmlspecialchars($booking['station_name']) . "</p>
-                            <p><strong>Booking Date:</strong> " . htmlspecialchars($booking['booking_date']) . "</p>
-                            <p><strong>Booking Time:</strong> " . htmlspecialchars($booking['booking_time']) . "</p>
-                            <p><strong>Amount:</strong> ₹" . htmlspecialchars($booking['amount']) . "</p>
-                        </div>
-                        <div class='total'>
-                            <p>Thank you for choosing EVolve for your EV charging needs!</p>
-                        </div>
-                    </div>
-                </body>
-                </html>
-            ";
+            // Add footer
+            $pdf->Ln(10);
+            $pdf->SetFont('Arial', 'I', 10);
+            $pdf->Cell(0, 10, 'Thank you for choosing EVolve for your EV charging needs!', 0, 1, 'C');
             
-            // Create a temporary file for the HTML content
-            $tempFile = sys_get_temp_dir() . '/receipt_' . $bookingId . '.html';
-            file_put_contents($tempFile, $htmlContent);
+            // Output the PDF
+            $pdf->Output('F', $pdfPath);
             
-            return $tempFile;
-        } catch (Exception $e) {
-            error_log("Error generating receipt: " . $e->getMessage());
-            return false;
+            return $pdfPath;
+        } else {
+            // If no PDF library is available, create a basic HTML file
+            $html = '<!DOCTYPE html>
+            <html>
+            <head>
+                <title>EVolve Booking Receipt</title>
+                <style>
+                    body {font-family: Arial, sans-serif; margin: 40px;}
+                    .header {text-align: center; margin-bottom: 30px;}
+                    .details {margin-bottom: 30px;}
+                    .row {margin: 10px 0;}
+                    .label {font-weight: bold; display: inline-block; width: 100px;}
+                    .qr-section {text-align: center; margin: 20px 0;}
+                    .footer {text-align: center; margin-top: 50px; font-style: italic;}
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>EVolve Booking Receipt</h1>
+                </div>
+                
+                <div class="details">
+                    <div class="row"><span class="label">Booking ID:</span> ' . $paymentData['booking_id'] . '</div>
+                    <div class="row"><span class="label">User:</span> ' . $paymentData['username'] . '</div>
+                    <div class="row"><span class="label">Station:</span> ' . $paymentData['station_name'] . '</div>
+                    <div class="row"><span class="label">Amount:</span> Rs.' . number_format($paymentData['amount'], 2) . '</div>
+                    <div class="row"><span class="label">Date:</span> ' . date('Y-m-d', strtotime($paymentData['payment_date'])) . '</div>
+                    <div class="row"><span class="label">Time:</span> ' . date('H:i:s', strtotime($paymentData['payment_time'])) . '</div>
+                </div>
+                
+                <div class="qr-section">
+                    <h3>QR CODE ACCESS INFORMATION:</h3>
+                    <p>Scan this QR code for check-in/check-out at the station:</p>';
+            
+            // Convert QR image to base64 for direct embedding
+            if (file_exists($qrImageFile)) {
+                $qrImageData = base64_encode(file_get_contents($qrImageFile));
+                $html .= '<img src="data:image/png;base64,' . $qrImageData . '" width="200" height="200">';
+            } else {
+                $html .= '<p>QR Code not available</p>';
+            }
+            
+            $html .= '</div>
+                
+                <div class="footer">
+                    <p>Thank you for choosing EVolve for your EV charging needs!</p>
+                </div>
+            </body>
+            </html>';
+            
+            $htmlPath = __DIR__ . '/../receipts/payment_' . $paymentData['payment_id'] . '.html';
+            file_put_contents($htmlPath, $html);
+            return $htmlPath;
         }
+    } catch (Exception $e) {
+        error_log("PDF generation error: " . $e->getMessage());
+        return false;
+    }
+}
+
+// Function to send payment receipt email with QR code
+function sendPaymentReceiptEmail($paymentId, $recipientEmail = null) {
+    global $pdo;
+    
+    // Get payment details
+    $stmt = $pdo->prepare("
+        SELECT p.*, b.booking_date, b.booking_time, b.user_id, b.station_id, 
+               cs.name as station_name, u.name as username, u.email
+        FROM payments p
+        JOIN bookings b ON p.booking_id = b.booking_id
+        JOIN charging_stations cs ON b.station_id = cs.station_id
+        JOIN users u ON b.user_id = u.user_id
+        WHERE p.payment_id = ?
+    ");
+    
+    $stmt->execute([$paymentId]);
+    $paymentData = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$paymentData) {
+        return [
+            'success' => false,
+            'message' => 'Payment not found'
+        ];
+    }
+    
+    // If no specific recipient is provided, send to user's email
+    if ($recipientEmail === null) {
+        $recipientEmail = $paymentData['email'];
+    }
+    
+    // Generate QR code data
+    $qrData = json_encode([
+        'payment_id' => $paymentData['payment_id'],
+        'booking_id' => $paymentData['booking_id'],
+        'user_id' => $paymentData['user_id'],
+        'station_id' => $paymentData['station_id'],
+        'timestamp' => time()
+    ]);
+    
+    // Create QR code directory if it doesn't exist
+    $qrDir = __DIR__ . '/../qrcodes';
+    if (!file_exists($qrDir)) {
+        mkdir($qrDir, 0777, true);
+    }
+    
+    // Generate QR code image
+    $qrImageFile = $qrDir . '/payment_' . $paymentData['payment_id'] . '.png';
+    
+    // Generate QR code using available methods
+    if (class_exists('QRcode')) {
+        require_once __DIR__ . '/../phpqrcode/qrlib.php';
+        \QRcode::png($qrData, $qrImageFile, QR_ECLEVEL_H, 10);
+    } else {
+        // Fallback to online QR code generator
+        $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($qrData);
+        $qrImage = file_get_contents($qrCodeUrl);
+        file_put_contents($qrImageFile, $qrImage);
+    }
+    
+    // Convert QR image to base64 for embedding in email
+    $qrImageData = base64_encode(file_get_contents($qrImageFile));
+    $qrCodeImgTag = '<img src="data:image/png;base64,' . $qrImageData . '" alt="QR Code" style="width: 200px; height: 200px;">';
+    
+    // Create PDF receipt using generate-pdf-receipt.php if available
+    // Otherwise create a simple PDF with the payment details
+    $pdfPath = '';
+    if (function_exists('generatePdfReceipt') && $paymentData['booking_id']) {
+        $pdfPath = generatePdfReceipt($paymentData['booking_id']);
+    } else {
+        // Generate a simple PDF with payment details and QR code
+        if (class_exists('FPDF')) {
+            require_once __DIR__ . '/../vendor/setasign/fpdf/fpdf.php';
+            
+            $pdf = new FPDF();
+            $pdf->AddPage();
+            
+            // Header
+            $pdf->SetFont('Arial', 'B', 16);
+            $pdf->Cell(0, 10, 'EVolve Payment Receipt', 0, 1, 'C');
+            
+            // Payment Details
+            $pdf->SetFont('Arial', 'B', 12);
+            $pdf->Cell(0, 10, 'Payment Details:', 0, 1);
+            
+            $pdf->SetFont('Arial', '', 11);
+            $pdf->Cell(60, 8, 'Payment ID:', 0);
+            $pdf->Cell(0, 8, $paymentData['payment_id'], 0, 1);
+            
+            $pdf->Cell(60, 8, 'Booking ID:', 0);
+            $pdf->Cell(0, 8, $paymentData['booking_id'], 0, 1);
+            
+            $pdf->Cell(60, 8, 'User:', 0);
+            $pdf->Cell(0, 8, $paymentData['username'], 0, 1);
+            
+            $pdf->Cell(60, 8, 'Station:', 0);
+            $pdf->Cell(0, 8, $paymentData['station_name'], 0, 1);
+            
+            $pdf->Cell(60, 8, 'Amount:', 0);
+            $pdf->Cell(0, 8, 'Rs.' . number_format($paymentData['amount'], 2), 0, 1);
+            
+            $pdf->Cell(60, 8, 'Date:', 0);
+            $pdf->Cell(0, 8, date('Y-m-d', strtotime($paymentData['booking_date'])), 0, 1);
+            
+            $pdf->Cell(60, 8, 'Time:', 0);
+            $pdf->Cell(0, 8, date('H:i:s', strtotime($paymentData['booking_time'])), 0, 1);
+            
+            // QR Code Section
+            $pdf->Ln(10);
+            $pdf->SetFont('Arial', 'B', 12);
+            $pdf->Cell(0, 10, 'Check-in QR Code:', 0, 1);
+            
+            $pdf->SetFont('Arial', '', 10);
+            $pdf->Cell(0, 8, 'Scan this QR code at the charging station for check-in and check-out', 0, 1, 'C');
+            
+            // Add QR code image (centered)
+            if (file_exists($qrImageFile)) {
+                try {
+                    $pdf->Ln(5);
+                    $imageWidth = 60;
+                    $x = ($pdf->GetPageWidth() - $imageWidth) / 2;
+                    $pdf->Image($qrImageFile, $x, $pdf->GetY(), $imageWidth);
+                    $pdf->Ln($imageWidth + 10);
+                } catch (Exception $e) {
+                    $pdf->Ln(5);
+                    $pdf->Cell(0, 10, 'QR Code not available', 0, 1, 'C');
+                }
+            }
+            
+            // Footer
+            $pdf->Ln(10);
+            $pdf->SetFont('Arial', 'I', 10);
+            $pdf->Cell(0, 10, 'Thank you for choosing EVolve for your EV charging needs!', 0, 1, 'C');
+            
+            // Save PDF
+            $pdfPath = __DIR__ . '/../receipts/payment_' . $paymentData['payment_id'] . '.pdf';
+            $pdf->Output('F', $pdfPath);
+        } else {
+            // Generate HTML receipt if FPDF is not available
+            $htmlContent = '<!DOCTYPE html>
+            <html>
+            <head>
+                <title>EVolve Payment Receipt</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 40px; }
+                    .header { text-align: center; margin-bottom: 30px; }
+                    .details { margin-bottom: 30px; }
+                    .row { margin: 10px 0; }
+                    .label { font-weight: bold; display: inline-block; width: 100px; }
+                    .qr-section { text-align: center; margin: 20px 0; }
+                    .footer { text-align: center; margin-top: 50px; font-style: italic; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>EVolve Payment Receipt</h1>
+                </div>
+                
+                <div class="details">
+                    <div class="row"><span class="label">Payment ID:</span> ' . $paymentData['payment_id'] . '</div>
+                    <div class="row"><span class="label">Booking ID:</span> ' . $paymentData['booking_id'] . '</div>
+                    <div class="row"><span class="label">User:</span> ' . $paymentData['username'] . '</div>
+                    <div class="row"><span class="label">Station:</span> ' . $paymentData['station_name'] . '</div>
+                    <div class="row"><span class="label">Amount:</span> Rs.' . number_format($paymentData['amount'], 2) . '</div>
+                    <div class="row"><span class="label">Date:</span> ' . date('Y-m-d', strtotime($paymentData['booking_date'])) . '</div>
+                    <div class="row"><span class="label">Time:</span> ' . date('H:i:s', strtotime($paymentData['booking_time'])) . '</div>
+                </div>
+                
+                <div class="qr-section">
+                    <h3>Check-in QR Code</h3>
+                    <p>Scan this QR code at the charging station for check-in and check-out</p>
+                    ' . $qrCodeImgTag . '
+                </div>
+                
+                <div class="footer">
+                    <p>Thank you for choosing EVolve for your EV charging needs!</p>
+                </div>
+            </body>
+            </html>';
+            
+            $pdfPath = __DIR__ . '/../receipts/payment_' . $paymentData['payment_id'] . '.html';
+            file_put_contents($pdfPath, $htmlContent);
+        }
+    }
+    
+    if (!$pdfPath || !file_exists($pdfPath)) {
+        return [
+            'success' => false,
+            'message' => 'Failed to generate receipt'
+        ];
+    }
+    
+    // Send email with PDF attachment
+    $mail = new PHPMailer(true);
+    
+    try {
+        // Server settings
+        $mail->isSMTP();
+        $mail->Host = SMTP_HOST;
+        $mail->SMTPAuth = true;
+        $mail->Username = SMTP_USER;
+        $mail->Password = SMTP_PASS;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = SMTP_PORT;
+        
+        // Recipients
+        $mail->setFrom(SMTP_FROM_EMAIL, 'EVolve EV Charging');
+        $mail->addAddress($recipientEmail);
+        
+        // Attach the PDF receipt
+        $attachmentName = 'EVolve_Receipt_' . $paymentData['payment_id'] . '.' . pathinfo($pdfPath, PATHINFO_EXTENSION);
+        $mail->addAttachment($pdfPath, $attachmentName);
+        
+        // Content
+        $mail->isHTML(true);
+        $mail->Subject = 'EVolve Payment Receipt - ' . $paymentData['payment_id'];
+        $mail->Body = '
+            <h2>EVolve Payment Receipt</h2>
+            <p>Thank you for your payment. Please find your receipt attached.</p>
+            <table style="border-collapse: collapse; width: 100%; max-width: 600px;">
+                <tr>
+                    <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Booking ID:</th>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">' . $paymentData['booking_id'] . '</td>
+                </tr>
+                <tr>
+                    <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Amount:</th>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">Rs.' . number_format($paymentData['amount'], 2) . '</td>
+                </tr>
+                <tr>
+                    <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Date:</th>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">' . date('Y-m-d', strtotime($paymentData['booking_date'])) . '</td>
+                </tr>
+                <tr>
+                    <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Station:</th>
+                    <td style="padding: 8px; border-bottom: 1px solid #ddd;">' . $paymentData['station_name'] . '</td>
+                </tr>
+            </table>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <h3>Check-in QR Code</h3>
+                <p>You can also use this QR code to check in at the station:</p>
+                ' . $qrCodeImgTag . '
+                <p style="font-size: 12px; color: #666;">Scan this QR code with the EVolve scanner at the charging station</p>
+            </div>
+            
+            <p>Thank you for choosing EVolve for your EV charging needs!</p>
+        ';
+        
+        $mail->send();
+        
+        // Clean up temporary files after sending
+        // Keep for 24 hours for troubleshooting, then set up a cron job to clean old files
+        //if (file_exists($pdfPath)) unlink($pdfPath);
+        //if (file_exists($qrImageFile)) unlink($qrImageFile);
+        
+        return [
+            'success' => true,
+            'message' => 'Payment receipt sent to ' . $recipientEmail
+        ];
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'message' => 'Email could not be sent. Error: ' . $mail->ErrorInfo
+        ];
+    }
+}
+
+// API endpoint for sending payment email
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Check if this is a direct API call
+    if (isset($_POST['action']) && $_POST['action'] === 'send_payment_receipt') {
+        header('Content-Type: application/json');
+        
+        if (!isset($_POST['payment_id'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Payment ID is required'
+            ]);
+            exit;
+        }
+        
+        $paymentId = intval($_POST['payment_id']);
+        $email = isset($_POST['email']) ? filter_var($_POST['email'], FILTER_SANITIZE_EMAIL) : null;
+        
+        $result = sendPaymentReceiptEmail($paymentId, $email);
+        echo json_encode($result);
+        exit;
     }
 }
 

@@ -81,6 +81,9 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Charging Stations - EVolve</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="booking-styles.css">
     <style>
         :root {
             --primary-color: #0066FF;
@@ -102,47 +105,57 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
         }
 
         header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
             background-color: var(--card-bg);
         }
 
         body {
             background-color: var(--background-color);
             color: var(--text-color);
-            padding: 2rem;
-            padding-top: calc(70px + 2rem); /* Adjust this value based on your header height */
+            padding: 1rem;  /* Reduced padding for mobile */
             min-height: 100vh;
         }
 
         .ev-header {
-            position: sticky;
-            top: 70px; /* Adjust this value based on your header height */
-            z-index: 900;
+            position: static;  /* Change from sticky to static */
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            gap: 1rem;
             background: var(--card-bg);
-            padding: 2rem;
-            border-radius: var(--border-radius);
+            padding: 1rem;
             box-shadow: var(--shadow);
         }
         
+        .ev-header-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .ev-header-top {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;  /* Allow wrapping on very small screens */
+        }
+
         .ev-page-title {
-            font-size: 2rem;
+            font-size: 1.25rem;  /* Smaller font size for mobile */
             font-weight: 700;
             color: var(--text-color);
             letter-spacing: -0.025em;
+            line-height: 1.2;
+            flex: 1;
+            min-width: 200px;  /* Prevent too narrow wrapping */
         }
 
         .ev-stations-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));  /* Smaller minimum width */
+            gap: 1rem;  /* Reduced gap for mobile */
             padding: 0.5rem;
         }
 
@@ -150,16 +163,17 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
             background-color: var(--card-bg);
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
-            padding: 1.5rem;
+            padding: 1rem;  /* Reduced padding for mobile */
             transition: var(--transition);
             border: 1px solid rgba(0,0,0,0.05);
             position: relative;
             overflow: hidden;
+            min-width: 0;  /* Allows cards to shrink below min-width */
         }
         
         .ev-station-image {
             width: 100%;
-            height: 150px;
+            height: 120px;  /* Slightly reduced height for mobile */
             object-fit: cover;
             border-radius: var(--border-radius);
             margin-bottom: 1rem;
@@ -168,7 +182,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
         
         .ev-station-image-placeholder {
             width: 100%;
-            height: 150px;
+            height: 120px;  /* Slightly reduced height for mobile */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -200,17 +214,18 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
         }
 
         .ev-station-name {
-            font-size: 1.25rem;
+            font-size: 1.1rem;  /* Slightly smaller font for mobile */
             font-weight: 600;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
             color: var(--text-color);
         }
 
         .ev-station-info {
-            margin-bottom: 0.75rem;
+            font-size: 0.9rem;  /* Smaller font for mobile */
+            margin-bottom: 0.5rem;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.5rem;
             color: var(--secondary-color);
         }
 
@@ -223,14 +238,14 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
         .ev-book-btn {
             background-color: var(--primary-color);
             color: white;
-            padding: 0.75rem 1.5rem;
+            padding: 0.6rem 1.25rem;  /* Slightly smaller padding */
             border: none;
             border-radius: var(--border-radius);
             cursor: pointer;
             width: 100%;
             margin-top: 1.5rem;
             font-weight: 500;
-            font-size: 1rem;
+            font-size: 0.95rem;
             transition: var(--transition);
             display: flex;
             align-items: center;
@@ -246,15 +261,15 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
         .ev-filters {
             position: relative;
             width: 100%;
-            max-width: 500px;
+            max-width: 100%;  /* Allow full width on mobile */
         }
 
         .ev-search-input {
             width: 100%;
-            padding: 1rem 1rem 1rem 3rem;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;  /* Slightly reduced padding */
             border: 1px solid #e2e8f0;
             border-radius: var(--border-radius);
-            font-size: 1rem;
+            font-size: 0.95rem;
             transition: var(--transition);
             background-color: white;
         }
@@ -317,9 +332,9 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
             position: absolute;
             top: 1rem;
             right: 1rem;
-            padding: 0.25rem 0.75rem;
+            padding: 0.2rem 0.6rem;
             border-radius: 1rem;
-            font-size: 0.875rem;
+            font-size: 0.8rem;
             font-weight: 500;
         }
 
@@ -362,6 +377,8 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
             display: flex;
             align-items: center;
             margin-top: 0.5rem;
+            flex-wrap: wrap;
+            gap: 0.25rem;
         }
         
         .ev-stars {
@@ -372,156 +389,212 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
         
         .ev-rating-count {
             color: var(--secondary-color);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+        }
+
+        /* Media Queries for larger screens */
+        @media (min-width: 640px) {
+            body {
+                padding: 2rem;
+            }
+
+            .ev-header {
+                padding: 1.5rem 0;  /* Vertical padding only */
+            }
+
+            .ev-header-content {
+                padding: 0 2rem;
+            }
+
+            .ev-page-title {
+                font-size: 1.5rem;
+            }
+
+            .ev-stations-grid {
+                gap: 1.5rem;
+            }
+
+            .ev-station-card {
+                padding: 1.5rem;
+            }
+
+            .ev-container {
+                padding: 2rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .ev-header-content {
+                padding: 0 3rem;
+            }
+
+            .ev-page-title {
+                font-size: 2rem;
+            }
+        }
+
+        /* Header flex container adjustments */
+        div[style*="display: flex; align-items: center; gap: 1rem;"] {
+            flex-wrap: wrap;  /* Allow wrapping on very small screens */
+        }
+
+        .ev-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem;
         }
     </style>
 </head>
 <body>
+    <?php include 'header.php'; ?>
     <header>
-        <?php include 'header.php'; ?>
     </header>
-    <div class="ev-header">
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <a href="index.php" class="ev-back-btn">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            <h1 class="ev-page-title">⚡ Available Charging Stations</h1>
-        </div>
-        <form method="POST" class="ev-filters">
-            <i class="fas fa-search ev-search-icon"></i>
-            <input type="text" name="search" class="ev-search-input" 
-                value="<?php echo isset($_POST['search']) ? htmlspecialchars($_POST['search']) : ''; ?>"
-                placeholder="Search by location, operator, or power output...">
-        </form>
-    </div>
-
-    <?php if ($error_message): ?>
-        <div class="ev-empty-state">
-            <i class="fas fa-exclamation-circle"></i>
-            <p><?php echo htmlspecialchars($error_message); ?></p>
-        </div>
-    <?php endif; ?>
-
-    <div class="ev-stations-grid">
-        <?php 
-        if ($stations && mysqli_num_rows($stations) > 0):
-            while($station = mysqli_fetch_assoc($stations)): 
-                // Calculate availability status
-                $availableSlots = intval($station['available_slots']);
-                $totalSlots = intval($station['total_slots']);
-                $statusClass = '';
-                $statusText = '';
-                
-                if ($availableSlots <= 0) {
-                    $statusClass = 'status-full';
-                    $statusText = 'Full';
-                } elseif ($availableSlots < ($totalSlots / 2)) {
-                    $statusClass = 'status-limited';
-                    $statusText = 'Limited';
-                } else {
-                    $statusClass = 'status-available';
-                    $statusText = 'Available';
-                }
-        ?>
-            <div class="ev-station-card">
-                <div class="ev-status-badge <?php echo str_replace('status-', 'ev-status-', $statusClass); ?>"><?php echo $statusText; ?></div>
-                
-                <?php if (!empty($station['image'])): ?>
-                    <img src="<?php echo htmlspecialchars($station['image']); ?>" alt="<?php echo htmlspecialchars($station['station_name']); ?>" class="ev-station-image">
-                <?php else: ?>
-                    <div class="ev-station-image-placeholder">
-                        <i class="fas fa-charging-station fa-2x"></i>
-                    </div>
-                <?php endif; ?>
-                
-                <div class="ev-station-name"><?php echo htmlspecialchars($station['station_name'] ?? $station['name'] ?? 'Unnamed Station'); ?></div>
-                <div class="ev-station-info">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span><?php echo htmlspecialchars($station['address'] ?? 'No address available'); ?></span>
+    <div class="ev-container">
+        <div class="ev-header">
+            <div class="ev-header-content">
+                <div class="ev-header-top">
+                    <a href="index.php" class="ev-back-btn">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <h1 class="ev-page-title">⚡ Available Charging Stations</h1>
                 </div>
-                <div class="ev-station-info">
-                    <i class="fas fa-user"></i>
-                    <span>Operated by <?php echo htmlspecialchars($station['operator_name'] ?? $station['owner_name'] ?? 'Unknown'); ?></span>
-                </div>
-                <div class="ev-station-info">
-                    <i class="fas fa-bolt"></i>
-                    <span>
-                        <?php 
-                        $charger_types = json_decode($station['charger_types'] ?? '[]', true);
-                        if (is_array($charger_types) && !empty($charger_types)) {
-                            $types = array_map(function($type) {
-                                // If it's a string, return it directly
-                                if (is_string($type)) {
-                                    return $type;
-                                }
-                                // If it's an array, check for both 'type' and 'name' keys
-                                if (is_array($type)) {
-                                    return $type['type'] ?? $type['name'] ?? 'Standard';
-                                }
-                                return 'Standard';
-                            }, $charger_types);
-                            echo htmlspecialchars(implode(', ', $types));
-                        } else {
-                            echo 'Standard';
-                        }
-                        ?>
-                    </span>
-                </div>
-                <div class="ev-station-info">
-                    <i class="fas fa-plug"></i>
-                    <span><?php echo $availableSlots . '/' . $totalSlots . ' slots available'; ?></span>
-                </div>
-                <div class="ev-station-info">
-                    <i class="fas fa-dollar-sign"></i>
-                    <span class="ev-price-tag">₹<?php echo isset($station['price']) ? number_format($station['price'], 2) : '0.00'; ?></span>
-                </div>
-                
-                <!-- Display Rating -->
-                <div class="ev-rating">
-                    <div class="ev-stars">
-                        <?php
-                        $avgRating = round(floatval($station['avg_rating'] ?? 0), 1);
-                        $fullStars = floor($avgRating);
-                        $halfStar = $avgRating - $fullStars >= 0.5;
-                        $emptyStars = 5 - $fullStars - ($halfStar ? 1 : 0);
-                        
-                        // Display full stars
-                        for ($i = 0; $i < $fullStars; $i++) {
-                            echo '<i class="fas fa-star"></i>';
-                        }
-                        
-                        // Display half star if applicable
-                        if ($halfStar) {
-                            echo '<i class="fas fa-star-half-alt"></i>';
-                        }
-                        
-                        // Display empty stars
-                        for ($i = 0; $i < $emptyStars; $i++) {
-                            echo '<i class="far fa-star"></i>';
-                        }
-                        ?>
-                    </div>
-                    <span class="ev-rating-count">
-                        <?php 
-                        echo $avgRating . ' (' . ($station['review_count'] ?? 0) . ' reviews)'; 
-                        ?>
-                    </span>
-                </div>
-                
-                <a href="book_station.php?id=<?php echo urlencode($station['station_id']); ?>" class="ev-book-btn">
-                    <i class="fas fa-bolt" style="line-height: 1;"></i>
-                    <span style="line-height: 1;">Book Now</span>
-                </a>
+                <form method="POST" class="ev-filters">
+                    <i class="fas fa-search ev-search-icon"></i>
+                    <input type="text" name="search" class="ev-search-input" 
+                        value="<?php echo isset($_POST['search']) ? htmlspecialchars($_POST['search']) : ''; ?>"
+                        placeholder="Search by location, operator, or power output...">
+                </form>
             </div>
-        <?php 
-            endwhile;
-        else: 
-        ?>
+        </div>
+
+        <?php if ($error_message): ?>
             <div class="ev-empty-state">
-                <i class="fas fa-charging-station"></i>
-                <p>No charging stations available at the moment.</p>
+                <i class="fas fa-exclamation-circle"></i>
+                <p><?php echo htmlspecialchars($error_message); ?></p>
             </div>
         <?php endif; ?>
+
+        <div class="ev-stations-grid">
+            <?php 
+            if ($stations && mysqli_num_rows($stations) > 0):
+                while($station = mysqli_fetch_assoc($stations)): 
+                    // Calculate availability status
+                    $availableSlots = intval($station['available_slots']);
+                    $totalSlots = intval($station['total_slots']);
+                    $statusClass = '';
+                    $statusText = '';
+                    
+                    if ($availableSlots <= 0) {
+                        $statusClass = 'status-full';
+                        $statusText = 'Full';
+                    } elseif ($availableSlots < ($totalSlots / 2)) {
+                        $statusClass = 'status-limited';
+                        $statusText = 'Limited';
+                    } else {
+                        $statusClass = 'status-available';
+                        $statusText = 'Available';
+                    }
+            ?>
+                <div class="ev-station-card">
+                    <div class="ev-status-badge <?php echo str_replace('status-', 'ev-status-', $statusClass); ?>"><?php echo $statusText; ?></div>
+                    
+                    <?php if (!empty($station['image'])): ?>
+                        <img src="<?php echo htmlspecialchars($station['image']); ?>" alt="<?php echo htmlspecialchars($station['station_name']); ?>" class="ev-station-image">
+                    <?php else: ?>
+                        <div class="ev-station-image-placeholder">
+                            <i class="fas fa-charging-station fa-2x"></i>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <div class="ev-station-name"><?php echo htmlspecialchars($station['station_name'] ?? $station['name'] ?? 'Unnamed Station'); ?></div>
+                    <div class="ev-station-info">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span><?php echo htmlspecialchars($station['address'] ?? 'No address available'); ?></span>
+                    </div>
+                    <div class="ev-station-info">
+                        <i class="fas fa-user"></i>
+                        <span>Operated by <?php echo htmlspecialchars($station['operator_name'] ?? $station['owner_name'] ?? 'Unknown'); ?></span>
+                    </div>
+                    <div class="ev-station-info">
+                        <i class="fas fa-bolt"></i>
+                        <span>
+                            <?php 
+                            $charger_types = json_decode($station['charger_types'] ?? '[]', true);
+                            if (is_array($charger_types) && !empty($charger_types)) {
+                                $types = array_map(function($type) {
+                                    // If it's a string, return it directly
+                                    if (is_string($type)) {
+                                        return $type;
+                                    }
+                                    // If it's an array, check for both 'type' and 'name' keys
+                                    if (is_array($type)) {
+                                        return $type['type'] ?? $type['name'] ?? 'Standard';
+                                    }
+                                    return 'Standard';
+                                }, $charger_types);
+                                echo htmlspecialchars(implode(', ', $types));
+                            } else {
+                                echo 'Standard';
+                            }
+                            ?>
+                        </span>
+                    </div>
+                    <div class="ev-station-info">
+                        <i class="fas fa-plug"></i>
+                        <span><?php echo $availableSlots . '/' . $totalSlots . ' slots available'; ?></span>
+                    </div>
+                    <div class="ev-station-info">
+                        <i class="fas fa-dollar-sign"></i>
+                        <span class="ev-price-tag">₹<?php echo isset($station['price']) ? number_format($station['price'], 2) : '0.00'; ?></span>
+                    </div>
+                    
+                    <!-- Display Rating -->
+                    <div class="ev-rating">
+                        <div class="ev-stars">
+                            <?php
+                            $avgRating = round(floatval($station['avg_rating'] ?? 0), 1);
+                            $fullStars = floor($avgRating);
+                            $halfStar = $avgRating - $fullStars >= 0.5;
+                            $emptyStars = 5 - $fullStars - ($halfStar ? 1 : 0);
+                            
+                            // Display full stars
+                            for ($i = 0; $i < $fullStars; $i++) {
+                                echo '<i class="fas fa-star"></i>';
+                            }
+                            
+                            // Display half star if applicable
+                            if ($halfStar) {
+                                echo '<i class="fas fa-star-half-alt"></i>';
+                            }
+                            
+                            // Display empty stars
+                            for ($i = 0; $i < $emptyStars; $i++) {
+                                echo '<i class="far fa-star"></i>';
+                            }
+                            ?>
+                        </div>
+                        <span class="ev-rating-count">
+                            <?php 
+                            echo $avgRating . ' (' . ($station['review_count'] ?? 0) . ' reviews)'; 
+                            ?>
+                        </span>
+                    </div>
+                    
+                    <a href="book_station.php?id=<?php echo urlencode($station['station_id']); ?>" class="ev-book-btn">
+                        <i class="fas fa-bolt" style="line-height: 1;"></i>
+                        <span style="line-height: 1;">Book Now</span>
+                    </a>
+                </div>
+            <?php 
+                endwhile;
+            else: 
+            ?>
+                <div class="ev-empty-state">
+                    <i class="fas fa-charging-station"></i>
+                    <p>No charging stations available at the moment.</p>
+                </div>
+            <?php endif; ?>
+        </div>
     </div>
 
     <script>

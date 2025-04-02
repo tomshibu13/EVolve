@@ -565,9 +565,7 @@ try {
         }
         
         function exportToExcel() {
-            // Implement export logic here
-            // You can use libraries like SheetJS or create a CSV file
-            alert('Export feature will be implemented soon!');
+            window.location.href = 'export_payments.php';
         }
 
         document.getElementById('sidebarToggle').addEventListener('click', () => {

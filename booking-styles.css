@@ -1,0 +1,204 @@
+/* Booking Panel Styles */
+.booking-panel {
+    position: fixed;
+    right: -100%;
+    top: 0;
+    width: 90%;
+    max-width: 400px;
+    height: 100vh;
+    background: white;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    transition: right 0.3s ease;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.booking-panel.active {
+    right: 0;
+}
+
+/* Booking Card Styles */
+.booking-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    padding: 15px;
+    margin-bottom: 15px;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.booking-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Status Styles */
+.booking-status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    margin: 8px 0;
+}
+
+.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.confirmed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.completed {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.cancelled {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Message Styles */
+.error-message {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.success-message {
+    text-align: center;
+    padding: 20px;
+    background: #2ecc71;
+    color: white;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .booking-panel {
+        width: 100%;
+        max-width: none;
+    }
+
+    .modal-dialog {
+        margin: 1rem;
+    }
+
+    .booking-card {
+        margin: 1rem 0;
+    }
+
+    .status-badge {
+        font-size: 0.75rem;
+    }
+}
+
+/* Add these styles to complement the header design */
+
+/* Modal and Dialog Styles */
+.modal-header {
+    background: linear-gradient(to right, #3498db, #2980b9);
+    color: white;
+    border-radius: 10px 10px 0 0;
+    padding: 1.5rem;
+}
+
+.modal-title {
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+/* Form Elements */
+.form-control {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* Buttons */
+.btn-primary {
+    background: #3498db;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: #2980b9;
+    transform: translateY(-1px);
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-active {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-pending {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+/* Additional Header Support */
+.nav-container {
+    position: relative;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #e74c3c;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* User Menu Animations */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-menu.active {
+    animation: slideDown 0.3s ease forwards;
+} 

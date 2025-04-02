@@ -1,233 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="header.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <style>
-       /* Header and Navigation */
-.header {
-    background-color: rgba(255, 255, 255, 0.98);
-    padding: 1.2rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    backdrop-filter: blur(8px);
-}
-
-.nav-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 2rem;
-}
-
-/* Logo Styles */
-.logo {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 1.8rem;
-    font-weight: 800;
-    color: #0066FF;
-    text-decoration: none;
-}
-
-/* Navigation Links */
-.nav-links {
-    display: flex;
-    gap: 2.5rem;
-    align-items: center;
-}
-
-.nav-links a {
-    text-decoration: none;
-    color: var(--text-color);
-    font-weight: 500;
-    font-size: 1.1rem;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    transition: all var(--transition-speed) ease;
-    position: relative;
-}
-
-/* Hover Effects */
-.nav-links a:hover {
-    color: var(--primary-color);
-    transform: translateY(-2px);
-}
-
-/* Active Link Style */
-.nav-links a.active {
-    color: var(--primary-color);
-    background-color: rgba(42, 157, 143, 0.1);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .nav-container {
-        padding: 0 1rem;
-    }
-    
-    .nav-links {
-        gap: 1.5rem;
-    }
-    
-    .nav-links a {
-        font-size: 1rem;
-        padding: 0.4rem 0.8rem;
-    }
-    
-    .logo {
-        font-size: 1.5rem;
-    }
-}
-
-.nav-link:hover {
-    text-decoration: underline;
-}
-
-.logo-text:hover {
-    text-decoration: underline;
-}
-/* Header and Navigation */
-.header {
-    background-color: rgba(255, 255, 255, 0.98);
-    padding: 1.2rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    backdrop-filter: blur(8px);
-}
-
-.nav-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 2rem;
-}
-
-/* Logo Styles */
-.logo {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 1.8rem;
-    font-weight: 800;
-    color: #0066FF;
-    text-decoration: none;
-}
-
-/* Navigation Links */
-.nav-links {
-    display: flex;
-    gap: 2.5rem;
-    align-items: center;
-}
-
-.nav-links a {
-    text-decoration: none;
-    color: var(--text-color);
-    font-weight: 500;
-    font-size: 1.1rem;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    transition: all var(--transition-speed) ease;
-    position: relative;
-}
-
-/* Hover Effects */
-.nav-links a:hover {
-    color: var(--primary-color);
-    transform: translateY(-2px);
-}
-
-/* Active Link Style */
-.nav-links a.active {
-    color: var(--primary-color);
-    background-color: rgba(42, 157, 143, 0.1);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .nav-container {
-        padding: 0 1rem;
-    }
-    
-    .nav-links {
-        gap: 1.5rem;
-    }
-    
-    .nav-links a {
-        font-size: 1rem;
-        padding: 0.4rem 0.8rem;
-    }
-    
-    .logo {
-        font-size: 1.5rem;
-    }
-}
-
-.nav-link:hover {
-    text-decoration: underline;
-}
-
-.logo-text:hover {
-    text-decoration: underline;
-}
-
-    </style>
-</head>
-<body>
 <?php
-// Include the database connection file
-include 'config.php'; // Ensure this path is correct based on your project structure
+require_once 'config.php';
 ?>
 <header class="header">
     <nav class="nav-container">
-        <!-- Logo -->
-         <a href="index.php" style="text-decoration: none;">
-        <div class="logo">
+        <a href="index.php" class="logo">
             <i class="fas fa-charging-station"></i>
             <span class="logo-text">E<span class="highlight">V</span>olve</span>
-        </div>
         </a>
-        <!-- Navigation Links -->
-        <div class="nav-links">
-            <a href="#searchInput" class="nav-link active">
-                <i class="fas fa-search"></i>
-                Find Stations
+        
+        <button class="mobile-menu-toggle d-md-none" id="mobileMenuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="nav-links" id="navLinks">
+            <button class="mobile-menu-close d-md-none" id="mobileMenuClose">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <a href="index.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>">
+                <i class="fas fa-home"></i>
+                Home
             </a>
-            <a href="#" class="nav-link" onclick="toggleBookingPanel()">
+            <a href="user_stations.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'user_stations.php' ? 'active' : ''; ?>">
+                <i class="fas fa-charging-station"></i>
+                Stations
+            </a>
+            <a href="my-bookings.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'my-bookings.php' ? 'active' : ''; ?>">
                 <i class="fas fa-calendar-check"></i>
                 My Bookings
             </a>
-            <a href="user_stations.php" class="nav-link">
-                <i class="fas fa-charging-station"></i>
-                Station
-            </a>
-            <a href="#about" class="nav-link">
+            <a href="about.php" class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'about.php' ? 'active' : ''; ?>">
                 <i class="fas fa-info-circle"></i>
-                About Us
+                About
             </a>
-            
-            <!-- User Profile Section
+
             <?php if (isset($_SESSION['user_id'])): ?>
-                <div class="user-profile">
-                    <span class="username"><?php echo htmlspecialchars($_SESSION['username']); ?></span>
-                    <i class="fas fa-chevron-down"></i>
-                    <div class="dropdown-content">
+                <div class="user-profile" id="userProfile">
+                    <span class="username">
+                        <i class="fas fa-user"></i>
+                        <?php echo htmlspecialchars($_SESSION['name'] ?? 'User'); ?>
+                    </span>
+                    <div class="dropdown-menu" id="userDropdown">
                         <a href="profile.php">
-                            <i class="fas fa-user"></i>
-                            My Profile
+                            <i class="fas fa-user-circle"></i>
+                            Profile
                         </a>
                         <a href="my-bookings.php">
                             <i class="fas fa-calendar-check"></i>
@@ -237,7 +53,6 @@ include 'config.php'; // Ensure this path is correct based on your project struc
                             <i class="fas fa-cog"></i>
                             Settings
                         </a>
-                        <div class="dropdown-divider"></div>
                         <a href="logout.php" class="logout-link">
                             <i class="fas fa-sign-out-alt"></i>
                             Logout
@@ -245,102 +60,113 @@ include 'config.php'; // Ensure this path is correct based on your project struc
                     </div>
                 </div>
             <?php else: ?>
-                <button class="nav-link login-btn" id="loginSignupBtn" onclick="showLoginModal()">
-                    <i class="fas fa-user"></i>
-                    Login/Signup
-                </button>
-            <?php endif; ?> -->
+                <a href="#" onclick="showLoginModal()" class="nav-link">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Login
+                </a>
+            <?php endif; ?>
         </div>
     </nav>
 </header>
+
 <script>
-// Function to toggle booking panel
-function toggleBookingPanel() {
-    // Implementation not shown in provided code
-    return false;
-}
+    // Mobile menu toggle
+    document.getElementById('mobileMenuToggle').addEventListener('click', function() {
+        document.getElementById('navLinks').classList.add('active');
+    });
 
-// Function to show login modal
-function showLoginModal() {
-    const modal = document.getElementById('loginModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        showLoginTab(new Event('click')); // Reset to login tab by default
-    }
-}
+    document.getElementById('mobileMenuClose').addEventListener('click', function() {
+        document.getElementById('navLinks').classList.remove('active');
+    });
 
-// Function to show login tab
-function showLoginTab(event) {
-    event.preventDefault();
-    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-    
-    const loginTab = document.querySelector('.tab:first-child');
-    const loginForm = document.getElementById('loginForm');
-    
-    if (loginTab) loginTab.classList.add('active');
-    if (loginForm) loginForm.classList.add('active');
-}
+    // User profile dropdown
+    const userProfile = document.getElementById('userProfile');
+    const userDropdown = document.getElementById('userDropdown');
 
-// Function to show signup tab
-function showSignupTab(event) {
-    event.preventDefault();
-    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-    
-    const signupTab = document.querySelector('.tab:last-child');
-    const signupForm = document.getElementById('signupForm');
-    
-    if (signupTab) signupTab.classList.add('active');
-    if (signupForm) signupForm.classList.add('active');
-}
-
-// Function to close login modal
-function closeLoginModal() {
-    const modal = document.getElementById('loginModal');
-    if (modal) {
-        modal.style.display = 'none';
-        // Clear forms and error messages
-        const loginForm = document.getElementById('loginForm');
-        const signupForm = document.getElementById('signupForm');
-        if (loginForm) loginForm.reset();
-        if (signupForm) signupForm.reset();
-        document.querySelectorAll('.validation-message').forEach(msg => msg.textContent = '');
-    }
-}
-
-// Function to scroll to support section
-function scrollToSupport(event) {
-    event.preventDefault();
-    const supportSection = document.querySelector('#support');
-    supportSection.scrollIntoView({ behavior: 'smooth' });
-}
-
-// Add this to your existing JavaScript
-document.addEventListener('DOMContentLoaded', function() {
-    // Handle dropdown toggle on click (optional, in addition to hover)
-    const userProfile = document.querySelector('.user-profile');
     if (userProfile) {
         userProfile.addEventListener('click', function(e) {
-            const dropdown = this.querySelector('.dropdown-content');
-            if (dropdown) {
-                // Toggle dropdown visibility
-                const isVisible = dropdown.style.display === 'block';
-                dropdown.style.display = isVisible ? 'none' : 'block';
-            }
+            e.stopPropagation();
+            userDropdown.classList.toggle('active');
         });
 
-        // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
             if (!userProfile.contains(e.target)) {
-                const dropdown = userProfile.querySelector('.dropdown-content');
-                if (dropdown) {
-                    dropdown.style.display = 'none';
-                }
+                userDropdown.classList.remove('active');
             }
         });
     }
-});
 </script>
-</body>
-</html>
+
+<style>
+    /* Mobile menu styles */
+    .mobile-menu-toggle,
+    .mobile-menu-close {
+        display: none;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 10px;
+    }
+
+    /* Add these dropdown styles */
+    .user-profile {
+        position: relative;
+        cursor: pointer;
+    }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background-color: #fff;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        border-radius: 4px;
+        min-width: 200px;
+        z-index: 1000;
+    }
+
+    .dropdown-menu.active {
+        display: block;
+    }
+
+    .dropdown-menu a {
+        display: block;
+        padding: 10px 15px;
+        color: #333;
+        text-decoration: none;
+        transition: background-color 0.3s;
+    }
+
+    .dropdown-menu a:hover {
+        background-color: #f5f5f5;
+    }
+
+    .dropdown-menu i {
+        margin-right: 8px;
+    }
+
+    /* Mobile styles */
+    @media (max-width: 768px) {
+        .mobile-menu-toggle,
+        .mobile-menu-close {
+            display: block;
+        }
+        
+        .nav-links {
+            display: none;
+        }
+        
+        .nav-links.active {
+            display: block;
+        }
+    }
+
+    /* Desktop styles */
+    @media (min-width: 769px) {
+        .mobile-menu-toggle,
+        .mobile-menu-close {
+            display: none !important;
+        }
+    }
+</style>
