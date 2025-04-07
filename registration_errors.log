@@ -902,3 +902,59 @@ POST data: Array
 )
 
 Preventing duplicate registration attempt (8s since last attempt)
+=== Registration attempt: 2025-04-07 16:59:13 ===
+POST data: Array
+(
+    [username] => sulthana
+    [email] => sulthanafathima2027@mca.ajce.in
+    [password] => Sulu@1234
+    [confirm_password] => Sulu@1234
+    [unified_handler] => true
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to sulthanafathima2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-04-07 16:59:19 ===
+POST data: Array
+(
+    [username] => sulthana
+    [email] => sulthanafathima2027@mca.ajce.in
+    [password] => Sulu@1234
+    [confirm_password] => Sulu@1234
+)
+
+Preventing duplicate registration attempt (6s since last attempt)
+=== Registration attempt: 2025-04-07 17:02:17 ===
+POST data: Array
+(
+    [username] => sulu
+    [email] => sulthanafathima2027@mca.ajce.in
+    [password] => Sulu@123
+    [confirm_password] => Sulu@123
+)
+
+Database connection successful
+All required fields present
+All validation passed
+Username and email are available
+Registration data stored in session
+Verification email sent successfully to sulthanafathima2027@mca.ajce.in
+Email sending result: success
+Sending success response: {"success":true,"message":"Please verify your email address with the code we sent you.","redirect":"index.php?verify=true&keep_open=1"}
+=== Registration attempt: 2025-04-07 17:02:22 ===
+POST data: Array
+(
+    [username] => sulu
+    [email] => sulthanafathima2027@mca.ajce.in
+    [password] => Sulu@123
+    [confirm_password] => Sulu@123
+    [unified_handler] => true
+)
+
+Preventing duplicate registration attempt (5s since last attempt)

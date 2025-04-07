@@ -566,11 +566,6 @@ session_start();
                             <input type="text" id="postalCode" placeholder="Postal Code" required>
                             <div class="error-message" id="postalCode-error"></div>
                         </div>
-                        <div class="form-group">
-                            <label for="businessRegistration">Business Registration Number</label>
-                            <input type="text" id="businessRegistration" placeholder="Business Registration Number" required>
-                            <div class="error-message" id="businessRegistration-error"></div>
-                        </div>
                     </div>
                     <button type="submit" class="auth-btn" id="signupButton">Register as Station Owner</button>
                     <div class="terms">
@@ -1007,9 +1002,9 @@ session_start();
                 if (value.length <= 3) {
                     value = value;
                 } else if (value.length <= 6) {
-                    value = value.slice(0, 3) + '-' + value.slice(3);
+                    value = value.slice(0, 3) + value.slice(3);
                 } else {
-                    value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6, 10);
+                    value = value.slice(0, 3)+ value.slice(3, 6)  + value.slice(6, 10);
                 }
                 this.value = value;
             }
@@ -1073,8 +1068,8 @@ session_start();
                     
                     // Validate required fields
                     const requiredFields = <?php echo $userLoggedIn ? 
-                        "['phone', 'address', 'city', 'state', 'postalCode', 'businessRegistration']" : 
-                        "['signupFullName', 'signupEmail', 'signupUsername', 'signupPassword', 'confirmPassword', 'phone', 'address', 'city', 'state', 'postalCode', 'businessRegistration']"; ?>;
+                        "['phone', 'address', 'city', 'state', 'postalCode']" : 
+                        "['signupFullName', 'signupEmail', 'signupUsername', 'signupPassword', 'confirmPassword', 'phone', 'address', 'city', 'state', 'postalCode']"; ?>;
                     
                     requiredFields.forEach(field => {
                         const element = document.getElementById(field);
@@ -1115,8 +1110,7 @@ session_start();
                             address: document.getElementById('address').value.trim(),
                             city: document.getElementById('city').value.trim(),
                             state: document.getElementById('state').value.trim(),
-                            postalCode: document.getElementById('postalCode').value.trim(),
-                            businessRegistration: document.getElementById('businessRegistration').value.trim()
+                            postalCode: document.getElementById('postalCode').value.trim()
                         };
 
                         console.log('Sending data:', formData); // Debug log

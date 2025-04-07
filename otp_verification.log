@@ -286,3 +286,65 @@ SESSION data: Array
 
 Missing required data
 ERROR: Missing required verification data
+=== OTP Verification attempt: 2025-04-07 17:00:18 ===
+POST data: Array
+(
+    [otp] => 841004
+)
+
+SESSION data: Array
+(
+    [registration_timestamp] => 1744037953
+    [pending_registration] => Array
+        (
+            [email] => sulthanafathima2027@mca.ajce.in
+            [passwordhash] => $2y$10$7xShzMAMUZpSgq67.qoUCe5ul98wKUv.PkTreeD1wXphCCg12zURS
+            [username] => sulthana
+            [name] => sulthana
+            [profile_picture] => 
+            [verification_token] => 841004
+            [token_expiry] => 2025-04-07 17:09:13
+        )
+
+    [pending_verification] => 1
+    [verify_email] => sulthanafathima2027@mca.ajce.in
+)
+
+Submitted OTP: 841004
+Stored OTP: 841004
+OTP Expiry: 2025-04-07 17:09:13
+OTP verification successful, proceeding with registration
+ERROR: User with this email or username already exists
+=== OTP Verification attempt: 2025-04-07 17:02:53 ===
+POST data: Array
+(
+    [otp] => 131310
+)
+
+SESSION data: Array
+(
+    [registration_timestamp] => 1744038137
+    [pending_registration] => Array
+        (
+            [email] => sulthanafathima2027@mca.ajce.in
+            [passwordhash] => $2y$10$YHmhJdVmxsClAtdpUEdIqOY0OLOFpj0UkchgB/Fp4JmMMUup6nbXm
+            [username] => sulu
+            [name] => sulu
+            [profile_picture] => 
+            [verification_token] => 131310
+            [token_expiry] => 2025-04-07 17:12:17
+        )
+
+    [pending_verification] => 1
+    [verify_email] => sulthanafathima2027@mca.ajce.in
+)
+
+Submitted OTP: 131310
+Stored OTP: 131310
+OTP Expiry: 2025-04-07 17:12:17
+OTP verification successful, proceeding with registration
+SQL: INSERT INTO tbl_users (username, email, passwordhash, name, profile_picture, status, created_at) 
+                           VALUES (?, ?, ?, ?, ?, 'active', NOW())
+Params: ["sulu","sulthanafathima2027@mca.ajce.in","PASSWORD_HASH_HIDDEN","sulu",null]
+New user ID: 114
+User registered successfully with ID: 114

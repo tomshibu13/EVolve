@@ -46,60 +46,70 @@ try {
     $result = mysqli_stmt_get_result($stmt);
     $station = mysqli_fetch_assoc($result);
 
-    // Handle booking submission
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        // Add your booking logic here
-        $user_id = $_SESSION['user_id'] ?? null; // Make sure user is logged in
-        $booking_date = $_POST['booking_date'];
-        $booking_time = $_POST['booking_time'];
-        $duration = $_POST['duration'];
-        
-        if (!$user_id) {
-            throw new Exception("Please log in to book a station");
-        }
-        
-        // Validate time is between 8 AM and 9 PM
-        $booking_hour = (int)substr($booking_time, 0, 2);
-        if ($booking_hour < 8 || $booking_hour > 21 || ($booking_hour == 21 && substr($booking_time, 3, 2) > '00')) {
-            throw new Exception("Booking time must be between 8:00 AM and 9:00 PM");
-        }
-        
-        // Check if the slot is already booked
-        $end_time = date('H:i', strtotime($booking_time . ' + ' . $duration . ' minutes'));
-        $check_query = "
-            SELECT * FROM bookings 
-            WHERE station_id = ? 
-            AND booking_date = ? 
-            AND (
-                (booking_time <= ? AND DATE_ADD(booking_time, INTERVAL duration MINUTE) > ?) OR
-                (booking_time < ? AND DATE_ADD(booking_time, INTERVAL duration MINUTE) >= ?)
-            )
-        ";
-        
-        $check_stmt = mysqli_prepare($conn, $check_query);
-        mysqli_stmt_bind_param($check_stmt, "isssss", $station_id, $booking_date, $end_time, $booking_time, $booking_time, $booking_time);
-        mysqli_stmt_execute($check_stmt);
-        $check_result = mysqli_stmt_get_result($check_stmt);
-        
-        if (mysqli_num_rows($check_result) > 0) {
-            throw new Exception("This time slot is already booked. Please select another time.");
-        }
+    // Initialize variables with default values
+    $user_id = $_SESSION['user_id'] ?? null;
+    $booking_date = $_POST['booking_date'] ?? '';
+    $booking_time = $_POST['booking_time'] ?? '';
+    $duration = $_POST['duration'] ?? '';
 
-        // Insert booking into database
-        $booking_query = "
-            INSERT INTO bookings (user_id, station_id, booking_date, booking_time, duration, status)
-            VALUES (?, ?, ?, ?, ?, 'pending')
-        ";
-        
-        $booking_stmt = mysqli_prepare($conn, $booking_query);
-        mysqli_stmt_bind_param($booking_stmt, "iissi", $user_id, $station_id, $booking_date, $booking_time, $duration);
-        
-        if (mysqli_stmt_execute($booking_stmt)) {
-            $success_message = "Booking successful! We'll notify you once it's confirmed.";
-            header('Location: my-bookings.php');
-            exit();
-        } else {
-            throw new Exception("Failed to create booking");
+    // Handle booking submission
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_booking'])) {
+        try {
+            // Validate user is logged in
+            if (!$user_id) {
+                throw new Exception("Please log in to book a station");
+            }
+            
+            // Validate required fields
+            if (empty($booking_date) || empty($booking_time) || empty($duration)) {
+                throw new Exception("Please fill in all required fields");
+            }
+            
+            // Validate time is between 8 AM and 9 PM
+            $booking_hour = (int)substr($booking_time, 0, 2);
+            if ($booking_hour < 8 || $booking_hour > 21 || ($booking_hour == 21 && substr($booking_time, 3, 2) > '00')) {
+                throw new Exception("Booking time must be between 8:00 AM and 9:00 PM");
+            }
+            
+            // Check if the slot is already booked
+            $end_time = date('H:i', strtotime($booking_time . ' + ' . $duration . ' minutes'));
+            $check_query = "
+                SELECT * FROM bookings 
+                WHERE station_id = ? 
+                AND booking_date = ? 
+                AND (
+                    (booking_time <= ? AND DATE_ADD(booking_time, INTERVAL duration MINUTE) > ?) OR
+                    (booking_time < ? AND DATE_ADD(booking_time, INTERVAL duration MINUTE) >= ?)
+                )
+            ";
+            
+            $check_stmt = mysqli_prepare($conn, $check_query);
+            mysqli_stmt_bind_param($check_stmt, "isssss", $station_id, $booking_date, $end_time, $booking_time, $booking_time, $booking_time);
+            mysqli_stmt_execute($check_stmt);
+            $check_result = mysqli_stmt_get_result($check_stmt);
+            
+            if (mysqli_num_rows($check_result) > 0) {
+                throw new Exception("This time slot is already booked. Please select another time.");
+            }
+
+            // Insert booking into database
+            $booking_query = "
+                INSERT INTO bookings (user_id, station_id, booking_date, booking_time, duration, status)
+                VALUES (?, ?, ?, ?, ?, 'pending')
+            ";
+            
+            $booking_stmt = mysqli_prepare($conn, $booking_query);
+            mysqli_stmt_bind_param($booking_stmt, "iissi", $user_id, $station_id, $booking_date, $booking_time, $duration);
+            
+            if (mysqli_stmt_execute($booking_stmt)) {
+                $success_message = "Booking successful! We'll notify you once it's confirmed.";
+                header('Location: my-bookings.php');
+                exit();
+            } else {
+                throw new Exception("Failed to create booking");
+            }
+        } catch (Exception $e) {
+            $error_message = "Error: " . $e->getMessage();
         }
     }
 
@@ -291,6 +301,55 @@ try {
             font-size: 14px;
             display: none;
         }
+
+        /* Add these styles to your existing CSS */
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-content {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .popup-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .popup-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            border: none;
+        }
+
+        .popup-confirm {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .popup-cancel {
+            background-color: #e5e7eb;
+            color: #374151;
+        }
     </style>
 </head>
 <body>
@@ -317,7 +376,7 @@ try {
         <?php if ($station): ?>
 
 
-            <form class="booking-form" method="POST" action="create_order.php">
+            <form class="booking-form" method="POST" action="book_station.php">
                 <input type="hidden" name="station_id" value="<?php echo htmlspecialchars($station_id); ?>">
                 
                 <div id="live-error" class="alert alert-error" style="display: none;"></div>
@@ -335,8 +394,8 @@ try {
                 <div class="form-group">
                     <label for="duration">Duration (minutes)</label>
                     <select id="duration" name="duration" class="form-control" required>
-                        <option value="30">30 minutes </option>
-                        <option value="60">1 hour </option>
+                        <option value="30">30 minutes</option>
+                        <option value="60">1 hour</option>
                         <option value="90">1.5 hours</option>
                         <option value="120">2 hours</option>
                     </select>
@@ -350,9 +409,21 @@ try {
                     </div>
                 </div>
 
-                <button type="submit" class="btn-primary">Proceed to Payment</button>
+                <button type="submit" name="submit_booking" class="btn-primary">Proceed to Payment</button>
             </form>
         <?php endif; ?>
+    </div>
+
+    <!-- Add this HTML before closing body tag -->
+    <div class="popup-overlay" id="confirmationPopup">
+        <div class="popup-content">
+            <h3>Confirm Booking</h3>
+            <p>Are you sure you want to proceed with this booking?</p>
+            <div class="popup-buttons">
+                <button class="popup-button popup-cancel" id="cancelBooking">Cancel</button>
+                <button class="popup-button popup-confirm" id="confirmBooking">Confirm</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -373,10 +444,9 @@ try {
             // Function to check availability in real-time
             function checkAvailability() {
                 if (!dateInput.value || !timeInput.value || !durationSelect.value) {
-                    return; // Don't check if fields are empty
+                    return;
                 }
                 
-                // Validate time range first
                 const selectedTime = timeInput.value;
                 const hour = parseInt(selectedTime.split(':')[0]);
                 const minute = parseInt(selectedTime.split(':')[1]);
@@ -387,10 +457,14 @@ try {
                     return;
                 }
                 
-                // Check for conflicting bookings via AJAX
+                const formData = new FormData();
+                formData.append('station_id', stationId);
+                formData.append('booking_date', dateInput.value);
+                formData.append('booking_time', timeInput.value);
+                formData.append('duration', durationSelect.value);
+                
                 const xhr = new XMLHttpRequest();
                 xhr.open('POST', 'check_availability.php', true);
-                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
                 
                 xhr.onload = function() {
                     if (this.status === 200) {
@@ -404,7 +478,7 @@ try {
                     }
                 };
                 
-                xhr.send(`station_id=${stationId}&booking_date=${dateInput.value}&booking_time=${timeInput.value}&duration=${durationSelect.value}`);
+                xhr.send(formData);
             }
             
             // Function to fetch and display booked time slots
@@ -414,8 +488,11 @@ try {
                 }
                 
                 const xhr = new XMLHttpRequest();
-                xhr.open('GET', `get_booked_slots.php?station_id=${stationId}&date=${dateInput.value}`, true);
+                const formData = new FormData();
+                formData.append('station_id', stationId);
+                formData.append('date', dateInput.value);
                 
+                xhr.open('POST', 'get_booked_slots.php', true);
                 xhr.onload = function() {
                     if (this.status === 200) {
                         const bookedSlots = JSON.parse(this.responseText);
@@ -423,7 +500,7 @@ try {
                     }
                 };
                 
-                xhr.send();
+                xhr.send(formData);
             }
             
             // Function to display time slots
@@ -624,13 +701,14 @@ try {
             });
             
             bookingForm.addEventListener('submit', function(e) {
+                e.preventDefault(); // Always prevent default first
+                
                 // Validate time range
                 const selectedTime = timeInput.value;
                 const hour = parseInt(selectedTime.split(':')[0]);
                 const minute = parseInt(selectedTime.split(':')[1]);
                 
                 if (hour < 8 || (hour === 21 && minute > 0) || hour > 21) {
-                    e.preventDefault();
                     liveError.textContent = 'Please select a time between 8:00 AM and 9:00 PM';
                     liveError.style.display = 'block';
                     return false;
@@ -638,13 +716,49 @@ try {
                 
                 // Check if there's an error displayed
                 if (liveError.style.display !== 'none') {
-                    e.preventDefault();
                     return false;
                 }
                 
-                if (!confirm('Confirm booking?')) {
-                    e.preventDefault();
+                // Show confirmation popup
+                document.getElementById('confirmationPopup').style.display = 'flex';
+            });
+
+            // Add these event listeners for the popup buttons
+            document.getElementById('cancelBooking').addEventListener('click', function() {
+                document.getElementById('confirmationPopup').style.display = 'none';
+            });
+
+            document.getElementById('confirmBooking').addEventListener('click', function() {
+                document.getElementById('confirmationPopup').style.display = 'none';
+                
+                // Create a hidden form for POST submission
+                const postForm = document.createElement('form');
+                postForm.method = 'POST';
+                postForm.action = 'payment_page.php';
+
+                // Get the form data
+                const formData = new FormData(bookingForm);
+                
+                // Add necessary fields to the post form
+                const fields = {
+                    'booking_date': formData.get('booking_date'),
+                    'booking_time': formData.get('booking_time'),
+                    'duration': formData.get('duration'),
+                    'station_id': formData.get('station_id')
+                };
+
+                // Create hidden inputs for each field
+                for (const [key, value] of Object.entries(fields)) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = value;
+                    postForm.appendChild(input);
                 }
+
+                // Append form to body and submit
+                document.body.appendChild(postForm);
+                postForm.submit();
             });
         });
     </script>

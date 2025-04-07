@@ -35,6 +35,31 @@ require_once 'config.php';
             </a>
 
             <?php if (isset($_SESSION['user_id'])): ?>
+                <a href="notifications.php" class="nav-link notification-link">
+                    <div class="notification-container">
+                        <i class="fas fa-bell"></i>
+                        <?php 
+                        // Count unread notifications
+                        $notifStmt = $pdo->prepare("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0");
+                        $notifStmt->execute([$_SESSION['user_id']]);
+                        $unreadNotifications = $notifStmt->fetchColumn();
+                        
+                        // Count unread enquiry responses
+                        $responseStmt = $pdo->prepare("SELECT COUNT(*) FROM enquiries WHERE user_id = ? AND status = 'responded' AND response IS NOT NULL");
+                        $responseStmt->execute([$_SESSION['user_id']]);
+                        $unreadResponses = $responseStmt->fetchColumn();
+                        
+                        // Calculate total unread count
+                        $totalUnread = $unreadNotifications + $unreadResponses;
+                        
+                        // Display badge if there are unread items
+                        if ($totalUnread > 0) {
+                            echo '<span class="notification-badge">' . $totalUnread . '</span>';
+                        }
+                        ?>
+                    </div>
+                </a>
+
                 <div class="user-profile" id="userProfile">
                     <span class="username">
                         <i class="fas fa-user"></i>
@@ -168,5 +193,46 @@ require_once 'config.php';
         .mobile-menu-close {
             display: none !important;
         }
+    }
+
+    /* Update notification styles */
+    .notification-link {
+        position: relative;
+        text-decoration: none;
+        color: inherit;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+    }
+
+    .notification-container {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .notification-link i {
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .notification-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background-color: #ff5252;
+        color: white;
+        border-radius: 50%;
+        min-width: 15px;
+        height: 15px;
+        font-size: 10px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2px;
     }
 </style>

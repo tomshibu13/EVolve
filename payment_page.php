@@ -1,7 +1,90 @@
 <?php
 session_start();
-$order_id = $_GET['order_id'];
-$amount = $_GET['amount'];  // Amount should already be in rupees
+
+// Include database configuration
+require_once 'config.php';
+
+// Check if the request is POST
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: index.php');
+    exit();
+}
+
+// Get the booking details from POST
+$booking_date = $_POST['booking_date'] ?? '';
+$booking_time = $_POST['booking_time'] ?? '';
+$duration = $_POST['duration'] ?? '';
+$station_id = $_POST['station_id'] ?? '';
+
+// Calculate amount based on duration and rates
+$hourly_rate = 100; // Set your rate per hour
+$amount = $hourly_rate * $duration;
+
+// Create Razorpay Order
+require 'vendor/autoload.php';
+use Razorpay\Api\Api;
+
+$key_id = "rzp_test_R6h0atxxQ4WsUU";
+$key_secret = "5CyNCDCaDKmrRqPWX2K6uLGV";
+
+$api = new Api($key_id, $key_secret);
+
+try {
+    // Create order on Razorpay
+    $orderData = [
+        'receipt'         => 'rcptid_' . time(),
+        'amount'          => $amount * 100, // Convert to paise
+        'currency'        => 'INR',
+        'payment_capture' => 1 // auto capture
+    ];
+
+    $razorpayOrder = $api->order->create($orderData);
+    $razorpayOrderId = $razorpayOrder['id'];
+
+    // Store booking details in database with pending status
+    $stmt = $pdo->prepare("
+        INSERT INTO bookings (
+            user_id, 
+            station_id, 
+            booking_date, 
+            booking_time, 
+            duration, 
+            amount,
+            razorpay_order_id,
+            status,
+            payment_status,
+            created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', NOW())
+    ");
+
+    $stmt->execute([
+        $_SESSION['user_id'],
+        $station_id,
+        $booking_date,
+        $booking_time,
+        $duration,
+        $amount,
+        $razorpayOrderId
+    ]);
+
+    $bookingId = $pdo->lastInsertId();
+
+    // Store in session for verification
+    $_SESSION['current_booking'] = [
+        'booking_id' => $bookingId,
+        'order_id' => $razorpayOrderId,
+        'amount' => $amount,
+        'booking_date' => $booking_date,
+        'booking_time' => $booking_time,
+        'duration' => $duration,
+        'station_id' => $station_id
+    ];
+
+} catch (Exception $e) {
+    error_log("Razorpay Error: " . $e->getMessage());
+    header("Location: error.php?message=" . urlencode("Payment initialization failed"));
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -9,9 +92,31 @@ $amount = $_GET['amount'];  // Amount should already be in rupees
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4CAF50">
+    
+    <!-- Add proper manifest -->
+    <link rel="manifest" href="manifest.json">
+    
     <title>Payment - EVolve</title>
+    
+    <!-- Preload Razorpay script -->
+    <link rel="preload" href="https://checkout.razorpay.com/v1/checkout.js" as="script">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
+    <!-- Optimize font loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Update Razorpay initialization -->
+    <script>
+        // Add canvas optimization
+        const canvas = document.createElement('canvas');
+        if (canvas.getContext) {
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        }
+    </script>
+
     <style>
         * {
             margin: 0;
@@ -177,7 +282,7 @@ $amount = $_GET['amount'];  // Amount should already be in rupees
             <div class="payment-details">
                 <div class="payment-info">
                     <span class="payment-label">Order ID:</span>
-                    <span class="payment-value"><?php echo htmlspecialchars($order_id); ?></span>
+                    <span class="payment-value"><?php echo htmlspecialchars($razorpayOrderId); ?></span>
                 </div>
                 <div class="payment-info">
                     <span class="payment-label">Amount:</span>
@@ -210,27 +315,39 @@ $amount = $_GET['amount'];  // Amount should already be in rupees
     
     <script>
         var options = {
-            "key": "rzp_test_R6h0atxxQ4WsUU",
-            "amount": <?php echo (int)($amount * 100); ?>, // Convert to paise and ensure it's an integer
+            "key": "<?php echo $key_id; ?>",
+            "amount": "<?php echo $amount * 100; ?>",
             "currency": "INR",
             "name": "EVolve Charging",
             "description": "Charging Station Booking",
-            "order_id": "<?php echo htmlspecialchars($order_id); ?>",
+            "image": "path/to/your/logo.png",
+            "order_id": "<?php echo $razorpayOrderId; ?>",
             "handler": function (response) {
                 // Show loading state
                 document.getElementById('pay-button').disabled = true;
                 document.getElementById('pay-button').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing Payment...';
                 
-                // Redirect to verify payment with all necessary parameters
-                window.location.href = "verify_payment.php?" + 
-                    "payment_id=" + response.razorpay_payment_id + 
-                    "&order_id=" + response.razorpay_order_id + 
-                    "&signature=" + response.razorpay_signature;
-            },
-            "modal": {
-                "ondismiss": function() {
-                    console.log('Payment modal closed');
+                // Create a form to submit payment details
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'verify_payment.php';
+
+                var fields = {
+                    'razorpay_payment_id': response.razorpay_payment_id,
+                    'razorpay_order_id': response.razorpay_order_id,
+                    'razorpay_signature': response.razorpay_signature
+                };
+
+                for (var key in fields) {
+                    var input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = fields[key];
+                    form.appendChild(input);
                 }
+
+                document.body.appendChild(form);
+                form.submit();
             },
             "prefill": {
                 "name": "<?php echo isset($_SESSION['name']) ? htmlspecialchars($_SESSION['name']) : ''; ?>",
@@ -241,11 +358,17 @@ $amount = $_GET['amount'];  // Amount should already be in rupees
                 "color": "#4CAF50"
             }
         };
-        
+
         document.getElementById('pay-button').onclick = function() {
             var rzp1 = new Razorpay(options);
             rzp1.open();
         };
+
+        // Handle payment failure
+        rzp1.on('payment.failed', function (response){
+            alert("Payment failed. Please try again. Error: " + response.error.description);
+            window.location.href = 'my-bookings.php?status=failed';
+        });
     </script>
 </body>
 </html>

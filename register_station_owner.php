@@ -44,7 +44,7 @@ try {
     error_log("User ID from session: " . $_SESSION['user_id']);
 
     // Validate required fields
-    $required_fields = ['phone', 'address', 'city', 'state', 'postalCode', 'businessRegistration'];
+    $required_fields = ['phone', 'address', 'city', 'state', 'postalCode'];
     foreach ($required_fields as $field) {
         if (!isset($data[$field]) || trim($data[$field]) === '') {
             error_log("Missing required field: " . $field);
@@ -102,8 +102,8 @@ try {
         // Insert request
         $insert_sql = "INSERT INTO station_owner_requests (
             user_id, owner_name, business_name, email, phone, address, 
-            city, state, postal_code, business_registration, password_hash, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')";
+            city, state, postal_code, password_hash, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')";
         
         error_log("SQL Query: " . $insert_sql);
         
@@ -126,11 +126,10 @@ try {
             'city' => $data['city'],
             'state' => $data['state'],
             'postal_code' => $data['postalCode'],
-            'business_registration' => $data['businessRegistration'],
             'password_hash' => $user_data['passwordhash']
         ], true));
 
-        $insert_stmt->bind_param("issssssssss",
+        $insert_stmt->bind_param("isssssssss",
             $_SESSION['user_id'],
             $user_data['name'],
             $businessName,
@@ -140,7 +139,6 @@ try {
             $data['city'],
             $data['state'],
             $data['postalCode'],
-            $data['businessRegistration'],
             $user_data['passwordhash']
         );
 

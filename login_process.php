@@ -37,6 +37,34 @@ try {
     $_SESSION['name'] = $user['name'];
     $_SESSION['is_admin'] = $user['is_admin'];
 
+    // Check if user is a station owner
+    $ownerStmt = $pdo->prepare("SELECT * FROM station_owner_requests WHERE user_id = ? ORDER BY created_at DESC LIMIT 1");
+    $ownerStmt->execute([$user['user_id']]);
+    $ownerData = $ownerStmt->fetch();
+
+    // Set redirect based on user type
+    if ($user['is_admin']) {
+        $redirect = 'admindash.php';
+    } else if ($ownerData) {
+        switch($ownerData['status']) {
+            case 'approved':
+                $redirect = 'station-owner-dashboard.php';
+                break;
+            case 'pending':
+                $redirect = 'index.php';
+                $message = 'Your station owner account is pending approval.';
+                break;
+            case 'rejected':
+                $redirect = 'index.php';
+                $message = 'Your station owner application was rejected.';
+                break;
+            default:
+                $redirect = 'index.php';
+        }
+    } else {
+        $redirect = 'index.php';
+    }
+
     // Handle remember me functionality
     if ($remember) {
         $token = bin2hex(random_bytes(32));
@@ -51,7 +79,7 @@ try {
     echo json_encode([
         'success' => true,
         'message' => 'Login successful',
-        'redirect' => 'index.php'
+        'redirect' => $redirect
     ]);
 
 } catch (Exception $e) {

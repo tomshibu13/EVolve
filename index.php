@@ -25,6 +25,63 @@ if (isset($_GET['verify']) && $_GET['verify'] === 'true' && isset($_SESSION['pen
     $showVerificationModal = true;
 }
 
+// Add this code to handle login redirection and display
+if (isset($_SESSION['login_success'])) {
+    echo '<script>
+        document.addEventListener("DOMContentLoaded", function() {
+            alert("' . htmlspecialchars($_SESSION['login_success']) . '");
+            // Ensure the page reflects the logged-in state
+            if (document.getElementById("loginSignupBtn")) {
+                document.getElementById("loginSignupBtn").style.display = "none";
+            }
+            // Make sure the username element is present with the right class
+            var userProfileElement = document.createElement("div");
+            userProfileElement.className = "user-profile";
+            userProfileElement.innerHTML = `
+                <button class="username-button">
+                    <span>
+                        <i class="fas fa-user"></i>
+                        ' . htmlspecialchars($_SESSION['name'] ?? $_SESSION['username'] ?? $_SESSION['email'] ?? 'User') . '
+                    </span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="profile.php">
+                        <i class="fas fa-user-circle"></i>
+                        My Profile
+                    </a>
+                    <a href="my-bookings.php">
+                        <i class="fas fa-calendar-check"></i>
+                        My Bookings
+                    </a>
+                    <a href="settings.php">
+                        <i class="fas fa-cog"></i>
+                        Settings
+                    </a>
+                    <a href="logout.php" class="logout-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </a>
+                </div>
+            `;
+            document.querySelector(".nav-links").appendChild(userProfileElement);
+            
+            // Add event listener for dropdown
+            userProfileElement.querySelector(".username-button").addEventListener("click", function(e) {
+                e.stopPropagation();
+                userProfileElement.querySelector(".dropdown-content").classList.toggle("active");
+            });
+            
+            document.addEventListener("click", function(e) {
+                if (!userProfileElement.contains(e.target)) {
+                    userProfileElement.querySelector(".dropdown-content").classList.remove("active");
+                }
+            });
+        });
+    </script>';
+    unset($_SESSION['login_success']);
+}
+
 try {
     // Create database connection
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
@@ -2828,6 +2885,101 @@ function isApprovedStationOwner($userId) {
                 font-size: 0.85rem;
             }
         }
+
+        .login-signup-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 15px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .login-signup-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .login-signup-btn i {
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .login-signup-btn {
+                width: 100%;
+                justify-content: flex-start;
+                padding: 12px 0;
+            }
+        }
+
+        .username-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-weight: 500;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: inherit;
+        }
+
+        .username-button:hover {
+            background-color: #e9ecef;
+        }
+
+        .user-profile i.fa-chevron-down {
+            display: none; /* Hide the original icon since we moved it into the button */
+        }
+
+        /* Update notification styles */
+        .notification-link {
+            position: relative;
+            text-decoration: none;
+            color: inherit;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .notification-container {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-link i {
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #ff5252;
+            color: white;
+            border-radius: 50%;
+            min-width: 15px;
+            height: 15px;
+            font-size: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px;
+        }
     </style>
 </head>
 <body>
@@ -2860,29 +3012,31 @@ function isApprovedStationOwner($userId) {
                     <i class="fas fa-info-circle"></i>
                     About Us
                 </a>
-                <a href="notifications.php" class="nav-link">
-                    <i class="fas fa-bell"></i>
-                    <?php 
-                    if (isset($_SESSION['user_id'])) {
-                        // Count unread notifications
-                        $notifStmt = $pdo->prepare("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0");
-                        $notifStmt->execute([$_SESSION['user_id']]);
-                        $unreadNotifications = $notifStmt->fetchColumn();
-                        
-                        // Count unread enquiry responses
-                        $responseStmt = $pdo->prepare("SELECT COUNT(*) FROM enquiries WHERE user_id = ? AND status = 'responded' AND response IS NOT NULL");
-                        $responseStmt->execute([$_SESSION['user_id']]);
-                        $unreadResponses = $responseStmt->fetchColumn();
-                        
-                        // Calculate total unread count
-                        $totalUnread = $unreadNotifications + $unreadResponses;
-                        
-                        // Display badge if there are unread items
-                        if ($totalUnread > 0) {
-                            echo '<span class="notification-badge">' . $totalUnread . '</span>';
+                <a href="notifications.php" class="nav-link notification-link">
+                    <div class="notification-container">
+                        <i class="fas fa-bell"></i>
+                        <?php 
+                        if (isset($_SESSION['user_id'])) {
+                            // Count unread notifications
+                            $notifStmt = $pdo->prepare("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0");
+                            $notifStmt->execute([$_SESSION['user_id']]);
+                            $unreadNotifications = $notifStmt->fetchColumn();
+                            
+                            // Count unread enquiry responses
+                            $responseStmt = $pdo->prepare("SELECT COUNT(*) FROM enquiries WHERE user_id = ? AND status = 'responded' AND response IS NOT NULL");
+                            $responseStmt->execute([$_SESSION['user_id']]);
+                            $unreadResponses = $responseStmt->fetchColumn();
+                            
+                            // Calculate total unread count
+                            $totalUnread = $unreadNotifications + $unreadResponses;
+                            
+                            // Display badge if there are unread items
+                            if ($totalUnread > 0) {
+                                echo '<span class="notification-badge">' . $totalUnread . '</span>';
+                            }
                         }
-                    }
-                    ?>
+                        ?>
+                    </div>
                 </a>
                 <?php if (isset($_SESSION['user_id'])): ?>
                 <!-- Debug information -->
@@ -2908,41 +3062,43 @@ function isApprovedStationOwner($userId) {
                 }
                 ?>
                 <div class="user-profile">
-                        <span class="username">
-                        <?php 
-                        if (isset($_SESSION['name']) && !empty($_SESSION['name'])) {
-                            echo htmlspecialchars($_SESSION['name']);
-                        } else {
-                            echo 'User';
-                        }
-                        ?>
-                    </span>
-                    <i class="fas fa-chevron-down"></i>
+                <button class="username-button">
+    <?php 
+    if (isset($_SESSION['name']) && !empty($_SESSION['name'])) {
+        echo htmlspecialchars($_SESSION['name']);
+    } else {
+        echo 'User';
+    }
+    ?>
+    <i class="fas fa-chevron-down"></i>
+</button>
+
+                    
                     <div class="dropdown-content">
                         <a href="example.php">
                             <i class="fas fa-user"></i>
                             My Profile
-                            </a>
-                            <a href="my-bookings.php">
-                                <i class="fas fa-calendar-check"></i>
-                                My Bookings
-                            </a>
-                            <a href="settings.php">
-                                <i class="fas fa-cog"></i>
-                                Settings
-                            </a>
+                        </a>
+                        <a href="my-bookings.php">
+                            <i class="fas fa-calendar-check"></i>
+                            My Bookings
+                        </a>
+                        <a href="settings.php">
+                            <i class="fas fa-cog"></i>
+                            Settings
+                        </a>
                         <div class="dropdown-divider"></div>
-                            <a href="logout.php" class="logout-link">
-                                <i class="fas fa-sign-out-alt"></i>
-                                Logout
-                            </a>
-                        </div>
+                        <a href="logout.php" class="logout-link">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Logout
+                        </a>
                     </div>
+                </div>
                 <?php else: ?>
-                <a href="#" class="nav-link" id="loginSignupBtn">
+                <button class="login-signup-btn" id="loginSignupBtn">
                     <i class="fas fa-user"></i>
                     Login/Signup
-                    </a>
+                </button>
                 <?php endif; ?>
             </div>
         </nav>
@@ -5017,34 +5173,22 @@ function isApprovedStationOwner($userId) {
             </div>
     
             <!-- Login Form -->
-                <form id="loginForm" action="login_process.php" method="post" class="tab-content active">
+                <form id="loginForm" action="process_login.php" method="POST" class="login-form tab-content active">
                 <div class="input-group">
                     <label for="login-email">Email</label>
                     <input type="email" id="login-email" name="email" required>
-                    <div class="validation-message" id="login-email-validation"></div>
+                    <div class="validation-message"></div>
                 </div>
-
                 <div class="input-group">
                     <label for="login-password">Password</label>
                     <input type="password" id="login-password" name="password" required>
-                    <div class="validation-message" id="login-password-validation"></div>
+                    <div class="validation-message"></div>
                 </div>
-
-                <div class="remember-me">
-                    <input type="checkbox" id="remember" name="remember">
-                    <label for="remember">Remember me</label>
+                <div class="input-group remember-me">
+                    <input type="checkbox" id="login-remember" name="remember">
+                    <label for="login-remember">Remember me</label>
                 </div>
-
-                <button type="submit" class="submit-button">
-                    <span class="button-text">Log In</span>
-                    <span class="spinner"></span>
-                </button>
-
-                <p class="forgot-password">
-                    <a href="forgot_password.php">Forgot Password?</a>
-                </p>
-
-                
+                <button type="submit" class="submit-button">Login</button>
             </form>
 
             <!-- Signup Form -->
@@ -5352,6 +5496,14 @@ function isApprovedStationOwner($userId) {
 }
 
 .tab-content.active {
+    display: block;
+}
+
+.login-form.tab-content {
+    display: none;
+}
+
+.login-form.tab-content.active {
     display: block;
 }
 
@@ -5873,22 +6025,38 @@ function isApprovedStationOwner($userId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Redirect on success
-                window.location.href = data.redirect || 'index.php';
+                // Hide login modal
+                const loginModal = document.getElementById('loginModal');
+                if (loginModal) {
+                    loginModal.style.display = 'none';
+                }
+                
+                // Simply reload the page to update UI based on session
+                window.location.reload();
             } else {
                 // Show error message
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'error-message';
-                errorDiv.textContent = data.error || 'Login failed. Please try again.';
-                this.insertBefore(errorDiv, this.firstChild);
+                if (errorContainer) {
+                    errorContainer.textContent = data.message || 'Login failed. Please check your credentials.';
+                    errorContainer.style.display = 'block';
+                }
+                
+                // Reset button state
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            errorDiv.textContent = 'An error occurred. Please try again.';
-            this.insertBefore(errorDiv, this.firstChild);
+            
+            // Show error message
+            if (errorContainer) {
+                errorContainer.textContent = 'An unexpected error occurred. Please try again.';
+                errorContainer.style.display = 'block';
+            }
+            
+            // Reset button state
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
         });
     });
 

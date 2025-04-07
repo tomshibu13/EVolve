@@ -580,10 +580,13 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
                         </span>
                     </div>
                     
-                    <a href="book_station.php?id=<?php echo urlencode($station['station_id']); ?>" class="ev-book-btn">
-                        <i class="fas fa-bolt" style="line-height: 1;"></i>
-                        <span style="line-height: 1;">Book Now</span>
-                    </a>
+                    <form action="book_station.php" method="POST" style="width: 100%;">
+                        <input type="hidden" name="id" value="<?php echo htmlspecialchars($station['station_id']); ?>">
+                        <button type="submit" class="ev-book-btn">
+                            <i class="fas fa-bolt" style="line-height: 1;"></i>
+                            <span style="line-height: 1;">Book Now</span>
+                        </button>
+                    </form>
                 </div>
             <?php 
                 endwhile;
@@ -708,10 +711,13 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
                                 <div class="ev-stars">${starsHtml}</div>
                                 <span class="ev-rating-count">${avgRating} (${station.review_count || 0} reviews)</span>
                             </div>
-                            <a href="book_station.php?id=${encodeURIComponent(station.station_id)}" class="ev-book-btn">
-                                <i class="fas fa-bolt" style="line-height: 1;"></i>
-                                <span style="line-height: 1;">Book Now</span>
-                            </a>
+                            <form action="book_station.php" method="POST" style="width: 100%;">
+                                <input type="hidden" name="id" value="${station.station_id}">
+                                <button type="submit" class="ev-book-btn">
+                                    <i class="fas fa-bolt" style="line-height: 1;"></i>
+                                    <span style="line-height: 1;">Book Now</span>
+                                </button>
+                            </form>
                         </div>
                     `;
                 }).join('');

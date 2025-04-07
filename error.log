@@ -23,3 +23,390 @@ Stack trace:
 Stack trace:
 #0 {main}
   thrown in C:\xampp\htdocs\Project\register_process.php on line 7
+[05-Apr-2025 08:54:36 Europe/Berlin] Received login data: Array
+(
+    [email] => tomshibu49@gmail.com
+    [password] => Tomshibu20@
+)
+
+[05-Apr-2025 08:54:36 Europe/Berlin] PHP Warning:  Undefined variable $mysqli in C:\xampp\htdocs\Project\process_login.php on line 38
+[05-Apr-2025 08:54:36 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to a member function ping() on null in C:\xampp\htdocs\Project\process_login.php:38
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\Project\process_login.php on line 38
+[05-Apr-2025 08:55:54 Europe/Berlin] Received login data: Array
+(
+    [email] => tomshibu49@gmail.com
+    [password] => Tomshibu20@
+)
+
+[05-Apr-2025 08:55:54 Europe/Berlin] MySQL connection status: connected
+[05-Apr-2025 08:55:54 Europe/Berlin] Checking email: tomshibu49@gmail.com
+[05-Apr-2025 08:55:54 Europe/Berlin] Number of users found: 1
+[05-Apr-2025 08:55:54 Europe/Berlin] User found: Array
+(
+    [user_id] => 2
+    [email] => tomshibu49@gmail.com
+    [username] => tomshibu
+)
+
+[05-Apr-2025 08:55:55 Europe/Berlin] Owner data found: Array
+(
+    [status] => approved
+    [owner_name] => tomshibu
+)
+
+[05-Apr-2025 08:55:55 Europe/Berlin] Successful login for user: tomshibu49@gmail.com
+[05-Apr-2025 08:55:55 Europe/Berlin] Response data: Array
+(
+    [success] => 1
+    [message] => 
+    [redirect] => station_owner_dashboard.php
+    [user] => Array
+        (
+            [user_id] => 2
+            [email] => tomshibu49@gmail.com
+            [username] => tomshibu
+            [name] => tomshibu
+            [is_station_owner] => 1
+            [owner_status] => approved
+            [owner_name] => tomshibu
+            [business_name] => 
+        )
+
+)
+
+[05-Apr-2025 08:57:53 Europe/Berlin] Received login data: Array
+(
+    [email] => tomshibu49@gmail.com
+    [password] => Tomshibu20@
+)
+
+[05-Apr-2025 08:57:53 Europe/Berlin] MySQL connection is using PDO
+[05-Apr-2025 08:57:53 Europe/Berlin] Checking email: tomshibu49@gmail.com
+[05-Apr-2025 08:57:53 Europe/Berlin] User found: yes
+[05-Apr-2025 08:57:53 Europe/Berlin] User found: Array
+(
+    [user_id] => 2
+    [email] => tomshibu49@gmail.com
+    [username] => tomshibu
+)
+
+[05-Apr-2025 08:57:53 Europe/Berlin] Owner data found: Array
+(
+    [status] => approved
+    [owner_name] => tomshibu
+)
+
+[05-Apr-2025 08:57:53 Europe/Berlin] Successful login for user: tomshibu49@gmail.com
+[05-Apr-2025 08:57:53 Europe/Berlin] Response data: Array
+(
+    [success] => 1
+    [message] => 
+    [redirect] => station_owner_dashboard.php
+    [user] => Array
+        (
+            [user_id] => 2
+            [email] => tomshibu49@gmail.com
+            [username] => tomshibu
+            [name] => tomshibu
+            [is_station_owner] => 1
+            [owner_status] => approved
+            [owner_name] => tomshibu
+            [business_name] => 
+        )
+
+)
+
+[05-Apr-2025 14:34:15 Europe/Berlin] Received login data: Array
+(
+    [email] => tomshibu666@gmail.com
+    [password] => Admin@123
+    [direct_submit] => 1
+)
+
+[05-Apr-2025 14:34:15 Europe/Berlin] MySQL connection status: connected
+[05-Apr-2025 14:34:15 Europe/Berlin] Checking email: tomshibu666@gmail.com
+[05-Apr-2025 14:34:15 Europe/Berlin] Number of users found: 1
+[05-Apr-2025 14:34:15 Europe/Berlin] User found: Array
+(
+    [user_id] => 1
+    [email] => tomshibu666@gmail.com
+    [username] => tomshibu1829
+    [is_admin] => 1
+)
+
+[05-Apr-2025 14:34:15 Europe/Berlin] Is admin check: isset=true, Value=1
+[05-Apr-2025 14:34:15 Europe/Berlin] Owner data found: Array
+(
+    [status] => rejected
+    [owner_name] => Tom Shibu
+)
+
+[05-Apr-2025 14:34:15 Europe/Berlin] Successful login for user: tomshibu666@gmail.com
+[05-Apr-2025 14:34:15 Europe/Berlin] Response data: Array
+(
+    [success] => 1
+    [message] => Your station owner application was rejected.
+    [redirect] => index.php
+    [user] => Array
+        (
+            [user_id] => 1
+            [email] => tomshibu666@gmail.com
+            [username] => tomshibu1829
+            [name] => Tom Shibu
+            [is_admin] => 1
+            [is_station_owner] => 1
+            [owner_status] => rejected
+            [owner_name] => Tom Shibu
+            [business_name] => 
+        )
+
+)
+
+[05-Apr-2025 14:34:15 Europe/Berlin] Admin user detected, forcing redirect to admindash.php
+[05-Apr-2025 14:34:22 Europe/Berlin] Received login data: Array
+(
+    [email] => tomshibu666@gmail.com
+    [password] => Admin@123
+    [direct_submit] => 1
+)
+
+[05-Apr-2025 14:34:22 Europe/Berlin] MySQL connection status: connected
+[05-Apr-2025 14:34:22 Europe/Berlin] Checking email: tomshibu666@gmail.com
+[05-Apr-2025 14:34:22 Europe/Berlin] Number of users found: 1
+[05-Apr-2025 14:34:22 Europe/Berlin] User found: Array
+(
+    [user_id] => 1
+    [email] => tomshibu666@gmail.com
+    [username] => tomshibu1829
+    [is_admin] => 1
+)
+
+[05-Apr-2025 14:34:22 Europe/Berlin] Is admin check: isset=true, Value=1
+[05-Apr-2025 14:34:22 Europe/Berlin] Owner data found: Array
+(
+    [status] => rejected
+    [owner_name] => Tom Shibu
+)
+
+[05-Apr-2025 14:34:22 Europe/Berlin] Successful login for user: tomshibu666@gmail.com
+[05-Apr-2025 14:34:22 Europe/Berlin] Response data: Array
+(
+    [success] => 1
+    [message] => Your station owner application was rejected.
+    [redirect] => index.php
+    [user] => Array
+        (
+            [user_id] => 1
+            [email] => tomshibu666@gmail.com
+            [username] => tomshibu1829
+            [name] => Tom Shibu
+            [is_admin] => 1
+            [is_station_owner] => 1
+            [owner_status] => rejected
+            [owner_name] => Tom Shibu
+            [business_name] => 
+        )
+
+)
+
+[05-Apr-2025 14:34:22 Europe/Berlin] Admin user detected, forcing redirect to admindash.php
+[05-Apr-2025 14:52:31 Europe/Berlin] Received login data: Array
+(
+    [email] => tomshibu666@gmail.com
+    [password] => Admin@123
+)
+
+[05-Apr-2025 14:52:31 Europe/Berlin] MySQL connection status: connected
+[05-Apr-2025 14:52:31 Europe/Berlin] Checking email: tomshibu666@gmail.com
+[05-Apr-2025 14:52:31 Europe/Berlin] Number of users found: 1
+[05-Apr-2025 14:52:31 Europe/Berlin] User found: Array
+(
+    [user_id] => 1
+    [email] => tomshibu666@gmail.com
+    [username] => tomshibu1829
+)
+
+[05-Apr-2025 14:52:31 Europe/Berlin] Successful login for user: tomshibu666@gmail.com
+[05-Apr-2025 14:52:31 Europe/Berlin] Response data: Array
+(
+    [success] => 1
+    [message] => 
+    [redirect] => admindash.php
+    [user] => Array
+        (
+            [user_id] => 1
+            [email] => tomshibu666@gmail.com
+            [username] => tomshibu1829
+            [name] => Tom Shibu
+            [is_admin] => 1
+        )
+
+)
+
+[05-Apr-2025 14:52:48 Europe/Berlin] Received login data: Array
+(
+    [email] => tomshibu49@gmail.com
+    [password] => Tomshibu20@
+)
+
+[05-Apr-2025 14:52:48 Europe/Berlin] MySQL connection status: connected
+[05-Apr-2025 14:52:48 Europe/Berlin] Checking email: tomshibu49@gmail.com
+[05-Apr-2025 14:52:48 Europe/Berlin] Number of users found: 1
+[05-Apr-2025 14:52:48 Europe/Berlin] User found: Array
+(
+    [user_id] => 2
+    [email] => tomshibu49@gmail.com
+    [username] => tomshibu
+)
+
+[05-Apr-2025 14:52:48 Europe/Berlin] Owner data found: Array
+(
+    [status] => approved
+    [owner_name] => tomshibu
+)
+
+[05-Apr-2025 14:52:48 Europe/Berlin] Successful login for user: tomshibu49@gmail.com
+[05-Apr-2025 14:52:48 Europe/Berlin] Response data: Array
+(
+    [success] => 1
+    [message] => 
+    [redirect] => station_owner_dashboard.php
+    [user] => Array
+        (
+            [user_id] => 2
+            [email] => tomshibu49@gmail.com
+            [username] => tomshibu
+            [name] => tomshibu
+            [is_admin] => 
+            [is_station_owner] => 1
+            [owner_status] => approved
+            [owner_name] => tomshibu
+            [business_name] => 
+        )
+
+)
+
+[05-Apr-2025 15:25:52 Europe/Berlin] Received login data: Array
+(
+    [email] => tomshibu666@gmail.com
+    [password] => Admin@123
+    [form_type] => regular
+)
+
+[05-Apr-2025 15:25:52 Europe/Berlin] MySQL connection status: connected
+[05-Apr-2025 15:25:52 Europe/Berlin] Checking email: tomshibu666@gmail.com
+[05-Apr-2025 15:25:52 Europe/Berlin] Number of users found: 1
+[05-Apr-2025 15:25:52 Europe/Berlin] User found: Array
+(
+    [user_id] => 1
+    [email] => tomshibu666@gmail.com
+    [username] => tomshibu1829
+)
+
+[05-Apr-2025 15:25:52 Europe/Berlin] Admin login successful, redirecting to: admindash.php
+[05-Apr-2025 15:25:52 Europe/Berlin] Successful login for user: tomshibu666@gmail.com
+[05-Apr-2025 15:25:52 Europe/Berlin] Response data: Array
+(
+    [success] => 1
+    [message] => Welcome Admin!
+    [redirect] => admindash.php
+    [user] => Array
+        (
+            [user_id] => 1
+            [email] => tomshibu666@gmail.com
+            [username] => tomshibu1829
+            [name] => Tom Shibu
+            [is_admin] => 1
+        )
+
+)
+
+[05-Apr-2025 15:25:52 Europe/Berlin] Redirecting user. Is admin: Yes
+[05-Apr-2025 15:25:52 Europe/Berlin] Redirect URL: admindash.php
+[05-Apr-2025 16:39:40 Europe/Berlin] Received login data: Array
+(
+    [email] => tomshibu666@gmail.com
+    [password] => Admin@123
+)
+
+[05-Apr-2025 16:39:40 Europe/Berlin] MySQL connection status: connected
+[05-Apr-2025 16:39:40 Europe/Berlin] Checking email: tomshibu666@gmail.com
+[05-Apr-2025 16:39:40 Europe/Berlin] Number of users found: 1
+[05-Apr-2025 16:39:40 Europe/Berlin] User found: Array
+(
+    [user_id] => 1
+    [email] => tomshibu666@gmail.com
+    [username] => tomshibu1829
+)
+
+[05-Apr-2025 16:39:40 Europe/Berlin] Owner data found: Array
+(
+    [status] => rejected
+    [owner_name] => Tom Shibu
+)
+
+[05-Apr-2025 16:39:40 Europe/Berlin] Successful login for user: tomshibu666@gmail.com
+[05-Apr-2025 16:39:40 Europe/Berlin] Response data: Array
+(
+    [success] => 1
+    [message] => Your station owner application was rejected.
+    [redirect] => index.php
+    [user] => Array
+        (
+            [user_id] => 1
+            [email] => tomshibu666@gmail.com
+            [username] => tomshibu1829
+            [name] => Tom Shibu
+            [is_station_owner] => 1
+            [owner_status] => rejected
+            [owner_name] => Tom Shibu
+            [business_name] => 
+        )
+
+)
+
+[05-Apr-2025 16:46:13 Europe/Berlin] Received login data: Array
+(
+    [email] => tomshibu666@gmail.com
+    [password] => Admin@123
+)
+
+[05-Apr-2025 16:46:13 Europe/Berlin] MySQL connection status: connected
+[05-Apr-2025 16:46:13 Europe/Berlin] Checking email: tomshibu666@gmail.com
+[05-Apr-2025 16:46:13 Europe/Berlin] Number of users found: 1
+[05-Apr-2025 16:46:13 Europe/Berlin] User found: Array
+(
+    [user_id] => 1
+    [email] => tomshibu666@gmail.com
+    [username] => tomshibu1829
+)
+
+[05-Apr-2025 16:46:13 Europe/Berlin] Owner data found: Array
+(
+    [status] => rejected
+    [owner_name] => Tom Shibu
+)
+
+[05-Apr-2025 16:46:13 Europe/Berlin] Successful login for user: tomshibu666@gmail.com
+[05-Apr-2025 16:46:13 Europe/Berlin] Response data: Array
+(
+    [success] => 1
+    [message] => Your station owner application was rejected.
+    [redirect] => index.php
+    [user] => Array
+        (
+            [user_id] => 1
+            [email] => tomshibu666@gmail.com
+            [username] => tomshibu1829
+            [name] => Tom Shibu
+            [is_admin] => 1
+            [is_station_owner] => 1
+            [owner_status] => rejected
+            [owner_name] => Tom Shibu
+            [business_name] => 
+        )
+
+)
+
