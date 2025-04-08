@@ -391,37 +391,44 @@ try {
 
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Business Name</label>
-                                <input type="text" class="form-control" name="business_name" value="<?php echo htmlspecialchars($owner['business_name']); ?>">
+                                <input type="text" class="form-control" name="business_name" value="<?php echo htmlspecialchars($owner['business_name']); ?>" required>
+                                <div class="invalid-feedback">Business name is required</div>
                             </div>
 
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Email</label>
-                                <input type="email" class="form-control" name="email" value="<?php echo htmlspecialchars($owner['email']); ?>">
+                                <input type="email" class="form-control" name="email" value="<?php echo htmlspecialchars($owner['email']); ?>" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+                                <div class="invalid-feedback">Please enter a valid email address</div>
                             </div>
 
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Phone</label>
-                                <input type="tel" class="form-control" name="phone" value="<?php echo htmlspecialchars($owner['phone']); ?>">
+                                <input type="tel" class="form-control" name="phone" value="<?php echo htmlspecialchars($owner['phone']); ?>" required pattern="[0-9]{10}">
+                                <div class="invalid-feedback">Please enter a valid 10-digit phone number</div>
                             </div>
 
                             <div class="col-12 mb-3">
                                 <label class="form-label">Address</label>
-                                <textarea class="form-control" name="address" rows="3"><?php echo htmlspecialchars($owner['address']); ?></textarea>
+                                <textarea class="form-control" name="address" rows="3" required minlength="5"><?php echo htmlspecialchars($owner['address']); ?></textarea>
+                                <div class="invalid-feedback">Please enter a valid address (minimum 5 characters)</div>
                             </div>
 
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">City</label>
-                                <input type="text" class="form-control" name="city" value="<?php echo htmlspecialchars($owner['city']); ?>">
+                                <input type="text" class="form-control" name="city" value="<?php echo htmlspecialchars($owner['city']); ?>" required>
+                                <div class="invalid-feedback">City is required</div>
                             </div>
 
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">State</label>
-                                <input type="text" class="form-control" name="state" value="<?php echo htmlspecialchars($owner['state']); ?>">
+                                <input type="text" class="form-control" name="state" value="<?php echo htmlspecialchars($owner['state']); ?>" required>
+                                <div class="invalid-feedback">State is required</div>
                             </div>
 
                             <div class="col-md-4 mb-3">
                                 <label class="form-label">Postal Code</label>
-                                <input type="text" class="form-control" name="postal_code" value="<?php echo htmlspecialchars($owner['postal_code']); ?>">
+                                <input type="text" class="form-control" name="postal_code" value="<?php echo htmlspecialchars($owner['postal_code']); ?>" required pattern="[0-9]{6}">
+                                <div class="invalid-feedback">Please enter a valid 6-digit postal code</div>
                             </div>
                         </div>
 
@@ -445,11 +452,35 @@ try {
             const form = document.getElementById('profileForm');
             const saveButton = document.getElementById('saveButton');
             const initialData = new FormData(form);
+            const inputs = form.querySelectorAll('input, textarea');
 
-            // Form change detection
+            // Form validation styles
+            function validateInput(input) {
+                if (input.checkValidity()) {
+                    input.classList.remove('is-invalid');
+                    input.classList.add('is-valid');
+                } else {
+                    input.classList.remove('is-valid');
+                    input.classList.add('is-invalid');
+                }
+            }
+
+            // Add validation to all inputs
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    validateInput(this);
+                });
+
+                input.addEventListener('blur', function() {
+                    validateInput(this);
+                });
+            });
+
+            // Form change detection with validation
             form.addEventListener('input', function() {
                 const currentData = new FormData(form);
                 let isChanged = false;
+                let isValid = form.checkValidity();
 
                 for (let [key, value] of currentData.entries()) {
                     if (value !== initialData.get(key)) {
@@ -458,7 +489,21 @@ try {
                     }
                 }
 
-                saveButton.disabled = !isChanged;
+                saveButton.disabled = !isChanged || !isValid;
+            });
+
+            // Form submission validation
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    // Show validation on all fields
+                    inputs.forEach(input => {
+                        validateInput(input);
+                    });
+                }
+                form.classList.add('was-validated');
             });
             
             // Toggle sidebar on mobile
