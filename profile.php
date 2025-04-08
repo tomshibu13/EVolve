@@ -320,6 +320,30 @@ $conn->close();
         .buttons-container {
             margin-top: 20px;
         }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+        .requirements-list {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+        }
+        .requirement {
+            margin: 0.25rem 0;
+            color: #6c757d;
+        }
+        .requirement.valid {
+            color: #28a745;
+        }
+        .requirement i {
+            margin-right: 0.5rem;
+        }
+        .requirement.valid i:before {
+            content: "\f00c";
+        }
     </style>
 </head>
 <body>
@@ -406,10 +430,11 @@ $conn->close();
         <div class="section-header">
             <h2 class="section-title">Change Password</h2>
         </div>
-        <form method="POST" action="" class="password-form">
+        <form method="POST" action="" class="password-form" id="passwordForm">
             <div class="form-group">
                 <label for="current_password">Current Password</label>
                 <input type="password" id="current_password" name="current_password" required>
+                <div id="currentPasswordError" class="error-message"></div>
             </div>
             
             <div class="form-group">
@@ -418,15 +443,23 @@ $conn->close();
                 <div class="password-requirements">
                     <i class="fas fa-info-circle"></i> Password must be at least 8 characters long and contain letters, numbers, and special characters
                 </div>
+                <div id="newPasswordError" class="error-message"></div>
+                <div id="requirements-list" class="requirements-list">
+                    <div id="length-check" class="requirement"><i class="fas fa-times"></i> At least 8 characters</div>
+                    <div id="letter-check" class="requirement"><i class="fas fa-times"></i> Contains letters</div>
+                    <div id="number-check" class="requirement"><i class="fas fa-times"></i> Contains numbers</div>
+                    <div id="special-check" class="requirement"><i class="fas fa-times"></i> Contains special characters</div>
+                </div>
             </div>
             
             <div class="form-group">
                 <label for="confirm_password">Confirm New Password</label>
                 <input type="password" id="confirm_password" name="confirm_password" required>
+                <div id="confirmPasswordError" class="error-message"></div>
             </div>
             
             <div class="buttons-container">
-                <button type="submit" name="change_password" class="action-button primary-button">
+                <button type="submit" name="change_password" class="action-button primary-button" id="updatePasswordBtn" disabled>
                     <i class="fas fa-save"></i> Update Password
                 </button>
             </div>
@@ -445,6 +478,108 @@ $conn->close();
             dropdown.style.display = "none";
         }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('passwordForm');
+        const currentPassword = document.getElementById('current_password');
+        const newPassword = document.getElementById('new_password');
+        const confirmPassword = document.getElementById('confirm_password');
+        const updateBtn = document.getElementById('updatePasswordBtn');
+        
+        const currentPasswordError = document.getElementById('currentPasswordError');
+        const newPasswordError = document.getElementById('newPasswordError');
+        const confirmPasswordError = document.getElementById('confirmPasswordError');
+
+        // Password requirement checks
+        const lengthCheck = document.getElementById('length-check');
+        const letterCheck = document.getElementById('letter-check');
+        const numberCheck = document.getElementById('number-check');
+        const specialCheck = document.getElementById('special-check');
+
+        function validatePassword() {
+            const password = newPassword.value;
+            let isValid = true;
+
+            // Check length
+            if(password.length >= 8) {
+                lengthCheck.classList.add('valid');
+            } else {
+                lengthCheck.classList.remove('valid');
+                isValid = false;
+            }
+
+            // Check for letters
+            if(/[a-zA-Z]/.test(password)) {
+                letterCheck.classList.add('valid');
+            } else {
+                letterCheck.classList.remove('valid');
+                isValid = false;
+            }
+
+            // Check for numbers
+            if(/\d/.test(password)) {
+                numberCheck.classList.add('valid');
+            } else {
+                numberCheck.classList.remove('valid');
+                isValid = false;
+            }
+
+            // Check for special characters
+            if(/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                specialCheck.classList.add('valid');
+            } else {
+                specialCheck.classList.remove('valid');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        function validateForm() {
+            let isValid = true;
+
+            // Current password validation
+            if(!currentPassword.value) {
+                currentPasswordError.style.display = 'block';
+                currentPasswordError.textContent = 'Current password is required';
+                isValid = false;
+            } else {
+                currentPasswordError.style.display = 'none';
+            }
+
+            // New password validation
+            if(!validatePassword()) {
+                newPasswordError.style.display = 'block';
+                newPasswordError.textContent = 'Password does not meet requirements';
+                isValid = false;
+            } else {
+                newPasswordError.style.display = 'none';
+            }
+
+            // Confirm password validation
+            if(newPassword.value !== confirmPassword.value) {
+                confirmPasswordError.style.display = 'block';
+                confirmPasswordError.textContent = 'Passwords do not match';
+                isValid = false;
+            } else {
+                confirmPasswordError.style.display = 'none';
+            }
+
+            updateBtn.disabled = !isValid;
+            return isValid;
+        }
+
+        // Add event listeners
+        currentPassword.addEventListener('input', validateForm);
+        newPassword.addEventListener('input', validateForm);
+        confirmPassword.addEventListener('input', validateForm);
+
+        form.addEventListener('submit', function(e) {
+            if(!validateForm()) {
+                e.preventDefault();
+            }
+        });
+    });
 </script>
 </body>
 </html>

@@ -82,8 +82,13 @@ try {
     <title>Station Details - EVolve</title>
     <link rel="stylesheet" href="main.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="booking-styles.css">
+
 </head>
 <body>
+    <?php include 'header.php'; ?>
     <div class="container">
         <div class="navigation-buttons">
             <a href="javascript:history.back()" class="nav-button back-button">

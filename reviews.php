@@ -135,6 +135,9 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVolve - Write Reviews</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="booking-styles.css">
     <style>
         :root {
             --primary-color: #3b82f6;
@@ -159,15 +162,7 @@ try {
             line-height: 1.6;
         }
         
-        .header {
-            background: linear-gradient(135deg, #4a6cfa, #2d95bd);
-            color: white;
-            padding: 1rem 0;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
+
         
         .nav-container {
             display: flex;
@@ -200,16 +195,7 @@ try {
             gap: 20px;
         }
         
-        .nav-link {
-            color: white;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 24px;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+
         
         .nav-link:hover {
             background: rgba(255, 255, 255, 0.1);
@@ -590,33 +576,7 @@ try {
     </style>
 </head>
 <body>
-    <header class="header">
-        <nav class="nav-container">
-            <div class="logo">
-                <i class="fas fa-charging-station"></i>
-                <span class="logo-text">E<span class="highlight">V</span>olve</span>
-            </div>
-            <div class="nav-links">
-                <a href="index.php" class="nav-link">
-                    <i class="fas fa-home"></i>
-                    Home
-                </a>
-                <a href="user_stations.php" class="nav-link">
-                    <i class="fas fa-search"></i>
-                    Find Stations
-                </a>
-                <a href="#" class="nav-link">
-                    <i class="fas fa-calendar-check"></i>
-                    My Bookings
-                </a>
-                <a href="reviews.php" class="nav-link active">
-                    <i class="fas fa-star"></i>
-                    Reviews
-                </a>
-            </div>
-        </nav>
-    </header>
-
+    <?php include 'header.php'; ?>
     <div class="container">
         <h1 class="page-title">Review Your EV Charging Experience</h1>
         <p class="page-description">Share your feedback about the stations you've visited. Your reviews help other EV drivers find the best charging spots.</p>

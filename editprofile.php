@@ -98,6 +98,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <!-- Add Font Awesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="booking-styles.css">
     <style>
         /* Reset and Global Styles */
         * {
@@ -250,17 +253,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
 
         .error-text {
             color: #dc3545;
-            font-size: 0.8rem;
+            font-size: 0.875rem;
             margin-top: 0.25rem;
-            display: block;
-        }
-
-        .form-group input.invalid {
-            border-color: #dc3545;
+            display: none;
         }
 
         .form-group input.valid {
             border-color: #28a745;
+            background-color: #fff;
+        }
+
+        .form-group input.invalid {
+            border-color: #dc3545;
+            background-color: #fff;
+        }
+
+        .form-group small.show {
+            display: block;
         }
     </style>
 </head>
@@ -317,115 +326,145 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
         </div>
     </div>
     <script>
-        // Profile picture preview
-        document.getElementById("profilePictureInput").addEventListener("change", function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById("profileImage").src = e.target.result;
-                };
-                reader.readAsDataURL(file);
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('profileForm');
+            const nameInput = form.querySelector('input[name="name"]');
+            const usernameInput = form.querySelector('input[name="username"]');
+            const emailInput = form.querySelector('input[name="email"]');
+            const phoneInput = form.querySelector('input[name="phone_number"]');
+            const submitButton = form.querySelector('button[type="submit"]');
+            const profileInput = document.getElementById('profilePictureInput');
+
+            // Validation functions
+            function validateName(name) {
+                return name.length >= 2 && name.length <= 50 && /^[a-zA-Z\s'-]+$/.test(name);
             }
-        });
 
-        // Form validation
-        const form = document.getElementById('profileForm');
-        const inputs = form.querySelectorAll('input[required]');
-        const phoneInput = form.querySelector('input[name="phone_number"]');
-        const validationMessage = document.getElementById('validationMessage');
-
-        const validationRules = {
-            name: {
-                pattern: /^[a-zA-Z\s]{2,50}$/,
-                message: 'Name should be 2-50 characters long and contain only letters'
-            },
-            username: {
-                pattern: /^[a-zA-Z0-9_]{3,20}$/,
-                message: 'Username should be 3-20 characters long and contain only letters, numbers, and underscores'
-            },
-            email: {
-                pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: 'Please enter a valid email address'
-            },
-            phone_number: {
-                pattern: /^\+?[\d\s-]{10,15}$/,
-                message: 'Please enter a valid phone number (10-15 digits)'
+            function validateUsername(username) {
+                return username.length >= 3 && username.length <= 30 && /^[a-zA-Z0-9_]+$/.test(username);
             }
-        };
 
-        function validateInput(input) {
-            const field = input.name;
-            const value = input.value.trim();
-            const errorElement = input.nextElementSibling;
-            
-            if (validationRules[field]) {
-                const isValid = validationRules[field].pattern.test(value);
-                input.classList.toggle('valid', isValid);
-                input.classList.toggle('invalid', !isValid);
-                
-                if (!isValid) {
-                    errorElement.textContent = validationRules[field].message;
-                    return false;
-                }
+            function validateEmail(email) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
             }
-            
-            errorElement.textContent = '';
-            return true;
-        }
 
-        // Live validation
-        inputs.forEach(input => {
-            input.addEventListener('input', () => {
-                validateInput(input);
-            });
-        });
+            function validatePhone(phone) {
+                if (!phone) return true; // Phone is optional
+                // Indian phone number format: 
+                // - Can start with +91 or 0 or nothing
+                // - Must be followed by a number between 6-9
+                // - Then 9 more digits
+                return /^(?:(?:\+91)|0)?[6-9]\d{9}$/.test(phone.replace(/[-\s]/g, '')); // Indian phone format
+            }
 
-        phoneInput.addEventListener('input', () => {
-            validateInput(phoneInput);
-        });
+            function validateProfilePicture(file) {
+                if (!file) return true; // Optional field
+                const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                return validTypes.includes(file.type) && file.size <= maxSize;
+            }
 
-        // Form submission validation
-        form.addEventListener('submit', (e) => {
-            let isValid = true;
-            let isChanged = false;
-            
-            // Check if any field has been modified
-            inputs.forEach(input => {
-                if (!validateInput(input)) {
-                    isValid = false;
+            // Show error message
+            function showError(input, message) {
+                const errorElement = input.nextElementSibling;
+                errorElement.textContent = message;
+                errorElement.classList.add('show');
+                input.classList.add('invalid');
+                input.classList.remove('valid');
+            }
+
+            // Show success
+            function showSuccess(input) {
+                const errorElement = input.nextElementSibling;
+                errorElement.classList.remove('show');
+                input.classList.remove('invalid');
+                input.classList.add('valid');
+            }
+
+            // Live validation handlers
+            nameInput.addEventListener('input', function() {
+                if (!validateName(this.value)) {
+                    showError(this, 'Name must be 2-50 characters long and contain only letters, spaces, hyphens, and apostrophes');
+                } else {
+                    showSuccess(this);
                 }
-                // Compare with original value
-                const originalValue = '<?php echo isset($userData) ? addslashes($userData[input.name]) : ""; ?>';
-                if (input.value !== originalValue) {
-                    isChanged = true;
-                }
+                validateForm();
             });
 
-            if (phoneInput.value.trim() !== '' && !validateInput(phoneInput)) {
-                isValid = false;
+            usernameInput.addEventListener('input', function() {
+                if (!validateUsername(this.value)) {
+                    showError(this, 'Username must be 3-30 characters long and contain only letters, numbers, and underscores');
+                } else {
+                    showSuccess(this);
+                }
+                validateForm();
+            });
+
+            emailInput.addEventListener('input', function() {
+                if (!validateEmail(this.value)) {
+                    showError(this, 'Please enter a valid email address');
+                } else {
+                    showSuccess(this);
+                }
+                validateForm();
+            });
+
+            phoneInput.addEventListener('input', function() {
+                if (!validatePhone(this.value)) {
+                    showError(this, 'Please enter a valid phone number ');
+                } else {
+                    showSuccess(this);
+                }
+                validateForm();
+            });
+
+            profileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    if (!validateProfilePicture(this.files[0])) {
+                        showError(this, 'Please select a valid image file (JPEG, PNG, or GIF) under 5MB');
+                    } else {
+                        showSuccess(this);
+                    }
+                }
+                validateForm();
+            });
+
+            // Preview profile picture
+            profileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('profileImage').src = e.target.result;
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+
+            // Form validation
+            function validateForm() {
+                const isNameValid = validateName(nameInput.value);
+                const isUsernameValid = validateUsername(usernameInput.value);
+                const isEmailValid = validateEmail(emailInput.value);
+                const isPhoneValid = validatePhone(phoneInput.value);
+                const isProfileValid = !profileInput.files.length || validateProfilePicture(profileInput.files[0]);
+
+                submitButton.disabled = !(isNameValid && isUsernameValid && isEmailValid && isPhoneValid && isProfileValid);
             }
 
-            // Check if phone number changed
-            const originalPhone = '<?php echo isset($userData["phone_number"]) ? addslashes($userData["phone_number"]) : ""; ?>';
-            if (phoneInput.value !== originalPhone) {
-                isChanged = true;
-            }
+            // Form submission
+            form.addEventListener('submit', function(e) {
+                if (!validateName(nameInput.value) || 
+                    !validateUsername(usernameInput.value) || 
+                    !validateEmail(emailInput.value) || 
+                    !validatePhone(phoneInput.value) ||
+                    (profileInput.files.length && !validateProfilePicture(profileInput.files[0]))) {
+                    e.preventDefault();
+                    alert('Please correct the errors in the form before submitting.');
+                }
+            });
 
-            // Check if profile picture is selected
-            if (document.getElementById('profilePictureInput').files.length > 0) {
-                isChanged = true;
-            }
-
-            if (!isValid) {
-                e.preventDefault();
-                validationMessage.style.display = 'block';
-                validationMessage.textContent = 'Please correct the errors before submitting.';
-            } else if (!isChanged) {
-                e.preventDefault();
-                validationMessage.style.display = 'block';
-                validationMessage.textContent = 'No changes were made to update.';
-            }
+            // Initial validation
+            validateForm();
         });
     </script>
 </body>

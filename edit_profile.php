@@ -97,6 +97,7 @@ $conn->close();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Profile</title>
+    
 
     <style>
         /* General Styles */
@@ -223,6 +224,27 @@ h1 {
     border-color: #28a745;
 }
 
+.error-text {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: none;
+}
+
+.form-group input.valid {
+    border-color: #28a745;
+    background-color: #fff;
+}
+
+.form-group input.invalid {
+    border-color: #dc3545;
+    background-color: #fff;
+}
+
+.form-group small.show {
+    display: block;
+}
+
     </style>
 
 </head>
@@ -278,11 +300,18 @@ h1 {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('profileForm');
-            const usernameInput = document.getElementById('username');
-            const emailInput = document.getElementById('email');
-            const profilePictureInput = document.getElementById('profile_picture');
+            const nameInput = form.querySelector('input[name="name"]');
+            const usernameInput = form.querySelector('input[name="username"]');
+            const emailInput = form.querySelector('input[name="email"]');
+            const phoneInput = form.querySelector('input[name="phone_number"]');
+            const submitButton = form.querySelector('button[type="submit"]');
+            const profileInput = document.getElementById('profile_picture');
 
             // Validation functions
+            function validateName(name) {
+                return name.length >= 2 && name.length <= 50 && /^[a-zA-Z\s'-]+$/.test(name);
+            }
+
             function validateUsername(username) {
                 return username.length >= 3 && username.length <= 30 && /^[a-zA-Z0-9_]+$/.test(username);
             }
@@ -291,63 +320,119 @@ h1 {
                 return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
             }
 
+            function validatePhone(phone) {
+                if (!phone) return true; // Phone is optional
+                return /^(\+?6?01)[0-46-9]-*[0-9]{7,8}$/.test(phone); // Malaysian phone format
+            }
+
             function validateProfilePicture(file) {
                 if (!file) return true; // Optional field
                 const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
-                return validTypes.includes(file.type);
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                return validTypes.includes(file.type) && file.size <= maxSize;
+            }
+
+            // Show error message
+            function showError(input, message) {
+                const errorElement = input.nextElementSibling;
+                errorElement.textContent = message;
+                errorElement.classList.add('show');
+                input.classList.add('invalid');
+                input.classList.remove('valid');
+            }
+
+            // Show success
+            function showSuccess(input) {
+                const errorElement = input.nextElementSibling;
+                errorElement.classList.remove('show');
+                input.classList.remove('invalid');
+                input.classList.add('valid');
             }
 
             // Live validation handlers
-            usernameInput.addEventListener('input', function() {
-                const errorElement = document.getElementById('username-error');
-                if (!validateUsername(this.value)) {
-                    errorElement.textContent = 'Username must be 3-30 characters long and contain only letters, numbers, and underscores';
-                    errorElement.style.display = 'block';
-                    this.classList.add('invalid');
-                    this.classList.remove('valid');
+            nameInput.addEventListener('input', function() {
+                if (!validateName(this.value)) {
+                    showError(this, 'Name must be 2-50 characters long and contain only letters, spaces, hyphens, and apostrophes');
                 } else {
-                    errorElement.style.display = 'none';
-                    this.classList.add('valid');
-                    this.classList.remove('invalid');
+                    showSuccess(this);
                 }
+                validateForm();
+            });
+
+            usernameInput.addEventListener('input', function() {
+                if (!validateUsername(this.value)) {
+                    showError(this, 'Username must be 3-30 characters long and contain only letters, numbers, and underscores');
+                } else {
+                    showSuccess(this);
+                }
+                validateForm();
             });
 
             emailInput.addEventListener('input', function() {
-                const errorElement = document.getElementById('email-error');
                 if (!validateEmail(this.value)) {
-                    errorElement.textContent = 'Please enter a valid email address';
-                    errorElement.style.display = 'block';
-                    this.classList.add('invalid');
-                    this.classList.remove('valid');
+                    showError(this, 'Please enter a valid email address');
                 } else {
-                    errorElement.style.display = 'none';
-                    this.classList.add('valid');
-                    this.classList.remove('invalid');
+                    showSuccess(this);
+                }
+                validateForm();
+            });
+
+            phoneInput.addEventListener('input', function() {
+                if (!validatePhone(this.value)) {
+                    showError(this, 'Please enter a valid Malaysian phone number (e.g., 601X-XXXXXXX)');
+                } else {
+                    showSuccess(this);
+                }
+                validateForm();
+            });
+
+            profileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    if (!validateProfilePicture(this.files[0])) {
+                        showError(this, 'Please select a valid image file (JPEG, PNG, or GIF) under 5MB');
+                    } else {
+                        showSuccess(this);
+                    }
+                }
+                validateForm();
+            });
+
+            // Preview profile picture
+            profileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('profileImage').src = e.target.result;
+                    };
+                    reader.readAsDataURL(this.files[0]);
                 }
             });
 
-            profilePictureInput.addEventListener('change', function() {
-                const errorElement = document.getElementById('profile-picture-error');
-                if (this.files.length > 0 && !validateProfilePicture(this.files[0])) {
-                    errorElement.textContent = 'Please select a valid image file (JPEG, PNG, or GIF)';
-                    errorElement.style.display = 'block';
-                } else {
-                    errorElement.style.display = 'none';
-                }
-            });
+            // Form validation
+            function validateForm() {
+                const isNameValid = validateName(nameInput.value);
+                const isUsernameValid = validateUsername(usernameInput.value);
+                const isEmailValid = validateEmail(emailInput.value);
+                const isPhoneValid = validatePhone(phoneInput.value);
+                const isProfileValid = !profileInput.files.length || validateProfilePicture(profileInput.files[0]);
 
-            // Form submission validation
+                submitButton.disabled = !(isNameValid && isUsernameValid && isEmailValid && isPhoneValid && isProfileValid);
+            }
+
+            // Form submission
             form.addEventListener('submit', function(e) {
-                const username = usernameInput.value;
-                const email = emailInput.value;
-                const profilePicture = profilePictureInput.files[0];
-
-                if (!validateUsername(username) || !validateEmail(email) || 
-                    (profilePicture && !validateProfilePicture(profilePicture))) {
+                if (!validateName(nameInput.value) || 
+                    !validateUsername(usernameInput.value) || 
+                    !validateEmail(emailInput.value) || 
+                    !validatePhone(phoneInput.value) ||
+                    (profileInput.files.length && !validateProfilePicture(profileInput.files[0]))) {
                     e.preventDefault();
                     alert('Please correct the errors in the form before submitting.');
                 }
             });
+
+            // Initial validation
+            validateForm();
         });
     </script>
 

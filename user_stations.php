@@ -86,12 +86,12 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
     <link rel="stylesheet" href="booking-styles.css">
     <style>
         :root {
-            --primary-color: #0066FF;
-            --primary-hover: #0052cc;  /* Darker shade for hover */
+            --primary-color: #4361ee;
+            --primary-hover: #3651d4;
             --secondary-color: #2C3E50;
             --background-color: #f5f6fa;
             --card-bg: #ffffff;
-            --text-color: #1e293b;
+            --text-color: #1a202c;
             --border-radius: 12px;
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --transition: all 0.3s ease;
@@ -104,180 +104,64 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
 
-        header {
-            background-color: var(--card-bg);
-        }
-
         body {
-            background-color: var(--background-color);
+            background: linear-gradient(145deg, #f0f4f8, #f8f9fa);
             color: var(--text-color);
-            padding: 1rem;  /* Reduced padding for mobile */
             min-height: 100vh;
         }
 
-        .ev-header {
-            position: static;  /* Change from sticky to static */
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            background: var(--card-bg);
-            padding: 1rem;
-            box-shadow: var(--shadow);
+        .ev-container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 30px;
         }
-        
+
+        .ev-header {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
         .ev-header-content {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
-            width: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 1rem;
+            gap: 1.5rem;
         }
 
         .ev-header-top {
             display: flex;
             align-items: center;
             gap: 1rem;
-            flex-wrap: wrap;  /* Allow wrapping on very small screens */
         }
 
         .ev-page-title {
-            font-size: 1.25rem;  /* Smaller font size for mobile */
-            font-weight: 700;
-            color: var(--text-color);
+            color: #1a202c;
+            font-size: 2.2em;
+            font-weight: 800;
             letter-spacing: -0.025em;
-            line-height: 1.2;
-            flex: 1;
-            min-width: 200px;  /* Prevent too narrow wrapping */
-        }
-
-        .ev-stations-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));  /* Smaller minimum width */
-            gap: 1rem;  /* Reduced gap for mobile */
-            padding: 0.5rem;
-        }
-
-        .ev-station-card {
-            background-color: var(--card-bg);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            padding: 1rem;  /* Reduced padding for mobile */
-            transition: var(--transition);
-            border: 1px solid rgba(0,0,0,0.05);
-            position: relative;
-            overflow: hidden;
-            min-width: 0;  /* Allows cards to shrink below min-width */
-        }
-        
-        .ev-station-image {
-            width: 100%;
-            height: 120px;  /* Slightly reduced height for mobile */
-            object-fit: cover;
-            border-radius: var(--border-radius);
-            margin-bottom: 1rem;
-            background-color: #f3f4f6;
-        }
-        
-        .ev-station-image-placeholder {
-            width: 100%;
-            height: 120px;  /* Slightly reduced height for mobile */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #f3f4f6;
-            border-radius: var(--border-radius);
-            margin-bottom: 1rem;
-            color: #94a3b8;
-        }
-
-        .ev-station-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: var(--primary-color);
-            opacity: 0;
-            transition: var(--transition);
-        }
-
-        .ev-station-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-
-        .ev-station-card:hover::before {
-            opacity: 1;
-        }
-
-        .ev-station-name {
-            font-size: 1.1rem;  /* Slightly smaller font for mobile */
-            font-weight: 600;
-            margin-bottom: 0.75rem;
-            color: var(--text-color);
-        }
-
-        .ev-station-info {
-            font-size: 0.9rem;  /* Smaller font for mobile */
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--secondary-color);
-        }
-
-        .ev-station-info i {
-            color: var(--primary-color);
-            width: 1.25rem;
-            font-size: 1rem;
-        }
-
-        .ev-book-btn {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 0.6rem 1.25rem;  /* Slightly smaller padding */
-            border: none;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            width: 100%;
-            margin-top: 1.5rem;
-            font-weight: 500;
-            font-size: 0.95rem;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            text-decoration: none;
-        }
-
-        .ev-book-btn:hover {
-            background-color: var(--primary-hover);
         }
 
         .ev-filters {
             position: relative;
             width: 100%;
-            max-width: 100%;  /* Allow full width on mobile */
         }
 
         .ev-search-input {
             width: 100%;
-            padding: 0.75rem 1rem 0.75rem 2.5rem;  /* Slightly reduced padding */
-            border: 1px solid #e2e8f0;
-            border-radius: var(--border-radius);
-            font-size: 0.95rem;
+            padding: 1rem 1rem 1rem 3rem;
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 12px;
+            font-size: 1rem;
             transition: var(--transition);
-            background-color: white;
+            background: white;
         }
 
         .ev-search-input:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 3px rgba(67,97,238,0.1);
         }
 
         .ev-search-icon {
@@ -288,69 +172,198 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
             color: var(--secondary-color);
         }
 
-        .ev-empty-state {
-            grid-column: 1/-1;
-            text-align: center;
-            padding: 3rem;
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
+        .ev-stations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 0.5rem;
         }
 
-        .ev-empty-state i {
-            font-size: 3rem;
-            color: var(--secondary-color);
+        .ev-station-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+            border: 1px solid rgba(0,0,0,0.03);
+            overflow: hidden;
+        }
+
+        .ev-station-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .ev-station-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            background-color: #f3f4f6;
+        }
+
+        .ev-station-image-placeholder {
+            width: 100%;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, #f0f4f8, #f8f9fa);
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            color: #94a3b8;
+        }
+
+        .ev-station-name {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #1a202c;
             margin-bottom: 1rem;
         }
 
-        .ev-empty-state p {
-            color: var(--secondary-color);
-            font-size: 1.1rem;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; }
-            100% { opacity: 0.6; }
-        }
-
-        .loading {
-            animation: pulse 1.5s infinite;
-        }
-
-        .ev-price-tag {
-            display: inline-flex;
+        .ev-station-info {
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+            display: flex;
             align-items: center;
-            background: #eef2ff;
+            gap: 0.75rem;
+            color: #4a5568;
+        }
+
+        .ev-station-info i {
             color: var(--primary-color);
-            padding: 0.25rem 0.75rem;
-            border-radius: 1rem;
-            font-weight: 500;
+            width: 1.25rem;
+            font-size: 1rem;
+        }
+
+        .ev-book-btn {
+            background: linear-gradient(145deg, #4361ee, #3651d4);
+            color: white;
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(67,97,238,0.2);
+        }
+
+        .ev-book-btn:hover {
+            background: linear-gradient(145deg, #3651d4, #2b46c8);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(67,97,238,0.3);
         }
 
         .ev-status-badge {
             position: absolute;
             top: 1rem;
             right: 1rem;
-            padding: 0.2rem 0.6rem;
-            border-radius: 1rem;
-            font-size: 0.8rem;
-            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .ev-status-available {
-            background: #dcfce7;
-            color: #166534;
+            background: linear-gradient(to right, #c6f6d5, #9ae6b4);
+            color: #2f855a;
         }
 
-        /* .status-full {
-            background: #fee2e2;
-            color: #991b1b;
-        } */
-
         .ev-status-limited {
-            background: #fef3c7;
-            color: #92400e;
+            background: linear-gradient(to right, #feebc8, #fbd38d);
+            color: #c05621;
+        }
+
+        .ev-price-tag {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(to right, #e6e6ff, #d1d1ff);
+            color: var(--primary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .ev-rating {
+            display: flex;
+            align-items: center;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .ev-stars {
+            display: flex;
+            margin-right: 0.75rem;
+            color: #FFD700;
+        }
+
+        .ev-rating-count {
+            color: #718096;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .ev-empty-state {
+            text-align: center;
+            padding: 70px 30px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .ev-empty-state i {
+            font-size: 4em;
+            margin-bottom: 20px;
+            color: #a0aec0;
+            animation: pulse 2s infinite;
+        }
+
+        .ev-empty-state p {
+            color: #4a5568;
+            font-size: 1.2em;
+            margin-bottom: 25px;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .ev-container {
+                padding: 20px;
+                margin: 20px;
+            }
+
+            .ev-header {
+                padding: 20px;
+            }
+
+            .ev-page-title {
+                font-size: 1.8em;
+            }
+
+            .ev-station-card {
+                padding: 20px;
+            }
+
+            .ev-station-name {
+                font-size: 1.1em;
+            }
         }
 
         .ev-back-btn {
@@ -360,95 +373,23 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: var(--card-bg);
+            background: white;
             border: 1px solid rgba(0,0,0,0.1);
             color: var(--text-color);
             text-decoration: none;
             transition: var(--transition);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .ev-back-btn:hover {
             background: var(--background-color);
             transform: translateX(-2px);
         }
-        
-        /* Star Rating Styles */
-        .ev-rating {
-            display: flex;
-            align-items: center;
-            margin-top: 0.5rem;
-            flex-wrap: wrap;
-            gap: 0.25rem;
-        }
-        
-        .ev-stars {
-            display: flex;
-            margin-right: 0.5rem;
-            color: #FFD700;
-        }
-        
-        .ev-rating-count {
-            color: var(--secondary-color);
-            font-size: 0.85rem;
-        }
-
-        /* Media Queries for larger screens */
-        @media (min-width: 640px) {
-            body {
-                padding: 2rem;
-            }
-
-            .ev-header {
-                padding: 1.5rem 0;  /* Vertical padding only */
-            }
-
-            .ev-header-content {
-                padding: 0 2rem;
-            }
-
-            .ev-page-title {
-                font-size: 1.5rem;
-            }
-
-            .ev-stations-grid {
-                gap: 1.5rem;
-            }
-
-            .ev-station-card {
-                padding: 1.5rem;
-            }
-
-            .ev-container {
-                padding: 2rem;
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .ev-header-content {
-                padding: 0 3rem;
-            }
-
-            .ev-page-title {
-                font-size: 2rem;
-            }
-        }
-
-        /* Header flex container adjustments */
-        div[style*="display: flex; align-items: center; gap: 1rem;"] {
-            flex-wrap: wrap;  /* Allow wrapping on very small screens */
-        }
-
-        .ev-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 1rem;
-        }
     </style>
 </head>
 <body>
-    <?php include 'header.php'; ?>
-    <header>
-    </header>
+<?php include 'header.php'; ?>
+
     <div class="ev-container">
         <div class="ev-header">
             <div class="ev-header-content">
@@ -599,6 +540,34 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'
             <?php endif; ?>
         </div>
     </div>
+
+    <script>
+    // Mobile menu toggle
+    document.getElementById('mobileMenuToggle').addEventListener('click', function() {
+        document.getElementById('navLinks').classList.add('active');
+    });
+
+    document.getElementById('mobileMenuClose').addEventListener('click', function() {
+        document.getElementById('navLinks').classList.remove('active');
+    });
+
+    // User profile dropdown
+    const userProfile = document.getElementById('userProfile');
+    const userDropdown = document.getElementById('userDropdown');
+
+    if (userProfile) {
+        userProfile.addEventListener('click', function(e) {
+            e.stopPropagation();
+            userDropdown.classList.toggle('active');
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!userProfile.contains(e.target)) {
+                userDropdown.classList.remove('active');
+            }
+        });
+    }
+    </script>
 
     <script>
     // Replace the existing script with this new version
